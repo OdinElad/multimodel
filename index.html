@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#070b16">
+<title>MultiModel</title>
+<meta name="description" content="Compare weather forecasts from the world's leading models in one place, with consensus-based storm alerts.">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+
+:root{
+  --bg:#070b16;--bg2:#0d1426;--card:#111a30;--card2:#16213d;--line:#22305a;
+  --txt:#e8eefc;--mut:#8e9cc4;--acc:#4f9cf9;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:Heebo,system-ui,sans-serif}
+body{background:radial-gradient(1200px 500px at 70% -10%,#1b2d63 0%,transparent 60%),var(--bg);min-height:100vh}
+.wrap{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+header.top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#4f9cf9,#a78bfa);display:grid;place-items:center;font-size:20px;box-shadow:0 6px 20px #4f9cf955}
+.brand h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px}
+.brand small{display:block;color:var(--mut);font-size:12px;font-weight:400}
+.search{position:relative;margin-bottom:14px}
+.search input{width:100%;padding:13px 44px 13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:15px;outline:none}
+.search input:focus{border-color:var(--acc)}
+.search .ic{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--mut)}
+.sugg{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--card2);border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:20;display:none}
+.sugg button{display:block;width:100%;text-align:right;padding:11px 14px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--txt);font:inherit;cursor:pointer}
+.sugg button:last-child{border-bottom:0}
+.sugg button:hover{background:#1d2a4d}
+.sugg small{color:var(--mut)}
+.locbtn{width:100%;display:flex;align-items:center;gap:10px;padding:13px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:16px;cursor:pointer;text-align:right}
+.locbtn:hover{border-color:var(--acc)}
+.locbtn .nm2{flex:1;font-weight:700}
+.locbtn .tag{font-size:11.5px;color:#6ee7a0;background:#22c55e1c;padding:2px 8px;border-radius:999px;font-weight:500}
+.locbtn .chg{font-size:13px;color:#9cc3ff}
+.banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px;padding:11px 13px;border-radius:13px;background:#4f9cf914;border:1px solid #4f9cf955;font-size:14px}
+.banner .txt{flex:1;min-width:180px}
+.btn{padding:9px 14px;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--txt);font:inherit;font-size:14px;cursor:pointer}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:700}
+.btn:disabled{opacity:.5;cursor:default}
+.ov{position:fixed;inset:0;background:#000a;z-index:50;display:none;align-items:flex-end;justify-content:center}
+.ov.show{display:flex}
+.sheet{width:100%;max-width:560px;max-height:88vh;background:var(--bg2);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:16px;display:flex;flex-direction:column;gap:10px}
+@media (min-width:640px){.ov{align-items:center}.sheet{border-radius:22px}}
+.sheet h3{margin:0;font-size:17px;display:flex;justify-content:space-between;align-items:center}
+.x{background:none;border:0;color:var(--mut);font-size:22px;cursor:pointer;padding:0 4px}
+.sheet input{width:100%;padding:13px 14px;border-radius:13px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:16px;outline:none}
+.sheet input:focus{border-color:var(--acc)}
+.list{overflow:auto;border-radius:13px;border:1px solid var(--line);min-height:60px}
+.opt{display:flex;align-items:center;gap:10px;width:100%;text-align:right;padding:12px 14px;background:none;border:0;border-bottom:1px solid var(--line);color:var(--txt);font:inherit;font-size:15px;cursor:pointer}
+.opt:last-child{border-bottom:0}
+.opt:hover,.opt.act{background:#1d2a4d}
+.opt.sel{background:#4f9cf922;outline:2px solid var(--acc);outline-offset:-2px}
+.opt small{display:block;color:var(--mut);font-size:12px}
+.opt .ck{margin-inline-start:auto;color:var(--acc);font-size:18px;visibility:hidden}
+.opt.sel .ck{visibility:visible}
+.hint{color:var(--mut);font-size:13px;padding:14px;text-align:center}
+.confirm{display:none;gap:8px;align-items:center;flex-wrap:wrap;padding:11px;border-radius:13px;background:#4f9cf914;border:1px solid #4f9cf955}
+.confirm.show{display:flex}
+.confirm .txt{flex:1;font-size:14px;min-width:160px}
+.row-btns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:13px;cursor:pointer}
+.chip:hover{border-color:var(--acc)}
+.card{background:linear-gradient(180deg,var(--card),#0f172b);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:14px}
+.hero{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+.place{font-size:20px;font-weight:700}
+.updated{color:var(--mut);font-size:12px;margin-top:2px}
+.bigt{font-size:64px;font-weight:300;line-height:1}
+.bigt sup{font-size:26px;vertical-align:top}
+.cond{font-size:16px;margin-top:6px}
+.rangeline{color:var(--mut);font-size:13px;margin-top:6px}
+.rainline{display:flex;gap:12px;align-items:center}
+.rainline .e{font-size:30px}
+.rainline b{display:block;font-size:17px;line-height:1.4}
+.rainline span{color:var(--mut);font-size:13px}
+.qa{display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;padding:11px 0;border-bottom:1px solid var(--line)}
+.qa:last-child{border-bottom:0;padding-bottom:0}
+.qa .e{font-size:22px}
+.qa b{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.qa span.t{color:#c9d3ef;font-size:13.5px;display:block;margin-top:3px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.pill.hi{background:#22c55e22;color:#6ee7a0}.pill.md{background:#f59e0b22;color:#fcd34d}.pill.lo{background:#ef444422;color:#fca5a5}
+.now-models{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.nm{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:6px 9px;font-size:12px;display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.alerts .al{display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:14px;margin-bottom:8px;border:1px solid}
+.al.red{background:#ef444414;border-color:#ef444455}
+.al.orange{background:#f59e0b14;border-color:#f59e0b55}
+.al.green{background:#22c55e10;border-color:#22c55e40}
+.al b{display:block;margin-bottom:2px}
+.al span{color:#c9d3ef;font-size:13px}
+h2{font-size:16px;margin:0 0 4px;font-weight:700}
+.sub{color:var(--mut);font-size:12.5px;margin:0 0 12px}
+.days{display:grid;gap:8px}
+.day{display:grid;grid-template-columns:62px 34px 1fr auto;gap:10px;align-items:center;padding:10px;border-radius:13px;background:var(--bg2);border:1px solid var(--line);cursor:pointer}
+.day:hover{border-color:#3a4f8a}
+.day .dn{font-weight:700}.day .dd{color:var(--mut);font-size:11.5px}
+.day .ico{font-size:24px;text-align:center}
+.day .sum{font-size:13px;line-height:1.5}
+.day .sum .m{color:var(--mut)}
+.day .tt{text-align:left;white-space:nowrap}
+.day .tt b{font-size:17px}.day .tt span{color:var(--mut);font-size:14px}
+.bar{height:6px;border-radius:4px;background:#22305a;position:relative;margin-top:5px;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;right:0;background:linear-gradient(90deg,#60a5fa,#3b82f6);border-radius:4px}
+.detail{display:none;grid-column:1/-1;margin-top:8px}
+.day.open .detail{display:block}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:12px;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:13px;min-width:520px}
+th,td{padding:8px 9px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:#0c1324;color:var(--mut);font-weight:500;position:sticky;top:0}
+td.l,th.l{text-align:right;position:sticky;right:0;background:#0f1730;z-index:1}
+tr:last-child td{border-bottom:0}
+.cons{background:#4f9cf914;font-weight:700}
+.tabs{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.tab{padding:7px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--mut);font:inherit;font-size:13px;cursor:pointer}
+.tab.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px;font-size:12px;color:var(--mut)}
+.legend span{display:flex;align-items:center;gap:5px}
+.models-info{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.mi{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:10px;font-size:13px}
+.mi b{display:flex;align-items:center;gap:6px}
+.mi span{color:var(--mut);font-size:12px}
+footer{text-align:center;color:var(--mut);font-size:12.5px;margin-top:22px;line-height:1.8}
+footer a{color:#9cc3ff;text-decoration:none}
+.made{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-weight:500}
+.shield{width:18px;height:18px}
+.loading{text-align:center;padding:50px 0;color:var(--mut)}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--acc);border-radius:50%;animation:s 0.9s linear infinite;margin:0 auto 12px}
+@keyframes s{to{transform:rotate(360deg)}}
+.err{background:#ef444418;border:1px solid #ef444455;padding:14px;border-radius:14px}
+@media (max-width:560px){
+  .bigt{font-size:54px}
+  .day{grid-template-columns:52px 28px 1fr auto;gap:8px;padding:9px}
+  .day .sum{font-size:12px}
+}
+
+html,body{font-family:Heebo,system-ui,-apple-system,"Segoe UI","Noto Sans","Noto Sans Arabic","Noto Sans SC","Noto Sans JP","PingFang SC","Hiragino Sans",sans-serif}
+img.logo{width:42px;height:42px;border-radius:12px;box-shadow:0 6px 20px #4f9cf955}
+.gear{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:12px;width:42px;height:42px;font-size:19px;cursor:pointer}
+.gear:hover{border-color:var(--acc)}
+.fld{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--mut)}
+.fld select{padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--txt);font:inherit;font-size:15px}
+footer .made{cursor:default}
+[dir=ltr] .locbtn,[dir=ltr] .opt{text-align:left}
+.opt .ck{margin-inline-start:auto}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img class="logo" src="icons/icon-192.png" alt="">
+      <div><h1 data-i18n="appName"></h1><small data-i18n="tagline"></small></div>
+    </div>
+    <button class="gear" id="gear" data-ta="settings">⚙️</button>
+  </header>
+
+  <div class="search">
+    <button class="locbtn" id="locBtn" data-ta="pickTitle">
+      <span>📍</span><span class="nm2" id="locName"></span>
+      <span class="tag" id="locTag" data-i18n="autoTag" hidden></span><span class="chg" data-i18n="change"></span>
+    </button>
+    <div class="banner" id="banner" hidden></div>
+  </div>
+
+  <div class="ov" id="ov" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3><span data-i18n="pickTitle"></span> <button class="x" id="close" data-ta="done">×</button></h3>
+      <button class="btn" id="geo" data-i18n="detectBtn"></button>
+      <input id="q" type="search" data-tp="searchPh" autocomplete="off" enterkeyhint="search">
+      <div class="list" id="list"></div>
+      <div class="confirm" id="confirm">
+        <div class="txt" id="confirmTxt"></div>
+        <button class="btn" id="back" data-i18n="back"></button>
+        <button class="btn pri" id="ok" data-i18n="confirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovS" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3><span data-i18n="settings"></span> <button class="x" id="closeS" data-ta="done">×</button></h3>
+      <label class="fld"><span data-i18n="language"></span><select id="selLang"></select></label>
+      <label class="fld"><span data-i18n="units"></span><select id="selUnits"></select></label>
+    </div>
+  </div>
+
+  <div id="app"><div class="loading"><div class="spin"></div></div></div>
+
+  <footer id="credit"></footer>
+</div>
+<script>
+// ===== שפות =====
+const L=['he','en','ar','ru','zh','ja'];
+const LANG_NAMES={he:'עברית',en:'English',ar:'العربية',ru:'Русский',zh:'中文',ja:'日本語'};
+const RTL={he:1,ar:1};
+const S={
+appName:['מולטי מודל','MultiModel','ملتي مودل','МультиМодель','多模型天气','マルチモデル'],
+tagline:['כל מודלי התחזית המובילים בעולם, במקום אחד','The world\'s leading forecast models, in one place','أهم نماذج التنبؤ في العالم في مكان واحد','Ведущие модели прогноза погоды в одном месте','全球主流天气预报模型，一站对比','世界の主要な予報モデルをひとつに'],
+locating:['מזהה את המיקום שלך...','Detecting your location...','جارٍ تحديد موقعك...','Определяем ваше местоположение...','正在定位...','現在地を検出中...'],
+autoTag:['זוהה אוטומטית','Auto-detected','تم التحديد تلقائيًا','Определено автоматически','自动定位','自動検出'],
+change:['שינוי','Change','تغيير','Изменить','更改','変更'],
+pickTitle:['בחירת מיקום','Choose location','اختيار الموقع','Выбор места','选择地点','場所を選択'],
+detectBtn:['📍 זהה את המיקום הנוכחי שלי','📍 Detect my current location','📍 حدّد موقعي الحالي','📍 Определить моё местоположение','📍 定位我的当前位置','📍 現在地を検出'],
+detecting:['📍 מזהה מיקום...','📍 Detecting...','📍 جارٍ التحديد...','📍 Определяем...','📍 定位中...','📍 検出中...'],
+searchPh:['הקלד שם של מקום ובחר מהרשימה','Type a place name and pick from the list','اكتب اسم المكان واختر من القائمة','Введите название и выберите из списка','输入地名并从列表中选择','地名を入力してリストから選択'],
+back:['חזרה','Back','رجوع','Назад','返回','戻る'],
+confirm:['אישור ✓','Confirm ✓','تأكيد ✓','Подтвердить ✓','确认 ✓','決定 ✓'],
+loading:['טוען תחזיות מכל המודלים...','Loading forecasts from all models...','جارٍ تحميل التوقعات من جميع النماذج...','Загружаем прогнозы всех моделей...','正在加载所有模型的预报...','全モデルの予報を読み込み中...'],
+noResults:['לא נמצא מקום בשם הזה. נסה כתיב אחר.','No place found. Try a different spelling.','لم يتم العثور على المكان. جرّب تهجئة أخرى.','Место не найдено. Попробуйте другое написание.','未找到该地点，请尝试其他拼写。','見つかりませんでした。別の表記で試してください。'],
+typeCity:['הקלד שם של מקום','Type a place name','اكتب اسم مكان','Введите название места','请输入地名','地名を入力してください'],
+recentPop:['אחרונים ומומלצים','Recent and suggested','الأخيرة والمقترحة','Недавние и рекомендуемые','最近和推荐','履歴とおすすめ'],
+switchTo:['לעבור ל<b>{p}</b>?','Switch to <b>{p}</b>?','الانتقال إلى <b>{p}</b>؟','Перейти: <b>{p}</b>?','切换到<b>{p}</b>？','<b>{p}</b>に切り替えますか？'],
+detectedSub:['זוהה לפי מיקום המכשיר','Detected from your device location','تم التحديد من موقع جهازك','Определено по местоположению устройства','根据设备位置识别','端末の位置情報から検出'],
+permDenied:['לא ניתנה הרשאת מיקום. אפשר לאשר אותה בהגדרות הדפדפן, או לבחור מקום מהרשימה.','Location permission was not granted. Allow it in your browser settings, or pick a place from the list.','لم يتم منح إذن الموقع. يمكنك السماح به من إعدادات المتصفح أو اختيار مكان من القائمة.','Доступ к геолокации не разрешён. Разрешите его в настройках браузера или выберите место из списка.','未授予位置权限。可在浏览器设置中允许，或从列表中选择地点。','位置情報の許可がありません。ブラウザの設定で許可するか、リストから選んでください。'],
+geoFail:['לא הצלחתי לזהות מיקום. בחר מקום מהרשימה.','Couldn\'t detect your location. Pick a place from the list.','تعذّر تحديد موقعك. اختر مكانًا من القائمة.','Не удалось определить местоположение. Выберите место из списка.','无法定位，请从列表中选择地点。','現在地を検出できませんでした。リストから選んでください。'],
+detectedQ:['זיהינו שאתה ב<b>{p}</b>. זה נכון?','Looks like you\'re in <b>{p}</b>. Is that right?','يبدو أنك في <b>{p}</b>. هل هذا صحيح؟','Ваше местоположение: <b>{p}</b>. Верно?','检测到您在<b>{p}</b>，对吗？','<b>{p}</b>にいるようです。合っていますか？'],
+yesBtn:['כן ✓','Yes ✓','نعم ✓','Да ✓','是 ✓','はい ✓'],
+otherPlace:['בחירת מיקום אחר','Choose another','اختيار مكان آخر','Выбрать другое','选择其他地点','別の場所を選ぶ'],
+movedQ:['נראה שאתה עכשיו ב<b>{p}</b>. לעבור לתחזית של המיקום הזה?','You seem to be in <b>{p}</b> now. Switch to this location?','يبدو أنك الآن في <b>{p}</b>. هل تريد الانتقال إلى توقعات هذا الموقع؟','Похоже, сейчас вы здесь: <b>{p}</b>. Показать прогноз для этого места?','您现在似乎在<b>{p}</b>，切换到该地点的预报吗？','現在<b>{p}</b>にいるようです。この場所の予報に切り替えますか？'],
+stay:['להישאר','Stay','البقاء','Остаться','保持不变','そのまま'],
+switchYes:['כן, לעבור','Yes, switch','نعم، انتقل','Да, перейти','是，切换','切り替える'],
+cantLocate:['לא הצלחתי לזהות את המיקום שלך','Couldn\'t detect your location','تعذّر تحديد موقعك','Не удалось определить ваше местоположение','无法定位您的位置','現在地を検出できませんでした'],
+permShort:['לא ניתנה הרשאת מיקום.','Location permission wasn\'t granted.','لم يتم منح إذن الموقع.','Доступ к геолокации не разрешён.','未授予位置权限。','位置情報が許可されていません。'],
+geoNA:['איתור מיקום לא זמין כרגע.','Location detection isn\'t available right now.','تحديد الموقع غير متاح حاليًا.','Определение местоположения сейчас недоступно.','当前无法使用定位。','現在地の検出は現在利用できません。'],
+pickFromList:['בחר מקום מהרשימה.','Pick a place from the list.','اختر مكانًا من القائمة.','Выберите место из списка.','请从列表中选择地点。','リストから場所を選んでください。'],
+loadErr:['לא הצלחתי לטעון את התחזית.','Couldn\'t load the forecast.','تعذّر تحميل التوقعات.','Не удалось загрузить прогноз.','无法加载预报。','予報を読み込めませんでした。'],
+checkNet:['בדוק את החיבור לאינטרנט ונסה שוב.','Check your connection and try again.','تحقق من الاتصال وحاول مرة أخرى.','Проверьте подключение и попробуйте снова.','请检查网络连接后重试。','接続を確認して、もう一度お試しください。'],
+cached:['אין חיבור. מוצגת התחזית האחרונה שנשמרה.','Offline. Showing the last saved forecast.','لا يوجد اتصال. تُعرض آخر توقعات محفوظة.','Нет связи. Показан последний сохранённый прогноз.','无网络连接，显示上次保存的预报。','オフラインです。最後に保存した予報を表示しています。'],
+noData:['לא התקבלו נתונים מהמודלים עבור המיקום הזה.','No model data for this location.','لا توجد بيانات من النماذج لهذا الموقع.','Нет данных моделей для этого места.','该地点没有模型数据。','この場所のモデルデータがありません。'],
+myLoc:['המיקום שלי','My location','موقعي','Моё местоположение','我的位置','現在地'],
+near:['ליד {p}','Near {p}','بالقرب من {p}','Рядом: {p}','{p}附近','{p}付近'],
+medianOf:['חציון של {n} מודלים לשעה {t}','Median of {n} models for {t}','الوسيط لـ {n} نماذج للساعة {t}','Медиана {n} моделей на {t}','{n}个模型在{t}的中位数','{n}モデルの中央値（{t}）'],
+excluded:['{m} חריג ולא נכלל','{m} is an outlier, excluded','{m} قيمة شاذة ولم يُحتسب','{m} сильно отличается и исключён','{m}偏差过大，已排除','{m}は外れ値のため除外'],
+wind:['רוח','Wind','الرياح','Ветер','风','風'],
+todayRange:['היום: {a} עד {b}','Today: {a} to {b}','اليوم: من {a} إلى {b}','Сегодня: от {a} до {b}','今天：{a} 至 {b}','今日: {a}～{b}'],
+spreadNow:['פער בין המודלים כרגע: {v}','Model spread now: {v}','الفارق بين النماذج الآن: {v}','Разброс моделей сейчас: {v}','当前模型差异：{v}','現在のモデル間の差: {v}'],
+spreadEx:['(בלי החריג: {v})','(without the outlier: {v})','(بدون القيمة الشاذة: {v})','(без выброса: {v})','（排除异常值：{v}）','（外れ値を除く: {v}）'],
+nightNote:['🌙 לילה בהיר ושקט: מודלים נוטים להעריך ביתר את הטמפרטורה בשעות כאלה, והמדידה בפועל יכולה להיות נמוכה ב-{v}.','🌙 Clear, calm night: models tend to overestimate temperature at these hours. Actual readings can be {v} lower.','🌙 ليلة صافية وهادئة: تميل النماذج إلى المبالغة في تقدير الحرارة في هذه الساعات، وقد تكون القراءة الفعلية أقل بـ {v}.','🌙 Ясная тихая ночь: в такие часы модели обычно завышают температуру, реальные значения могут быть ниже на {v}.','🌙 晴朗无风的夜晚：模型在此时往往高估气温，实际读数可能低{v}。','🌙 晴れて風の弱い夜は、モデルが気温を高めに予測しがちで、実測は{v}低いことがあります。'],
+range24:['{a} עד {b} מעלות','{a} to {b}°','{a} إلى {b} درجات','{a}-{b}°','{a}至{b}°','{a}～{b}°'],
+conf:['ביטחון {n}%','Confidence {n}%','الثقة {n}%','Уверенность {n}%','可信度 {n}%','信頼度 {n}%'],
+measuredNow:['נמדד עכשיו','Measured now','مقاس الآن','Измерено сейчас','实测','実測'],
+stationLine:['תחנת {s} · {d} · לפני {m} דק\'','{s} station · {d} · {m} min ago','محطة {s} · {d} · قبل {m} دقيقة','Станция {s} · {d} · {m} мин назад','{s}站 · {d} · {m}分钟前','{s}観測所 · {d} · {m}分前'],
+modelsSay:['המודלים: {v}','Models: {v}','النماذج: {v}','Модели: {v}','模型：{v}','モデル: {v}'],
+noRain3:['לא צפוי גשם ב-3 הימים הקרובים','No rain expected in the next 3 days','لا يُتوقع هطول أمطار خلال الأيام الثلاثة القادمة','Дождя в ближайшие 3 дня не ожидается','未来3天预计无雨','今後3日間、雨の予報はありません'],
+noneModel:['אף אחד מהמודלים לא מראה גשם.','None of the models show rain.','لا يُظهر أي نموذج أمطارًا.','Ни одна модель не показывает дождь.','所有模型均未显示降雨。','どのモデルも雨を示していません。'],
+mostNo:['רוב המודלים לא צופים גשם ב-3 הימים הקרובים','Most models expect no rain in the next 3 days','معظم النماذج لا تتوقع أمطارًا خلال الأيام الثلاثة القادمة','Большинство моделей не ожидают дождя в ближайшие 3 дня','多数模型预计未来3天无雨','大半のモデルは今後3日間、雨なしと予測'],
+onlyK:['רק {k}/{n} מודלים מראים גשם {d} בסביבות {t}.','Only {k}/{n} models show rain {d} around {t}.','{k}/{n} فقط من النماذج تُظهر أمطارًا {d} حوالي {t}.','Дождь показывают только {k}/{n} моделей: {d}, около {t}.','仅{k}/{n}个模型显示{d}{t}左右有雨。','{d}{t}頃に雨を示すのは{k}/{n}モデルのみ。'],
+rainNow:['יורד גשם עכשיו, צפוי להימשך עד {e}','Raining now, expected until {e}','تمطر الآن، ويُتوقع أن تستمر حتى {e}','Сейчас идёт дождь, ожидается до {e}','正在下雨，预计持续到{e}','現在雨、{e}まで続く見込み'],
+rainAt:['גשם צפוי {d} בין {a} ל-{b}','Rain expected {d} between {a} and {b}','أمطار متوقعة {d} بين {a} و{b}','Дождь ожидается: {d}, с {a} до {b}','预计{d}{a}至{b}有雨','{d}の{a}～{b}に雨の予報'],
+rainMeta:['{k}/{n} מודלים · כ-{s} בסך הכול','{k}/{n} models · about {s} total','{k}/{n} نماذج · حوالي {s} إجمالًا','{k}/{n} моделей · всего около {s}','{k}/{n}个模型 · 总计约{s}','{k}/{n}モデル · 合計約{s}'],
+endRange:['סוף טווח התחזית','the end of the forecast','نهاية فترة التوقعات','конца прогноза','预报结束','予報期間の終わり'],
+today:['היום','today','اليوم','сегодня','今天','今日'],
+tomorrow:['מחר','tomorrow','غدًا','завтра','明天','明日'],
+onDay:['ב{d}','on {d}','يوم {d}','{d}','{d}','{d}'],
+alertsTitle:['התראות לפי הסכמת מודלים','Alerts by model consensus','تنبيهات حسب توافق النماذج','Предупреждения по согласию моделей','基于模型共识的预警','モデルの一致度による警報'],
+alertsSub:['התראה אדומה או כתומה מוצגת כשרוב המודלים מסכימים. כשרק חלק מהמודלים צופים סופה, היא מסומנת כסימן ראשון.','Red or orange alerts appear when most models agree. When only some models forecast a storm, it is shown as an early sign.','تظهر التنبيهات الحمراء أو البرتقالية عندما تتفق معظم النماذج. وعندما تتوقع بعض النماذج فقط عاصفة، تُعرض كإشارة مبكرة.','Красные и оранжевые предупреждения появляются, когда большинство моделей согласны. Если бурю прогнозируют лишь некоторые модели, это показано как ранний признак.','当多数模型一致时显示红色或橙色预警；仅部分模型预报风暴时，显示为早期信号。','多くのモデルが一致すると赤・オレンジの警報を表示します。一部のモデルのみが嵐を予測する場合は「初期の兆候」として表示します。'],
+thunder:['סופות רעמים אפשריות {d}','Possible thunderstorms {d}','عواصف رعدية محتملة {d}','Возможны грозы: {d}','{d}可能有雷暴','{d}は雷雨の可能性'],
+thunderMeta:['{k}/{n} מודלים מראים פוטנציאל לסופות רעמים.','{k}/{n} models show thunderstorm potential.','{k}/{n} نماذج تُظهر احتمال عواصف رعدية.','{k}/{n} моделей показывают риск гроз.','{k}/{n}个模型显示有雷暴可能。','{k}/{n}モデルが雷雨の可能性を示しています。'],
+thunderEarly:['סימן ראשון לסופת רעמים {d}','Early sign of a thunderstorm {d}','إشارة مبكرة لعاصفة رعدية {d}','Ранний признак грозы: {d}','{d}出现雷暴早期信号','{d}に雷雨の初期の兆候'],
+thunderEarlyMeta:['רק {k}/{n} מודלים צופים סופת רעמים. שווה לעקוב.','Only {k}/{n} models forecast a thunderstorm. Worth watching.','{k}/{n} فقط من النماذج تتوقع عاصفة رعدية. تستحق المتابعة.','Грозу прогнозируют только {k}/{n} моделей. Стоит следить.','仅{k}/{n}个模型预报雷暴，值得关注。','雷雨を予測しているのは{k}/{n}モデルのみ。要注意。'],
+heavy:['גשם חזק {d}','Heavy rain {d}','أمطار غزيرة {d}','Сильный дождь: {d}','{d}有大雨','{d}は大雨'],
+heavyMeta:['{k} מודלים צופים {v} ומעלה. חשש להצפות מקומיות.','{k} models forecast {v} or more. Risk of local flooding.','{k} نماذج تتوقع {v} أو أكثر. خطر فيضانات محلية.','{k} моделей прогнозируют {v} и более. Возможны локальные подтопления.','{k}个模型预报{v}或以上，可能出现局地积水。','{k}モデルが{v}以上を予測。局地的な浸水のおそれ。'],
+windA:['רוחות חזקות {d}','Strong winds {d}','رياح قوية {d}','Сильный ветер: {d}','{d}有大风','{d}は強風'],
+windMeta:['{k} מודלים צופים משבים של {v} ומעלה (עד {m}).','{k} models forecast gusts of {v} or more (up to {m}).','{k} نماذج تتوقع هبات {v} أو أكثر (حتى {m}).','{k} моделей прогнозируют порывы от {v} (до {m}).','{k}个模型预报阵风{v}以上（最高{m}）。','{k}モデルが{v}以上の突風を予測（最大{m}）。'],
+calm:['אין צפי לסערות בימים הקרובים','No storms expected in the coming days','لا يُتوقع حدوث عواصف في الأيام القادمة','Бурь в ближайшие дни не ожидается','未来几天预计无风暴','今後数日、嵐の予報はありません'],
+calmNone:['אף רוב של מודלים לא צופה גשם משמעותי ב-7 הימים הקרובים.','No majority of models expects significant rain in the next 7 days.','لا تتوقع أغلبية النماذج أمطارًا كبيرة خلال الأيام السبعة القادمة.','Большинство моделей не ожидают значительного дождя в ближайшие 7 дней.','未来7天多数模型均未预报明显降雨。','今後7日間、大半のモデルはまとまった雨を予測していません。'],
+calmRain:['רוב המודלים צופים גשם {d}, אבל בלי סימנים לסערה.','Most models expect rain {d}, but no signs of a storm.','تتوقع معظم النماذج أمطارًا {d}، لكن دون مؤشرات على عاصفة.','Большинство моделей ожидают дождь ({d}), но без признаков бури.','多数模型预计{d}有雨，但无风暴迹象。','大半のモデルが{d}の雨を予測していますが、嵐の兆候はありません。'],
+qaTitle:['שאלות של יום יום','Everyday questions','أسئلة يومية','Вопросы на каждый день','日常问题','毎日の質問'],
+qaSub:['תשובות לפי הסכמת המודלים ל-24 עד 48 השעות הקרובות.','Answers based on model consensus for the next 24 to 48 hours.','إجابات حسب توافق النماذج للـ 24 إلى 48 ساعة القادمة.','Ответы по согласию моделей на ближайшие 24-48 часов.','基于未来24至48小时的模型共识给出答案。','今後24～48時間のモデルの一致度に基づく回答です。'],
+laundry:['לתלות כביסה?','Hang laundry outside?','هل أنشر الغسيل؟','Вешать бельё на улице?','能晾衣服吗？','洗濯物を外に干せる？'],
+run:['לצאת לריצה?','Go for a run?','هل أخرج للجري؟','Выйти на пробежку?','适合跑步吗？','ランニングに行ける？'],
+garden:['להשקות את הגינה?','Water the garden?','هل أسقي الحديقة؟','Поливать сад?','需要浇花园吗？','庭の水やりは必要？'],
+yes:['כן','Yes','نعم','Да','是','はい'],
+no:['לא','No','لا','Нет','否','いいえ'],
+maybe:['אולי','Maybe','ربما','Возможно','也许','たぶん'],
+little:['מעט','A little','قليلًا','Немного','少量','少しだけ'],
+laundryNo:['רוב המודלים צופים גשם {d} בשעות היום.','Most models expect rain {d} during the day.','تتوقع معظم النماذج أمطارًا {d} خلال النهار.','Большинство моделей ожидают дождь днём ({d}).','多数模型预计{d}白天有雨。','大半のモデルが{d}の日中に雨を予測。'],
+laundryMaybe:['חלק מהמודלים מראים גשם {d} בשעות היום. כדאי לעקוב.','Some models show rain {d} during the day. Worth watching.','بعض النماذج تُظهر أمطارًا {d} خلال النهار. تستحق المتابعة.','Некоторые модели показывают дождь днём ({d}). Стоит следить.','部分模型显示{d}白天有雨，值得关注。','一部のモデルが{d}の日中に雨を示しています。要注意。'],
+laundryYes:['יבש {d} בשעות היום לפי כל המודלים.','Dry during the day {d} according to all models.','جاف خلال النهار {d} حسب جميع النماذج.','Днём сухо ({d}) по всем моделям.','所有模型均显示{d}白天无雨。','全モデルで{d}の日中は雨なし。'],
+windyAdd:[' אבל הרוח חזקה.',' But it\'s windy.',' لكن الرياح قوية.',' Но ветрено.','但风较大。','ただし風が強めです。'],
+runNo:['צפוי גשם ברוב שעות היום ב-24 השעות הקרובות.','Rain is expected for most daytime hours in the next 24 hours.','يُتوقع هطول أمطار في معظم ساعات النهار خلال الـ 24 ساعة القادمة.','В ближайшие 24 часа дождь ожидается большую часть дня.','未来24小时白天大部分时间有雨。','今後24時間、日中の大半で雨の予報です。'],
+runYes:['הזמן הטוב ביותר: {d} בסביבות {t} ({v}, רוח {w}).','Best time: {d} around {t} ({v}, wind {w}).','أفضل وقت: {d} حوالي {t} ({v}، رياح {w}).','Лучшее время: {d}, около {t} ({v}, ветер {w}).','最佳时间：{d}{t}左右（{v}，风速{w}）。','おすすめ: {d}{t}頃（{v}、風{w}）。'],
+gardenNo:['צפויים כ-{v} גשם ב-48 השעות הקרובות.','About {v} of rain is expected in the next 48 hours.','يُتوقع نحو {v} من الأمطار خلال الـ 48 ساعة القادمة.','В ближайшие 48 часов ожидается около {v} осадков.','未来48小时预计降雨约{v}。','今後48時間で約{v}の雨が予想されます。'],
+gardenLittle:['צפוי רק מעט גשם (כ-{v} ב-48 שעות), השקיה קלה מספיקה.','Only a little rain expected (about {v} in 48 hours). Light watering is enough.','يُتوقع القليل من الأمطار فقط (نحو {v} خلال 48 ساعة). يكفي ري خفيف.','Ожидается лишь небольшой дождь (около {v} за 48 часов). Достаточно лёгкого полива.','预计只有少量降雨（48小时约{v}），少量浇水即可。','雨は少しだけ（48時間で約{v}）。軽い水やりで十分です。'],
+gardenYes:['לא צפוי גשם ב-48 השעות הקרובות. עדיף בבוקר מוקדם או בערב.','No rain expected in the next 48 hours. Early morning or evening is best.','لا يُتوقع هطول أمطار خلال الـ 48 ساعة القادمة. الأفضل في الصباح الباكر أو المساء.','В ближайшие 48 часов дождя не ожидается. Лучше рано утром или вечером.','未来48小时预计无雨，最好在清晨或傍晚浇水。','今後48時間は雨の予報なし。早朝か夕方がおすすめです。'],
+daysTitle:['7 ימים לפי כלל המודלים','7 days across all models','7 أيام حسب جميع النماذج','7 дней по всем моделям','全部模型的7天预报','全モデルによる7日間'],
+daysSub:['ציון הביטחון הוא הערכה לפי הפער בין המודלים והמרחק בימים, ולא הסתברות סטטיסטית. לחיצה על יום פותחת את הטבלה של כל מודל.','The confidence score is an estimate based on model spread and lead time, not a statistical probability. Tap a day to see each model.','درجة الثقة تقدير يعتمد على تباين النماذج وبُعد اليوم، وليست احتمالًا إحصائيًا. اضغط على يوم لعرض كل نموذج.','Показатель уверенности оценивается по разбросу моделей и дальности прогноза и не является статистической вероятностью. Нажмите на день, чтобы увидеть каждую модель.','可信度是根据模型差异和预报时效得出的估计值，并非统计概率。点击某一天可查看各模型详情。','信頼度はモデル間の差と予報日数に基づく目安で、統計的な確率ではありません。日付をタップすると各モデルを表示します。'],
+rainOf:['גשם: {k}/{n} מודלים','Rain: {k}/{n} models','أمطار: {k}/{n} نماذج','Дождь: {k}/{n} моделей','降雨：{k}/{n}个模型','雨: {k}/{n}モデル'],
+upTo:['עד {v}','up to {v}','حتى {v}','до {v}','最多{v}','最大{v}'],
+model:['מודל','Model','النموذج','Модель','模型','モデル'],
+max:['מקס\'','Max','العظمى','Макс','最高','最高'],
+min:['מינ\'','Min','الصغرى','Мин','最低','最低'],
+rainH:['גשם','Rain','أمطار','Осадки','降雨','雨'],
+gustH:['משבים','Gusts','الهبات','Порывы','阵风','突風'],
+condH:['מצב','Sky','الحالة','Погода','天气','天気'],
+mean:['ממוצע','Average','المتوسط','Среднее','平均','平均'],
+chartTitle:['גרף השוואה: 7 ימים','Comparison chart: 7 days','مخطط المقارنة: 7 أيام','График сравнения: 7 дней','对比图：7天','比較グラフ: 7日間'],
+chartSub:['כל קו הוא מודל. הקו הלבן המקווקו הוא הממוצע. כשהקווים מתפזרים, התחזית פחות בטוחה.','Each line is a model. The dashed white line is the average. When the lines spread apart, the forecast is less certain.','كل خط يمثل نموذجًا. الخط الأبيض المتقطع هو المتوسط. عندما تتباعد الخطوط تقل دقة التوقع.','Каждая линия соответствует модели. Белая пунктирная линия показывает среднее. Чем сильнее расходятся линии, тем менее надёжен прогноз.','每条线代表一个模型，白色虚线为平均值。线条越分散，预报越不确定。','各線が1つのモデル、白い破線が平均です。線が離れるほど予報は不確かです。'],
+tabTemp:['🌡️ טמפרטורה','🌡️ Temperature','🌡️ الحرارة','🌡️ Температура','🌡️ 气温','🌡️ 気温'],
+tabRain:['🌧️ גשם','🌧️ Rain','🌧️ الأمطار','🌧️ Осадки','🌧️ 降雨','🌧️ 雨'],
+tabGust:['💨 משבי רוח','💨 Wind gusts','💨 هبات الرياح','💨 Порывы ветра','💨 阵风','💨 突風'],
+now:['עכשיו','Now','الآن','Сейчас','现在','現在'],
+hourlyTitle:['48 השעות הקרובות','Next 48 hours','الـ 48 ساعة القادمة','Ближайшие 48 часов','未来48小时','今後48時間'],
+hourlySub:['{w} לפי כל מודל. מעבר בין המדדים בלשוניות של הגרף.','{w} by model. Switch metrics with the chart tabs.','{w} حسب كل نموذج. بدّل المقاييس من تبويبات المخطط.','{w} по каждой модели. Переключайте показатели вкладками графика.','各模型的{w}。可通过图表标签切换指标。','モデル別の{w}。グラフのタブで指標を切り替えます。'],
+wTemp:['טמפרטורה ({u})','Temperature ({u})','الحرارة ({u})','Температура ({u})','气温（{u}）','気温（{u}）'],
+wRain:['גשם ({u} לשעה)','Rain ({u} per hour)','الأمطار ({u} في الساعة)','Осадки ({u} в час)','降雨（{u}/小时）','雨（{u}/時）'],
+wGust:['משבי רוח ({u})','Wind gusts ({u})','هبات الرياح ({u})','Порывы ветра ({u})','阵风（{u}）','突風（{u}）'],
+hourH:['שעה','Time','الساعة','Время','时间','時刻'],
+modelsTitle:['המודלים בהשוואה','The models','النماذج المقارنة','Модели в сравнении','参与对比的模型','比較するモデル'],
+modelsSub:['מודלי חיזוי נומריים של שירותים מטאורולוגיים לאומיים.','Numerical weather prediction models from national weather services.','نماذج تنبؤ عددية من هيئات الأرصاد الوطنية.','Численные модели прогноза национальных метеослужб.','来自各国气象机构的数值天气预报模型。','各国気象機関の数値予報モデル。'],
+builtBy:['נבנה על ידי אלעד אלימלך','Built by Elad Elimelech','من تطوير إلعاد إليملخ','Разработчик: Элад Элимелех','开发者：Elad Elimelech','開発: Elad Elimelech'],
+dataCredit:['נתוני תחזית: {l} (CC BY 4.0), על בסיס מודלים של ECMWF, NOAA, DWD, UK Met Office ו-Météo-France.','Forecast data: {l} (CC BY 4.0), based on models from ECMWF, NOAA, DWD, UK Met Office and Météo-France.','بيانات التوقعات: {l} (CC BY 4.0)، استنادًا إلى نماذج ECMWF وNOAA وDWD وUK Met Office وMétéo-France.','Данные прогноза: {l} (CC BY 4.0), на основе моделей ECMWF, NOAA, DWD, UK Met Office и Météo-France.','预报数据：{l}（CC BY 4.0），基于ECMWF、NOAA、DWD、英国气象局和法国气象局的模型。','予報データ: {l}（CC BY 4.0）。ECMWF、NOAA、DWD、英国気象庁、フランス気象局のモデルに基づきます。'],
+obsCredit:['מדידות: השירות המטאורולוגי (בישראל) ו-NOAA Aviation Weather Center (METAR).','Observations: Israel Meteorological Service (in Israel) and NOAA Aviation Weather Center (METAR).','القياسات: خدمة الأرصاد الإسرائيلية (داخل إسرائيل) وNOAA Aviation Weather Center (METAR).','Наблюдения: Метеослужба Израиля (в Израиле) и NOAA Aviation Weather Center (METAR).','实测数据：以色列气象局（以色列境内）及NOAA航空气象中心（METAR）。','観測データ: イスラエル気象局（イスラエル国内）、NOAA航空気象センター（METAR）。'],
+disclaimer:['התחזית היא תוצר של מודלים ממוחשבים ואינה תחליף להודעות הרשמיות של שירות המטאורולוגיה במדינה שלך.','Forecasts are computer model output and do not replace official warnings from your national weather service.','التوقعات ناتجة عن نماذج حاسوبية ولا تغني عن التحذيرات الرسمية لهيئة الأرصاد في بلدك.','Прогноз основан на компьютерных моделях и не заменяет официальные предупреждения метеослужбы вашей страны.','预报为计算机模型输出，不能替代所在国家气象部门的官方预警。','予報はコンピューターモデルの出力であり、各国気象機関の公式な警報に代わるものではありません。'],
+settings:['הגדרות','Settings','الإعدادات','Настройки','设置','設定'],
+language:['שפה','Language','اللغة','Язык','语言','言語'],
+units:['יחידות','Units','الوحدات','Единицы','单位','単位'],
+langAuto:['אוטומטי (לפי שפת הטלפון)','Automatic (phone language)','تلقائي (حسب لغة الهاتف)','Автоматически (язык телефона)','自动（按手机语言）','自動（端末の言語）'],
+unitsAuto:['אוטומטי (לפי האזור בטלפון)','Automatic (phone region)','تلقائي (حسب منطقة الهاتف)','Автоматически (по региону телефона)','自动（按手机地区）','自動（端末の地域設定）'],
+metric:['מטרי (°C, קמ"ש, מ"מ)','Metric (°C, km/h, mm)','متري (°C، كم/س، مم)','Метрические (°C, км/ч, мм)','公制（°C，公里/时，毫米）','メートル法（°C、km/h、mm）'],
+imperial:['אמריקאי (°F, mph, אינץ\')','Imperial (°F, mph, in)','إمبراطوري (°F، ميل/س، إنش)','Имперские (°F, mph, дюймы)','英制（°F，英里/时，英寸）','ヤード・ポンド法（°F、mph、in）'],
+done:['סגירה','Done','تم','Готово','完成','完了'],
+kmh:['קמ"ש','km/h','كم/س','км/ч','公里/时','km/h'],
+mm:['מ"מ','mm','مم','мм','毫米','mm'],
+km:['ק"מ','km','كم','км','公里','km'],
+c_clear:['בהיר','Clear','صافٍ','Ясно','晴','晴れ'],
+c_mostlyClear:['בהיר ברובו','Mostly clear','صافٍ غالبًا','Преимущественно ясно','大部晴朗','おおむね晴れ'],
+c_partly:['מעונן חלקית','Partly cloudy','غائم جزئيًا','Переменная облачность','多云','晴れ時々曇り'],
+c_cloudy:['מעונן','Cloudy','غائم','Пасмурно','阴','曇り'],
+c_fog:['ערפל','Fog','ضباب','Туман','雾','霧'],
+c_drizzle:['טפטוף','Drizzle','رذاذ','Морось','毛毛雨','霧雨'],
+c_freezing:['גשם קופא','Freezing rain','مطر متجمد','Ледяной дождь','冻雨','着氷性の雨'],
+c_lightRain:['גשם קל','Light rain','مطر خفيف','Небольшой дождь','小雨','小雨'],
+c_rain:['גשם','Rain','مطر','Дождь','雨','雨'],
+c_heavyRain:['גשם חזק','Heavy rain','مطر غزير','Сильный дождь','大雨','強い雨'],
+c_snow:['שלג','Snow','ثلج','Снег','雪','雪'],
+c_showers:['ממטרים','Showers','زخات','Ливни','阵雨','にわか雨'],
+c_thunder:['סופת רעמים','Thunderstorm','عاصفة رعدية','Гроза','雷暴','雷雨'],
+c_hail:['סופת רעמים וברד','Thunderstorm with hail','عاصفة رعدية مع برد','Гроза с градом','雷暴伴冰雹','雷雨・ひょう'],
+c_unknown:['לא ידוע','Unknown','غير معروف','Нет данных','未知','不明']
+};
+
+// ===== שפות אירופה: fr, de, es, it, pt, nl, pl, uk =====
+const L_EU=['fr','de','es','it','pt','nl','pl','uk'];
+Object.assign(LANG_NAMES,{fr:"Français",de:"Deutsch",es:"Español",it:"Italiano",pt:"Português",nl:"Nederlands",pl:"Polski",uk:"Українська"});
+const S_EU={
+appName:["MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","МультіМодель"],
+tagline:["Les principaux modèles de prévision du monde, au même endroit","Die führenden Wettermodelle der Welt an einem Ort","Los principales modelos de previsión del mundo, en un solo lugar","I principali modelli di previsione del mondo, in un unico posto","Os principais modelos de previsão do mundo, num só lugar","De belangrijkste weermodellen ter wereld op één plek","Najważniejsze modele prognoz świata w jednym miejscu","Провідні моделі прогнозу погоди в одному місці"],
+locating:["Localisation en cours...","Standort wird ermittelt...","Detectando tu ubicación...","Rilevamento della posizione...","A detetar a sua localização...","Locatie wordt bepaald...","Ustalanie lokalizacji...","Визначаємо ваше місцезнаходження..."],
+autoTag:["Détecté automatiquement","Automatisch erkannt","Detectado automáticamente","Rilevato automaticamente","Detetado automaticamente","Automatisch bepaald","Wykryto automatycznie","Визначено автоматично"],
+change:["Modifier","Ändern","Cambiar","Cambia","Alterar","Wijzigen","Zmień","Змінити"],
+pickTitle:["Choisir un lieu","Ort wählen","Elegir ubicación","Scegli località","Escolher local","Locatie kiezen","Wybierz miejsce","Вибір місця"],
+detectBtn:["📍 Détecter ma position actuelle","📍 Aktuellen Standort ermitteln","📍 Detectar mi ubicación actual","📍 Rileva la mia posizione","📍 Detetar a minha localização","📍 Mijn huidige locatie bepalen","📍 Wykryj moją lokalizację","📍 Визначити моє місцезнаходження"],
+detecting:["📍 Détection...","📍 Wird ermittelt...","📍 Detectando...","📍 Rilevamento...","📍 A detetar...","📍 Bezig...","📍 Wykrywanie...","📍 Визначаємо..."],
+searchPh:["Saisissez un lieu et choisissez dans la liste","Ort eingeben und aus der Liste wählen","Escribe un lugar y elígelo de la lista","Digita una località e scegli dall'elenco","Escreva um local e escolha da lista","Typ een plaats en kies uit de lijst","Wpisz nazwę miejsca i wybierz z listy","Введіть назву і виберіть зі списку"],
+back:["Retour","Zurück","Atrás","Indietro","Voltar","Terug","Wstecz","Назад"],
+confirm:["Confirmer ✓","Bestätigen ✓","Confirmar ✓","Conferma ✓","Confirmar ✓","Bevestigen ✓","Potwierdź ✓","Підтвердити ✓"],
+loading:["Chargement des prévisions de tous les modèles...","Prognosen aller Modelle werden geladen...","Cargando previsiones de todos los modelos...","Caricamento delle previsioni di tutti i modelli...","A carregar previsões de todos os modelos...","Verwachtingen van alle modellen laden...","Wczytywanie prognoz wszystkich modeli...","Завантажуємо прогнози всіх моделей..."],
+noResults:["Aucun lieu trouvé. Essayez une autre orthographe.","Kein Ort gefunden. Versuchen Sie eine andere Schreibweise.","No se encontró el lugar. Prueba otra ortografía.","Nessuna località trovata. Prova un'altra grafia.","Local não encontrado. Tente outra grafia.","Geen plaats gevonden. Probeer een andere spelling.","Nie znaleziono miejsca. Spróbuj innej pisowni.","Місце не знайдено. Спробуйте інше написання."],
+typeCity:["Saisissez un lieu","Ort eingeben","Escribe un lugar","Digita una località","Escreva um local","Typ een plaats","Wpisz nazwę miejsca","Введіть назву місця"],
+recentPop:["Récents et suggérés","Zuletzt und empfohlen","Recientes y sugeridos","Recenti e suggeriti","Recentes e sugeridos","Recent en aanbevolen","Ostatnie i polecane","Нещодавні та рекомендовані"],
+switchTo:["Passer à <b>{p}</b> ?","Zu <b>{p}</b> wechseln?","¿Cambiar a <b>{p}</b>?","Passare a <b>{p}</b>?","Mudar para <b>{p}</b>?","Overschakelen naar <b>{p}</b>?","Przełączyć na: <b>{p}</b>?","Перейти: <b>{p}</b>?"],
+detectedSub:["Détecté via la position de l'appareil","Über den Gerätestandort erkannt","Detectado por la ubicación del dispositivo","Rilevato dalla posizione del dispositivo","Detetado pela localização do dispositivo","Bepaald via de locatie van je toestel","Wykryto na podstawie lokalizacji urządzenia","Визначено за місцезнаходженням пристрою"],
+permDenied:["L'accès à la position n'a pas été autorisé. Autorisez-le dans les réglages du navigateur ou choisissez un lieu dans la liste.","Standortzugriff wurde nicht erlaubt. Erlauben Sie ihn in den Browsereinstellungen oder wählen Sie einen Ort aus der Liste.","No se concedió el permiso de ubicación. Actívalo en los ajustes del navegador o elige un lugar de la lista.","Il permesso di posizione non è stato concesso. Attivalo nelle impostazioni del browser o scegli una località dall'elenco.","A permissão de localização não foi concedida. Ative-a nas definições do navegador ou escolha um local da lista.","Locatietoegang is niet toegestaan. Sta het toe in de browserinstellingen of kies een plaats uit de lijst.","Nie udzielono dostępu do lokalizacji. Zezwól na niego w ustawieniach przeglądarki lub wybierz miejsce z listy.","Доступ до геолокації не надано. Дозвольте його в налаштуваннях браузера або виберіть місце зі списку."],
+geoFail:["Impossible de détecter votre position. Choisissez un lieu dans la liste.","Standort konnte nicht ermittelt werden. Wählen Sie einen Ort aus der Liste.","No se pudo detectar tu ubicación. Elige un lugar de la lista.","Impossibile rilevare la posizione. Scegli una località dall'elenco.","Não foi possível detetar a localização. Escolha um local da lista.","Locatie kon niet worden bepaald. Kies een plaats uit de lijst.","Nie udało się wykryć lokalizacji. Wybierz miejsce z listy.","Не вдалося визначити місцезнаходження. Виберіть місце зі списку."],
+detectedQ:["Vous semblez être à <b>{p}</b>. Est-ce exact ?","Sie scheinen in <b>{p}</b> zu sein. Stimmt das?","Parece que estás en <b>{p}</b>. ¿Es correcto?","Sembra che tu sia a <b>{p}</b>. È corretto?","Parece que está em <b>{p}</b>. Está correto?","Je lijkt in <b>{p}</b> te zijn. Klopt dat?","Twoja lokalizacja: <b>{p}</b>. Zgadza się?","Ваше місцезнаходження: <b>{p}</b>. Правильно?"],
+yesBtn:["Oui ✓","Ja ✓","Sí ✓","Sì ✓","Sim ✓","Ja ✓","Tak ✓","Так ✓"],
+otherPlace:["Choisir un autre lieu","Anderen Ort wählen","Elegir otro","Scegli un'altra","Escolher outro","Andere kiezen","Wybierz inne","Вибрати інше"],
+movedQ:["Vous semblez être à <b>{p}</b> maintenant. Afficher la prévision de ce lieu ?","Sie scheinen jetzt in <b>{p}</b> zu sein. Zu diesem Ort wechseln?","Parece que ahora estás en <b>{p}</b>. ¿Ver la previsión de este lugar?","Sembra che ora tu sia a <b>{p}</b>. Passare a questa località?","Parece que agora está em <b>{p}</b>. Ver a previsão deste local?","Je lijkt nu in <b>{p}</b> te zijn. Naar deze locatie overschakelen?","Wygląda na to, że jesteś teraz tutaj: <b>{p}</b>. Pokazać prognozę dla tego miejsca?","Схоже, зараз ви тут: <b>{p}</b>. Показати прогноз для цього місця?"],
+stay:["Rester","Bleiben","Quedarme","Resta","Manter","Blijven","Zostań","Залишити"],
+switchYes:["Oui, changer","Ja, wechseln","Sí, cambiar","Sì, passa","Sim, mudar","Ja, wissel","Tak, przełącz","Так, перейти"],
+cantLocate:["Impossible de détecter votre position","Standort konnte nicht ermittelt werden","No se pudo detectar tu ubicación","Impossibile rilevare la posizione","Não foi possível detetar a localização","Locatie kon niet worden bepaald","Nie udało się wykryć lokalizacji","Не вдалося визначити ваше місцезнаходження"],
+permShort:["L'accès à la position n'a pas été autorisé.","Standortzugriff wurde nicht erlaubt.","No se concedió el permiso de ubicación.","Il permesso di posizione non è stato concesso.","A permissão de localização não foi concedida.","Locatietoegang is niet toegestaan.","Nie udzielono dostępu do lokalizacji.","Доступ до геолокації не надано."],
+geoNA:["La localisation n'est pas disponible pour le moment.","Standortermittlung ist derzeit nicht verfügbar.","La ubicación no está disponible ahora.","La localizzazione non è disponibile al momento.","A localização não está disponível neste momento.","Locatiebepaling is nu niet beschikbaar.","Lokalizacja jest teraz niedostępna.","Визначення місцезнаходження зараз недоступне."],
+pickFromList:["Choisissez un lieu dans la liste.","Wählen Sie einen Ort aus der Liste.","Elige un lugar de la lista.","Scegli una località dall'elenco.","Escolha um local da lista.","Kies een plaats uit de lijst.","Wybierz miejsce z listy.","Виберіть місце зі списку."],
+loadErr:["Impossible de charger la prévision.","Die Prognose konnte nicht geladen werden.","No se pudo cargar la previsión.","Impossibile caricare la previsione.","Não foi possível carregar a previsão.","De verwachting kon niet worden geladen.","Nie udało się wczytać prognozy.","Не вдалося завантажити прогноз."],
+checkNet:["Vérifiez votre connexion et réessayez.","Prüfen Sie Ihre Verbindung und versuchen Sie es erneut.","Comprueba tu conexión e inténtalo de nuevo.","Controlla la connessione e riprova.","Verifique a ligação e tente novamente.","Controleer je verbinding en probeer het opnieuw.","Sprawdź połączenie i spróbuj ponownie.","Перевірте з'єднання і спробуйте ще раз."],
+cached:["Hors ligne. Affichage de la dernière prévision enregistrée.","Offline. Die zuletzt gespeicherte Prognose wird angezeigt.","Sin conexión. Se muestra la última previsión guardada.","Offline. Viene mostrata l'ultima previsione salvata.","Sem ligação. A mostrar a última previsão guardada.","Offline. De laatst opgeslagen verwachting wordt getoond.","Brak połączenia. Pokazano ostatnią zapisaną prognozę.","Немає зв'язку. Показано останній збережений прогноз."],
+noData:["Aucune donnée de modèle pour ce lieu.","Keine Modelldaten für diesen Ort.","No hay datos de modelos para este lugar.","Nessun dato dei modelli per questa località.","Sem dados dos modelos para este local.","Geen modelgegevens voor deze locatie.","Brak danych modeli dla tego miejsca.","Немає даних моделей для цього місця."],
+myLoc:["Ma position","Mein Standort","Mi ubicación","La mia posizione","A minha localização","Mijn locatie","Moja lokalizacja","Моє місцезнаходження"],
+near:["Près de {p}","Nahe {p}","Cerca de {p}","Vicino a {p}","Perto de {p}","Nabij {p}","Okolice: {p}","Поблизу: {p}"],
+medianOf:["Médiane de {n} modèles pour {t}","Median von {n} Modellen für {t}","Mediana de {n} modelos para las {t}","Mediana di {n} modelli per le {t}","Mediana de {n} modelos para as {t}","Mediaan van {n} modellen voor {t}","Mediana {n} modeli na {t}","Медіана {n} моделей на {t}"],
+excluded:["{m} est aberrant et exclu","{m} ist ein Ausreißer und ausgeschlossen","{m} es atípico y se excluyó","{m} è anomalo ed è escluso","{m} é atípico e foi excluído","{m} wijkt sterk af en is uitgesloten","{m} odstaje i został wykluczony","{m} сильно відрізняється і виключений"],
+wind:["Vent","Wind","Viento","Vento","Vento","Wind","Wiatr","Вітер"],
+todayRange:["Aujourd'hui : {a} à {b}","Heute: {a} bis {b}","Hoy: {a} a {b}","Oggi: da {a} a {b}","Hoje: {a} a {b}","Vandaag: {a} tot {b}","Dziś: od {a} do {b}","Сьогодні: від {a} до {b}"],
+spreadNow:["Écart entre modèles : {v}","Abweichung der Modelle jetzt: {v}","Diferencia entre modelos ahora: {v}","Differenza tra i modelli ora: {v}","Diferença entre modelos agora: {v}","Spreiding van modellen nu: {v}","Rozrzut modeli teraz: {v}","Розкид моделей зараз: {v}"],
+spreadEx:["(sans la valeur aberrante : {v})","(ohne Ausreißer: {v})","(sin el atípico: {v})","(senza il valore anomalo: {v})","(sem o atípico: {v})","(zonder uitschieter: {v})","(bez wartości odstającej: {v})","(без викиду: {v})"],
+nightNote:["🌙 Nuit claire et calme : les modèles ont tendance à surestimer la température à ces heures. La mesure réelle peut être inférieure de {v}.","🌙 Klare, windstille Nacht: Modelle überschätzen zu diesen Zeiten oft die Temperatur. Der Messwert kann {v} niedriger sein.","🌙 Noche despejada y en calma: los modelos tienden a sobrestimar la temperatura a estas horas. La medición real puede ser {v} más baja.","🌙 Notte serena e calma: i modelli tendono a sovrastimare la temperatura in queste ore. La misura reale può essere più bassa di {v}.","🌙 Noite limpa e calma: os modelos tendem a sobrestimar a temperatura a estas horas. A medição real pode ser {v} mais baixa.","🌙 Heldere, windstille nacht: modellen overschatten op zulke uren vaak de temperatuur. De werkelijke meting kan {v} lager zijn.","🌙 Pogodna, bezwietrzna noc: modele zwykle zawyżają wtedy temperaturę. Rzeczywisty pomiar może być niższy o {v}.","🌙 Ясна тиха ніч: у такі години моделі зазвичай завищують температуру, реальні значення можуть бути нижчими на {v}."],
+range24:["{a} à {b}°","{a} bis {b}°","{a} a {b}°","{a}-{b}°","{a} a {b}°","{a} tot {b}°","{a}-{b}°","{a}-{b}°"],
+conf:["Confiance {n} %","Sicherheit {n} %","Confianza {n} %","Affidabilità {n}%","Confiança {n}%","Zekerheid {n}%","Pewność {n}%","Впевненість {n}%"],
+measuredNow:["Mesuré maintenant","Jetzt gemessen","Medido ahora","Misurato ora","Medido agora","Nu gemeten","Zmierzono teraz","Виміряно зараз"],
+stationLine:["Station {s} · {d} · il y a {m} min","Station {s} · {d} · vor {m} Min.","Estación {s} · {d} · hace {m} min","Stazione {s} · {d} · {m} min fa","Estação {s} · {d} · há {m} min","Station {s} · {d} · {m} min geleden","Stacja {s} · {d} · {m} min temu","Станція {s} · {d} · {m} хв тому"],
+modelsSay:["Modèles : {v}","Modelle: {v}","Modelos: {v}","Modelli: {v}","Modelos: {v}","Modellen: {v}","Modele: {v}","Моделі: {v}"],
+noRain3:["Pas de pluie prévue dans les 3 prochains jours","Kein Regen in den nächsten 3 Tagen erwartet","No se espera lluvia en los próximos 3 días","Nessuna pioggia prevista nei prossimi 3 giorni","Sem chuva prevista nos próximos 3 dias","Geen regen verwacht in de komende 3 dagen","Brak opadów w ciągu najbliższych 3 dni","Дощу в найближчі 3 дні не очікується"],
+noneModel:["Aucun modèle n'indique de pluie.","Kein Modell zeigt Regen.","Ningún modelo muestra lluvia.","Nessun modello indica pioggia.","Nenhum modelo mostra chuva.","Geen enkel model toont regen.","Żaden model nie pokazuje deszczu.","Жодна модель не показує дощу."],
+mostNo:["La plupart des modèles ne prévoient pas de pluie dans les 3 prochains jours","Die meisten Modelle erwarten in den nächsten 3 Tagen keinen Regen","La mayoría de los modelos no prevén lluvia en los próximos 3 días","La maggior parte dei modelli non prevede pioggia nei prossimi 3 giorni","A maioria dos modelos não prevê chuva nos próximos 3 dias","De meeste modellen verwachten geen regen in de komende 3 dagen","Większość modeli nie przewiduje deszczu w ciągu 3 dni","Більшість моделей не очікують дощу в найближчі 3 дні"],
+onlyK:["Seuls {k}/{n} modèles indiquent de la pluie {d} vers {t}.","Nur {k}/{n} Modelle zeigen Regen {d} gegen {t}.","Solo {k}/{n} modelos muestran lluvia {d} hacia las {t}.","Solo {k}/{n} modelli indicano pioggia {d} verso le {t}.","Apenas {k}/{n} modelos mostram chuva {d} por volta das {t}.","Slechts {k}/{n} modellen tonen regen {d} rond {t}.","Deszcz pokazuje tylko {k}/{n} modeli: {d}, około {t}.","Дощ показують лише {k}/{n} моделей: {d}, близько {t}."],
+rainNow:["Il pleut, jusqu'à {e} environ","Es regnet, voraussichtlich bis {e}","Llueve ahora, previsto hasta las {e}","Piove ora, previsto fino alle {e}","Está a chover, previsto até às {e}","Het regent nu, verwacht tot {e}","Teraz pada, do około {e}","Зараз іде дощ, очікується до {e}"],
+rainAt:["Pluie prévue {d} entre {a} et {b}","Regen erwartet {d} zwischen {a} und {b}","Lluvia prevista {d} entre las {a} y las {b}","Pioggia prevista {d} tra le {a} e le {b}","Chuva prevista {d} entre as {a} e as {b}","Regen verwacht {d} tussen {a} en {b}","Deszcz: {d}, od {a} do {b}","Дощ очікується: {d}, з {a} до {b}"],
+rainMeta:["{k}/{n} modèles · environ {s} au total","{k}/{n} Modelle · insgesamt etwa {s}","{k}/{n} modelos · unos {s} en total","{k}/{n} modelli · circa {s} in totale","{k}/{n} modelos · cerca de {s} no total","{k}/{n} modellen · ongeveer {s} in totaal","{k}/{n} modeli · łącznie około {s}","{k}/{n} моделей · загалом близько {s}"],
+endRange:["la fin de la prévision","Ende der Prognose","el final de la previsión","la fine della previsione","o fim da previsão","het einde van de verwachting","końca prognozy","кінця прогнозу"],
+today:["aujourd'hui","heute","hoy","oggi","hoje","vandaag","dziś","сьогодні"],
+tomorrow:["demain","morgen","mañana","domani","amanhã","morgen","jutro","завтра"],
+onDay:["{d}","am {d}","el {d}","{d}","{d}","op {d}","{d}","{d}"],
+alertsTitle:["Alertes selon le consensus des modèles","Warnungen nach Modellkonsens","Alertas según el consenso de modelos","Allerte in base al consenso dei modelli","Alertas por consenso dos modelos","Waarschuwingen op basis van modelconsensus","Ostrzeżenia według zgodności modeli","Попередження за згодою моделей"],
+alertsSub:["Une alerte rouge ou orange s'affiche quand la plupart des modèles sont d'accord. Si seuls certains prévoient une tempête, c'est un premier signal.","Rote oder orange Warnungen erscheinen, wenn die meisten Modelle übereinstimmen. Sagen nur einige ein Unwetter voraus, wird es als erstes Anzeichen gezeigt.","Las alertas rojas o naranjas aparecen cuando la mayoría de los modelos coinciden. Si solo algunos prevén tormenta, se muestra como primer indicio.","Gli avvisi rossi o arancioni compaiono quando la maggior parte dei modelli concorda. Se solo alcuni prevedono un temporale, viene mostrato come primo segnale.","Os alertas vermelhos ou laranja aparecem quando a maioria dos modelos concorda. Se só alguns preveem tempestade, surge como primeiro sinal.","Rode of oranje waarschuwingen verschijnen als de meeste modellen het eens zijn. Als slechts enkele een storm voorspellen, wordt dat als eerste signaal getoond.","Czerwone lub pomarańczowe ostrzeżenia pojawiają się, gdy większość modeli się zgadza. Gdy burzę prognozują tylko niektóre, pokazujemy to jako pierwszy sygnał.","Червоні або помаранчеві попередження з'являються, коли більшість моделей згодні. Якщо бурю прогнозують лише деякі моделі, це показано як ранню ознаку."],
+thunder:["Orages possibles {d}","Gewitter möglich {d}","Posibles tormentas {d}","Possibili temporali {d}","Possíveis trovoadas {d}","Mogelijk onweer {d}","Możliwe burze: {d}","Можливі грози: {d}"],
+thunderMeta:["{k}/{n} modèles indiquent un risque d'orage.","{k}/{n} Modelle zeigen Gewitterpotenzial.","{k}/{n} modelos muestran potencial de tormenta.","{k}/{n} modelli indicano possibilità di temporali.","{k}/{n} modelos mostram potencial de trovoada.","{k}/{n} modellen tonen kans op onweer.","{k}/{n} modeli pokazuje ryzyko burz.","{k}/{n} моделей показують ризик гроз."],
+thunderEarly:["Premier signal d'orage {d}","Erstes Gewitteranzeichen {d}","Primer indicio de tormenta {d}","Primo segnale di temporale {d}","Primeiro sinal de trovoada {d}","Eerste teken van onweer {d}","Pierwszy sygnał burzy: {d}","Рання ознака грози: {d}"],
+thunderEarlyMeta:["Seuls {k}/{n} modèles prévoient un orage. À surveiller.","Nur {k}/{n} Modelle sagen ein Gewitter voraus. Im Auge behalten.","Solo {k}/{n} modelos prevén tormenta. Conviene vigilar.","Solo {k}/{n} modelli prevedono un temporale. Da tenere d'occhio.","Apenas {k}/{n} modelos preveem trovoada. Vale a pena acompanhar.","Slechts {k}/{n} modellen voorspellen onweer. Houd het in de gaten.","Burzę prognozuje tylko {k}/{n} modeli. Warto obserwować.","Грозу прогнозують лише {k}/{n} моделей. Варто стежити."],
+heavy:["Fortes pluies {d}","Starkregen {d}","Lluvia intensa {d}","Pioggia intensa {d}","Chuva forte {d}","Zware regen {d}","Silny deszcz: {d}","Сильний дощ: {d}"],
+heavyMeta:["{k} modèles prévoient {v} ou plus. Risque d'inondations locales.","{k} Modelle erwarten {v} oder mehr. Gefahr lokaler Überflutungen.","{k} modelos prevén {v} o más. Riesgo de inundaciones locales.","{k} modelli prevedono {v} o più. Rischio di allagamenti locali.","{k} modelos preveem {v} ou mais. Risco de inundações locais.","{k} modellen voorspellen {v} of meer. Kans op lokale wateroverlast.","{k} modeli prognozuje {v} lub więcej. Ryzyko lokalnych podtopień.","{k} моделей прогнозують {v} і більше. Можливі локальні підтоплення."],
+windA:["Vents forts {d}","Starker Wind {d}","Viento fuerte {d}","Vento forte {d}","Vento forte {d}","Harde wind {d}","Silny wiatr: {d}","Сильний вітер: {d}"],
+windMeta:["{k} modèles prévoient des rafales de {v} ou plus (jusqu'à {m}).","{k} Modelle erwarten Böen ab {v} (bis {m}).","{k} modelos prevén rachas de {v} o más (hasta {m}).","{k} modelli prevedono raffiche di {v} o più (fino a {m}).","{k} modelos preveem rajadas de {v} ou mais (até {m}).","{k} modellen voorspellen windstoten van {v} of meer (tot {m}).","{k} modeli prognozuje porywy od {v} (do {m}).","{k} моделей прогнозують пориви від {v} (до {m})."],
+calm:["Pas de tempête prévue dans les prochains jours","In den nächsten Tagen kein Unwetter erwartet","No se esperan tormentas en los próximos días","Nessuna tempesta prevista nei prossimi giorni","Sem tempestades previstas nos próximos dias","Geen storm verwacht in de komende dagen","W najbliższych dniach bez burz","Бур у найближчі дні не очікується"],
+calmNone:["Aucune majorité de modèles ne prévoit de pluie significative dans les 7 prochains jours.","Keine Mehrheit der Modelle erwartet nennenswerten Regen in den nächsten 7 Tagen.","Ninguna mayoría de modelos prevé lluvia significativa en los próximos 7 días.","Nessuna maggioranza di modelli prevede pioggia significativa nei prossimi 7 giorni.","Nenhuma maioria de modelos prevê chuva significativa nos próximos 7 dias.","Geen meerderheid van modellen verwacht noemenswaardige regen in de komende 7 dagen.","Większość modeli nie przewiduje znaczących opadów w ciągu 7 dni.","Більшість моделей не очікують значного дощу в найближчі 7 днів."],
+calmRain:["La plupart des modèles prévoient de la pluie {d}, sans signe de tempête.","Die meisten Modelle erwarten Regen {d}, aber ohne Unwetteranzeichen.","La mayoría de los modelos prevén lluvia {d}, pero sin señales de tormenta.","La maggior parte dei modelli prevede pioggia {d}, ma senza segnali di tempesta.","A maioria dos modelos prevê chuva {d}, mas sem sinais de tempestade.","De meeste modellen verwachten regen {d}, maar geen tekenen van storm.","Większość modeli przewiduje deszcz ({d}), ale bez oznak burzy.","Більшість моделей очікують дощ ({d}), але без ознак бурі."],
+qaTitle:["Questions du quotidien","Alltagsfragen","Preguntas del día a día","Domande quotidiane","Perguntas do dia a dia","Vragen van alledag","Codzienne pytania","Повсякденні питання"],
+qaSub:["Réponses selon le consensus des modèles pour les 24 à 48 prochaines heures.","Antworten nach Modellkonsens für die nächsten 24 bis 48 Stunden.","Respuestas según el consenso de modelos para las próximas 24 a 48 horas.","Risposte in base al consenso dei modelli per le prossime 24-48 ore.","Respostas segundo o consenso dos modelos para as próximas 24 a 48 horas.","Antwoorden op basis van modelconsensus voor de komende 24 tot 48 uur.","Odpowiedzi według zgodności modeli na najbliższe 24-48 godzin.","Відповіді за згодою моделей на найближчі 24-48 годин."],
+laundry:["Étendre le linge dehors ?","Wäsche draußen aufhängen?","¿Tender la ropa fuera?","Stendere il bucato fuori?","Estender a roupa lá fora?","Was buiten ophangen?","Suszyć pranie na zewnątrz?","Сушити білизну надворі?"],
+run:["Aller courir ?","Joggen gehen?","¿Salir a correr?","Andare a correre?","Ir correr?","Gaan hardlopen?","Iść pobiegać?","Піти на пробіжку?"],
+garden:["Arroser le jardin ?","Den Garten gießen?","¿Regar el jardín?","Annaffiare il giardino?","Regar o jardim?","De tuin water geven?","Podlać ogród?","Поливати сад?"],
+yes:["Oui","Ja","Sí","Sì","Sim","Ja","Tak","Так"],
+no:["Non","Nein","No","No","Não","Nee","Nie","Ні"],
+maybe:["Peut-être","Vielleicht","Quizás","Forse","Talvez","Misschien","Może","Можливо"],
+little:["Un peu","Ein wenig","Un poco","Poco","Pouco","Een beetje","Trochę","Трохи"],
+laundryNo:["La plupart des modèles prévoient de la pluie {d} en journée.","Die meisten Modelle erwarten tagsüber Regen ({d}).","La mayoría de los modelos prevén lluvia {d} durante el día.","La maggior parte dei modelli prevede pioggia {d} durante il giorno.","A maioria dos modelos prevê chuva {d} durante o dia.","De meeste modellen verwachten {d} overdag regen.","Większość modeli przewiduje deszcz w ciągu dnia ({d}).","Більшість моделей очікують дощ удень ({d})."],
+laundryMaybe:["Certains modèles indiquent de la pluie {d} en journée. À surveiller.","Einige Modelle zeigen tagsüber Regen ({d}). Im Auge behalten.","Algunos modelos muestran lluvia {d} durante el día. Conviene vigilar.","Alcuni modelli indicano pioggia {d} durante il giorno. Da tenere d'occhio.","Alguns modelos mostram chuva {d} durante o dia. Vale a pena acompanhar.","Sommige modellen tonen {d} overdag regen. Houd het in de gaten.","Niektóre modele pokazują deszcz w ciągu dnia ({d}). Warto obserwować.","Деякі моделі показують дощ удень ({d}). Варто стежити."],
+laundryYes:["Sec en journée {d} selon tous les modèles.","Laut allen Modellen tagsüber trocken ({d}).","Seco durante el día {d} según todos los modelos.","Asciutto durante il giorno {d} secondo tutti i modelli.","Seco durante o dia {d} segundo todos os modelos.","Volgens alle modellen {d} overdag droog.","Według wszystkich modeli w dzień sucho ({d}).","Удень сухо ({d}) за всіма моделями."],
+windyAdd:[" Mais il y a du vent."," Aber es ist windig."," Pero hace viento."," Ma c'è vento."," Mas está ventoso."," Maar het waait flink."," Ale jest wietrznie."," Але вітряно."],
+runNo:["Pluie prévue la plupart des heures de jour dans les prochaines 24 heures.","In den nächsten 24 Stunden wird tagsüber meist Regen erwartet.","Se espera lluvia la mayor parte del día en las próximas 24 horas.","Pioggia prevista per gran parte del giorno nelle prossime 24 ore.","Prevê-se chuva na maior parte do dia nas próximas 24 horas.","De komende 24 uur wordt overdag vooral regen verwacht.","W ciągu 24 godzin przez większość dnia ma padać.","У найближчі 24 години дощ очікується більшу частину дня."],
+runYes:["Meilleur moment : {d} vers {t} ({v}, vent {w}).","Beste Zeit: {d} gegen {t} ({v}, Wind {w}).","Mejor momento: {d} hacia las {t} ({v}, viento {w}).","Momento migliore: {d} verso le {t} ({v}, vento {w}).","Melhor altura: {d} por volta das {t} ({v}, vento {w}).","Beste moment: {d} rond {t} ({v}, wind {w}).","Najlepsza pora: {d}, około {t} ({v}, wiatr {w}).","Найкращий час: {d}, близько {t} ({v}, вітер {w})."],
+gardenNo:["Environ {v} de pluie attendus dans les 48 prochaines heures.","In den nächsten 48 Stunden werden etwa {v} Regen erwartet.","Se esperan unos {v} de lluvia en las próximas 48 horas.","Previsti circa {v} di pioggia nelle prossime 48 ore.","Esperam-se cerca de {v} de chuva nas próximas 48 horas.","Er wordt ongeveer {v} regen verwacht in de komende 48 uur.","W ciągu 48 godzin spodziewane jest około {v} opadów.","У найближчі 48 годин очікується близько {v} опадів."],
+gardenLittle:["Peu de pluie attendue (environ {v} en 48 heures). Un arrosage léger suffit.","Nur wenig Regen erwartet (etwa {v} in 48 Stunden). Leichtes Gießen genügt.","Solo se espera poca lluvia (unos {v} en 48 horas). Basta un riego ligero.","Prevista solo poca pioggia (circa {v} in 48 ore). Basta un'annaffiatura leggera.","Prevê-se pouca chuva (cerca de {v} em 48 horas). Basta uma rega leve.","Weinig regen verwacht (ongeveer {v} in 48 uur). Licht water geven is genoeg.","Spodziewany jest tylko niewielki deszcz (około {v} w 48 godzin). Wystarczy lekkie podlewanie.","Очікується лише невеликий дощ (близько {v} за 48 годин). Достатньо легкого поливу."],
+gardenYes:["Pas de pluie prévue dans les 48 prochaines heures. Tôt le matin ou le soir, c'est idéal.","Kein Regen in den nächsten 48 Stunden. Am besten früh morgens oder abends.","No se espera lluvia en las próximas 48 horas. Mejor temprano o al atardecer.","Nessuna pioggia prevista nelle prossime 48 ore. Meglio al mattino presto o la sera.","Sem chuva prevista nas próximas 48 horas. Melhor de manhã cedo ou ao fim da tarde.","Geen regen verwacht in de komende 48 uur. Het beste vroeg in de ochtend of 's avonds.","W ciągu 48 godzin bez deszczu. Najlepiej wcześnie rano lub wieczorem.","У найближчі 48 годин дощу не очікується. Краще рано-вранці або ввечері."],
+daysTitle:["7 jours selon tous les modèles","7 Tage über alle Modelle","7 días según todos los modelos","7 giorni secondo tutti i modelli","7 dias segundo todos os modelos","7 dagen volgens alle modellen","7 dni według wszystkich modeli","7 днів за всіма моделями"],
+daysSub:["L'indice de confiance est une estimation fondée sur l'écart entre modèles et l'échéance, pas une probabilité statistique. Touchez un jour pour voir chaque modèle.","Die Sicherheit ist eine Schätzung aus Modellabweichung und Vorhersagezeitraum, keine statistische Wahrscheinlichkeit. Tippen Sie auf einen Tag, um jedes Modell zu sehen.","La confianza es una estimación basada en la diferencia entre modelos y la antelación, no una probabilidad estadística. Toca un día para ver cada modelo.","L'affidabilità è una stima basata sulla differenza tra modelli e sull'anticipo, non una probabilità statistica. Tocca un giorno per vedere ogni modello.","A confiança é uma estimativa baseada na diferença entre modelos e na antecedência, não uma probabilidade estatística. Toque num dia para ver cada modelo.","De zekerheid is een schatting op basis van spreiding tussen modellen en de vooruitlooptijd, geen statistische kans. Tik op een dag om elk model te zien.","Pewność to szacunek oparty na rozrzucie modeli i odległości w czasie, a nie prawdopodobieństwo statystyczne. Dotknij dnia, aby zobaczyć każdy model.","Впевненість оцінюється за розкидом моделей і дальністю прогнозу та не є статистичною ймовірністю. Натисніть на день, щоб побачити кожну модель."],
+rainOf:["Pluie : {k}/{n} modèles","Regen: {k}/{n} Modelle","Lluvia: {k}/{n} modelos","Pioggia: {k}/{n} modelli","Chuva: {k}/{n} modelos","Regen: {k}/{n} modellen","Deszcz: {k}/{n} modeli","Дощ: {k}/{n} моделей"],
+upTo:["jusqu'à {v}","bis {v}","hasta {v}","fino a {v}","até {v}","tot {v}","do {v}","до {v}"],
+model:["Modèle","Modell","Modelo","Modello","Modelo","Model","Model","Модель"],
+max:["Max","Max","Máx","Max","Máx","Max","Maks","Макс"],
+min:["Min","Min","Mín","Min","Mín","Min","Min","Мін"],
+rainH:["Pluie","Regen","Lluvia","Pioggia","Chuva","Regen","Opad","Опади"],
+gustH:["Rafales","Böen","Rachas","Raffiche","Rajadas","Windstoten","Porywy","Пориви"],
+condH:["Ciel","Himmel","Cielo","Cielo","Céu","Lucht","Niebo","Погода"],
+mean:["Moyenne","Mittel","Media","Media","Média","Gemiddeld","Średnia","Середнє"],
+chartTitle:["Graphique comparatif : 7 jours","Vergleichsdiagramm: 7 Tage","Gráfico comparativo: 7 días","Grafico di confronto: 7 giorni","Gráfico comparativo: 7 dias","Vergelijkingsgrafiek: 7 dagen","Wykres porównawczy: 7 dni","Графік порівняння: 7 днів"],
+chartSub:["Chaque ligne est un modèle. La ligne blanche en pointillés est la moyenne. Plus les lignes s'écartent, moins la prévision est sûre.","Jede Linie ist ein Modell. Die weiße gestrichelte Linie ist der Mittelwert. Je weiter die Linien auseinanderliegen, desto unsicherer die Prognose.","Cada línea es un modelo. La línea blanca discontinua es la media. Cuanto más se separan las líneas, menos segura es la previsión.","Ogni linea è un modello. La linea bianca tratteggiata è la media. Più le linee si allontanano, meno è sicura la previsione.","Cada linha é um modelo. A linha branca tracejada é a média. Quanto mais as linhas se afastam, menos certa é a previsão.","Elke lijn is een model. De witte stippellijn is het gemiddelde. Hoe verder de lijnen uiteenlopen, hoe onzekerder de verwachting.","Każda linia to model. Biała przerywana linia to średnia. Im bardziej linie się rozchodzą, tym mniej pewna prognoza.","Кожна лінія відповідає моделі. Біла пунктирна лінія показує середнє. Що більше лінії розходяться, то менш надійний прогноз."],
+tabTemp:["🌡️ Température","🌡️ Temperatur","🌡️ Temperatura","🌡️ Temperatura","🌡️ Temperatura","🌡️ Temperatuur","🌡️ Temperatura","🌡️ Температура"],
+tabRain:["🌧️ Pluie","🌧️ Regen","🌧️ Lluvia","🌧️ Pioggia","🌧️ Chuva","🌧️ Regen","🌧️ Opady","🌧️ Опади"],
+tabGust:["💨 Rafales","💨 Böen","💨 Rachas","💨 Raffiche","💨 Rajadas","💨 Windstoten","💨 Porywy wiatru","💨 Пориви вітру"],
+now:["Maintenant","Jetzt","Ahora","Ora","Agora","Nu","Teraz","Зараз"],
+hourlyTitle:["Prochaines 48 heures","Nächste 48 Stunden","Próximas 48 horas","Prossime 48 ore","Próximas 48 horas","Komende 48 uur","Najbliższe 48 godzin","Найближчі 48 годин"],
+hourlySub:["{w} par modèle. Changez de mesure avec les onglets du graphique.","{w} je Modell. Messgröße über die Reiter des Diagramms wechseln.","{w} por modelo. Cambia de métrica con las pestañas del gráfico.","{w} per modello. Cambia misura con le schede del grafico.","{w} por modelo. Mude de medida nos separadores do gráfico.","{w} per model. Wissel van meetwaarde met de tabbladen van de grafiek.","{w} według modelu. Zmieniaj miarę zakładkami wykresu.","{w} за кожною моделлю. Перемикайте показники вкладками графіка."],
+wTemp:["Température ({u})","Temperatur ({u})","Temperatura ({u})","Temperatura ({u})","Temperatura ({u})","Temperatuur ({u})","Temperatura ({u})","Температура ({u})"],
+wRain:["Pluie ({u} par heure)","Regen ({u} pro Stunde)","Lluvia ({u} por hora)","Pioggia ({u} all'ora)","Chuva ({u} por hora)","Regen ({u} per uur)","Opad ({u} na godzinę)","Опади ({u} на годину)"],
+wGust:["Rafales ({u})","Böen ({u})","Rachas ({u})","Raffiche ({u})","Rajadas ({u})","Windstoten ({u})","Porywy ({u})","Пориви вітру ({u})"],
+hourH:["Heure","Zeit","Hora","Ora","Hora","Tijd","Godz.","Час"],
+modelsTitle:["Les modèles comparés","Die Modelle im Vergleich","Los modelos comparados","I modelli a confronto","Os modelos comparados","De vergeleken modellen","Porównywane modele","Моделі в порівнянні"],
+modelsSub:["Modèles de prévision numérique des services météorologiques nationaux.","Numerische Wettermodelle nationaler Wetterdienste.","Modelos de predicción numérica de los servicios meteorológicos nacionales.","Modelli di previsione numerica dei servizi meteorologici nazionali.","Modelos de previsão numérica dos serviços meteorológicos nacionais.","Numerieke weermodellen van nationale weerdiensten.","Numeryczne modele prognoz krajowych służb meteorologicznych.","Чисельні моделі прогнозу національних метеослужб."],
+builtBy:["Créé par Elad Elimelech","Entwickelt von Elad Elimelech","Creado por Elad Elimelech","Creato da Elad Elimelech","Criado por Elad Elimelech","Gemaakt door Elad Elimelech","Autor: Elad Elimelech","Розробник: Елад Елімелех"],
+dataCredit:["Données de prévision : {l} (CC BY 4.0), à partir des modèles d'ECMWF, NOAA, DWD, UK Met Office et Météo-France.","Prognosedaten: {l} (CC BY 4.0), basierend auf Modellen von ECMWF, NOAA, DWD, UK Met Office und Météo-France.","Datos de previsión: {l} (CC BY 4.0), basados en modelos de ECMWF, NOAA, DWD, UK Met Office y Météo-France.","Dati di previsione: {l} (CC BY 4.0), basati sui modelli di ECMWF, NOAA, DWD, UK Met Office e Météo-France.","Dados de previsão: {l} (CC BY 4.0), com base em modelos do ECMWF, NOAA, DWD, UK Met Office e Météo-France.","Verwachtingsgegevens: {l} (CC BY 4.0), op basis van modellen van ECMWF, NOAA, DWD, UK Met Office en Météo-France.","Dane prognoz: {l} (CC BY 4.0), na podstawie modeli ECMWF, NOAA, DWD, UK Met Office i Météo-France.","Дані прогнозу: {l} (CC BY 4.0), на основі моделей ECMWF, NOAA, DWD, UK Met Office і Météo-France."],
+obsCredit:["Observations : Service météorologique d'Israël (en Israël) et NOAA Aviation Weather Center (METAR).","Messwerte: Israelischer Wetterdienst (in Israel) und NOAA Aviation Weather Center (METAR).","Observaciones: Servicio Meteorológico de Israel (en Israel) y NOAA Aviation Weather Center (METAR).","Osservazioni: Servizio meteorologico israeliano (in Israele) e NOAA Aviation Weather Center (METAR).","Observações: Serviço Meteorológico de Israel (em Israel) e NOAA Aviation Weather Center (METAR).","Waarnemingen: Israëlische weerdienst (in Israël) en NOAA Aviation Weather Center (METAR).","Pomiary: Izraelska Służba Meteorologiczna (w Izraelu) i NOAA Aviation Weather Center (METAR).","Спостереження: Метеослужба Ізраїлю (в Ізраїлі) та NOAA Aviation Weather Center (METAR)."],
+disclaimer:["Les prévisions proviennent de modèles informatiques et ne remplacent pas les alertes officielles du service météo de votre pays.","Die Prognosen stammen aus Computermodellen und ersetzen keine amtlichen Warnungen Ihres nationalen Wetterdienstes.","Las previsiones proceden de modelos informáticos y no sustituyen los avisos oficiales del servicio meteorológico de tu país.","Le previsioni derivano da modelli informatici e non sostituiscono gli avvisi ufficiali del servizio meteorologico del tuo paese.","As previsões resultam de modelos informáticos e não substituem os avisos oficiais do serviço meteorológico do seu país.","De verwachtingen komen uit computermodellen en vervangen geen officiële waarschuwingen van de weerdienst in je land.","Prognozy pochodzą z modeli komputerowych i nie zastępują oficjalnych ostrzeżeń krajowej służby meteorologicznej.","Прогноз ґрунтується на комп'ютерних моделях і не замінює офіційних попереджень метеослужби вашої країни."],
+settings:["Réglages","Einstellungen","Ajustes","Impostazioni","Definições","Instellingen","Ustawienia","Налаштування"],
+language:["Langue","Sprache","Idioma","Lingua","Idioma","Taal","Język","Мова"],
+units:["Unités","Einheiten","Unidades","Unità","Unidades","Eenheden","Jednostki","Одиниці"],
+langAuto:["Automatique (langue du téléphone)","Automatisch (Telefonsprache)","Automático (idioma del teléfono)","Automatico (lingua del telefono)","Automático (idioma do telemóvel)","Automatisch (taal van telefoon)","Automatycznie (język telefonu)","Автоматично (мова телефону)"],
+unitsAuto:["Automatique (région du téléphone)","Automatisch (Telefonregion)","Automático (región del teléfono)","Automatico (regione del telefono)","Automático (região do telemóvel)","Automatisch (regio van telefoon)","Automatycznie (region telefonu)","Автоматично (регіон телефону)"],
+metric:["Métrique (°C, km/h, mm)","Metrisch (°C, km/h, mm)","Métrico (°C, km/h, mm)","Metrico (°C, km/h, mm)","Métrico (°C, km/h, mm)","Metrisch (°C, km/u, mm)","Metryczne (°C, km/h, mm)","Метричні (°C, км/год, мм)"],
+imperial:["Impérial (°F, mph, in)","Imperial (°F, mph, in)","Imperial (°F, mph, in)","Imperiale (°F, mph, in)","Imperial (°F, mph, in)","Imperiaal (°F, mph, in)","Imperialne (°F, mph, in)","Імперські (°F, mph, дюйми)"],
+done:["Fermer","Fertig","Listo","Fatto","Concluído","Klaar","Gotowe","Готово"],
+kmh:["km/h","km/h","km/h","km/h","km/h","km/u","km/h","км/год"],
+mm:["mm","mm","mm","mm","mm","mm","mm","мм"],
+km:["km","km","km","km","km","km","km","км"],
+c_clear:["Dégagé","Klar","Despejado","Sereno","Céu limpo","Helder","Bezchmurnie","Ясно"],
+c_mostlyClear:["Plutôt dégagé","Überwiegend klar","Mayormente despejado","Prevalentemente sereno","Pouco nublado","Overwegend helder","Przeważnie bezchmurnie","Переважно ясно"],
+c_partly:["Partiellement nuageux","Teilweise bewölkt","Parcialmente nublado","Parzialmente nuvoloso","Parcialmente nublado","Half bewolkt","Częściowe zachmurzenie","Мінлива хмарність"],
+c_cloudy:["Couvert","Bedeckt","Nublado","Nuvoloso","Nublado","Bewolkt","Pochmurno","Хмарно"],
+c_fog:["Brouillard","Nebel","Niebla","Nebbia","Nevoeiro","Mist","Mgła","Туман"],
+c_drizzle:["Bruine","Nieselregen","Llovizna","Pioviggine","Chuvisco","Motregen","Mżawka","Мряка"],
+c_freezing:["Pluie verglaçante","Gefrierender Regen","Lluvia helada","Pioggia gelata","Chuva gelada","IJzel","Marznący deszcz","Крижаний дощ"],
+c_lightRain:["Pluie faible","Leichter Regen","Lluvia débil","Pioggia debole","Chuva fraca","Lichte regen","Słaby deszcz","Невеликий дощ"],
+c_rain:["Pluie","Regen","Lluvia","Pioggia","Chuva","Regen","Deszcz","Дощ"],
+c_heavyRain:["Forte pluie","Starker Regen","Lluvia fuerte","Pioggia forte","Chuva forte","Zware regen","Silny deszcz","Сильний дощ"],
+c_snow:["Neige","Schnee","Nieve","Neve","Neve","Sneeuw","Śnieg","Сніг"],
+c_showers:["Averses","Schauer","Chubascos","Rovesci","Aguaceiros","Buien","Przelotne opady","Зливи"],
+c_thunder:["Orage","Gewitter","Tormenta","Temporale","Trovoada","Onweer","Burza","Гроза"],
+c_hail:["Orage avec grêle","Gewitter mit Hagel","Tormenta con granizo","Temporale con grandine","Trovoada com granizo","Onweer met hagel","Burza z gradem","Гроза з градом"],
+c_unknown:["Inconnu","Unbekannt","Desconocido","Sconosciuto","Desconhecido","Onbekend","Brak danych","Немає даних"]
+};
+for(const k in S){const v=S_EU[k];if(v)S[k].push(...v);else S[k].push(...L_EU.map(()=>S[k][1]))}
+L.push(...L_EU);
+
+const CITIES=[
+['פרדס חנה-כרכור',32.4747,34.9707,'מחוז חיפה'],['חדרה',32.434,34.9197,'מחוז חיפה'],['בנימינה-גבעת עדה',32.5205,34.9519,'מחוז חיפה'],
+['זכרון יעקב',32.5707,34.9536,'מחוז חיפה'],['קיסריה',32.5007,34.9097,'מחוז חיפה'],['אור עקיבא',32.5085,34.9195,'מחוז חיפה'],
+['חריש',32.4628,35.0426,'מחוז חיפה'],['עין שמר',32.4627,35.0072,'מחוז חיפה'],['כפר גליקסון',32.4945,34.9817,'מחוז חיפה'],
+['פרדסיה',32.3058,34.9081,'מחוז המרכז'],['חיפה',32.794,34.9896,'מחוז חיפה'],['טירת כרמל',32.7608,34.9718,'מחוז חיפה'],
+['קריית אתא',32.8095,35.1019,'מחוז חיפה'],['קריית ביאליק',32.8343,35.0857,'מחוז חיפה'],['קריית מוצקין',32.8378,35.0775,'מחוז חיפה'],
+['קריית ים',32.8495,35.0686,'מחוז חיפה'],['נשר',32.7678,35.0418,'מחוז חיפה'],['יקנעם עילית',32.6597,35.1061,'מחוז הצפון'],
+['עכו',32.9281,35.0818,'מחוז הצפון'],['נהריה',33.0059,35.0981,'מחוז הצפון'],['כרמיאל',32.9171,35.3049,'מחוז הצפון'],
+['צפת',32.9646,35.496,'מחוז הצפון'],['טבריה',32.7959,35.531,'מחוז הצפון'],['נצרת',32.7019,35.3033,'מחוז הצפון'],
+['נוף הגליל',32.7085,35.3249,'מחוז הצפון'],['עפולה',32.6078,35.2897,'מחוז הצפון'],['בית שאן',32.4973,35.4968,'מחוז הצפון'],
+['קריית שמונה',33.2073,35.5712,'מחוז הצפון'],['מעלות-תרשיחא',33.0167,35.2708,'מחוז הצפון'],['קצרין',32.9925,35.6901,'רמת הגולן'],
+['מגדל העמק',32.6766,35.2397,'מחוז הצפון'],['שפרעם',32.8056,35.1696,'מחוז הצפון'],['אום אל-פחם',32.5194,35.1536,'מחוז חיפה'],
+['נתניה',32.3215,34.8532,'מחוז המרכז'],['כפר יונה',32.3171,34.9358,'מחוז המרכז'],['אבן יהודה',32.27,34.8875,'מחוז המרכז'],
+['כפר סבא',32.1782,34.9076,'מחוז המרכז'],['רעננה',32.1848,34.8713,'מחוז המרכז'],['הוד השרון',32.1593,34.8932,'מחוז המרכז'],
+['הרצליה',32.1624,34.8447,'מחוז תל אביב'],['רמת השרון',32.1461,34.8394,'מחוז תל אביב'],['תל אביב-יפו',32.0853,34.7818,'מחוז תל אביב'],
+['רמת גן',32.0684,34.8248,'מחוז תל אביב'],['גבעתיים',32.0722,34.8125,'מחוז תל אביב'],['בני ברק',32.0807,34.8338,'מחוז תל אביב'],
+['פתח תקווה',32.0871,34.8875,'מחוז המרכז'],['ראש העין',32.0956,34.9566,'מחוז המרכז'],['אלעד',32.0522,34.9511,'מחוז המרכז'],
+['חולון',32.0158,34.7874,'מחוז תל אביב'],['בת ים',32.0171,34.7454,'מחוז תל אביב'],['ראשון לציון',31.973,34.7925,'מחוז המרכז'],
+['נס ציונה',31.9293,34.7987,'מחוז המרכז'],['רחובות',31.8928,34.8113,'מחוז המרכז'],['יבנה',31.8781,34.7398,'מחוז המרכז'],
+['לוד',31.9516,34.8953,'מחוז המרכז'],['רמלה',31.9279,34.8625,'מחוז המרכז'],['מודיעין-מכבים-רעות',31.8969,35.0104,'מחוז המרכז'],
+['שוהם',31.9987,34.9457,'מחוז המרכז'],['יהוד-מונוסון',32.0331,34.8889,'מחוז המרכז'],['אור יהודה',32.0306,34.8504,'מחוז תל אביב'],
+['גדרה',31.8143,34.7774,'מחוז המרכז'],['קריית גת',31.61,34.7642,'מחוז הדרום'],['אשדוד',31.8014,34.6435,'מחוז הדרום'],
+['אשקלון',31.6688,34.5743,'מחוז הדרום'],['שדרות',31.525,34.5966,'מחוז הדרום'],['נתיבות',31.4231,34.5891,'מחוז הדרום'],
+['אופקים',31.3141,34.6203,'מחוז הדרום'],['באר שבע',31.252,34.7915,'מחוז הדרום'],['דימונה',31.0686,35.0333,'מחוז הדרום'],
+['ערד',31.2589,35.2128,'מחוז הדרום'],['ירוחם',30.9877,34.9311,'מחוז הדרום'],['מצפה רמון',30.6103,34.8013,'מחוז הדרום'],
+['אילת',29.5577,34.9519,'מחוז הדרום'],['ירושלים',31.7683,35.2137,'מחוז ירושלים'],['בית שמש',31.7497,34.9886,'מחוז ירושלים'],
+['מבשרת ציון',31.8019,35.15,'מחוז ירושלים'],['מעלה אדומים',31.7773,35.2983,'יהודה ושומרון'],['אריאל',32.1061,35.1874,'יהודה ושומרון'],
+['ים המלח (עין בוקק)',31.2002,35.3623,'מחוז הדרום'],['עין גדי',31.4612,35.3876,'מחוז הדרום']
+];
+
+// ===== הגדרות בסיס =====
+const $=s=>document.querySelector(s);
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+const r1=v=>Math.round(v*10)/10;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
+
+// ===== שפה ויחידות (לפי האדם, לא לפי המקום) =====
+function navLangs(){const a=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);return a.map(x=>String(x))}
+function detectLang(){for(const l of navLangs()){let p=l.toLowerCase().split(/[-_]/)[0];if(p==='iw')p='he';if(L.includes(p))return p}return 'en'}
+function detectImperial(){
+  const IMP=['US','LR','MM','PR','GU','VI','AS','MP','UM','BS','BZ','KY','PW','FM','MH'];
+  for(const l of navLangs()){const m=l.match(/[-_]([A-Za-z]{2})\b/);if(m)return IMP.includes(m[1].toUpperCase())}
+  try{const r=new Intl.Locale(Intl.DateTimeFormat().resolvedOptions().locale).maximize().region;return IMP.includes(r)}catch(e){return false}
+}
+let LANG='en',LI=1,LOC='en';
+const U={imp:false};
+function applyPrefs(){
+  const pl=load('mm_lang')||'auto',pu=load('mm_units')||'auto';
+  LANG=pl==='auto'?detectLang():pl;LI=L.indexOf(LANG);if(LI<0){LANG='en';LI=1}
+  LOC={zh:'zh-CN',he:'he-IL',ar:'ar',ru:'ru-RU',ja:'ja-JP',fr:'fr-FR',de:'de-DE',es:'es-ES',it:'it-IT',pt:'pt-PT',nl:'nl-NL',pl:'pl-PL',uk:'uk-UA'}[LANG]||'en';
+  U.imp=pu==='auto'?detectImperial():pu==='imperial';
+  document.documentElement.lang=LANG;document.documentElement.dir=RTL[LANG]?'rtl':'ltr';
+  document.title=t('appName')+' | '+t('tagline');
+}
+function t(k,p){const a=S[k];let s=a?(a[LI]??a[1]):k;if(p)for(const x in p)s=s.split('{'+x+'}').join(p[x]);return s}
+const cap=s=>s?s.charAt(0).toUpperCase()+s.slice(1):s;
+
+// המרות תצוגה (כל החישובים נעשים במטרי)
+const cT=c=>U.imp?c*9/5+32:c;
+const fT=c=>c==null?'·':Math.round(cT(c))+'°';
+const fT1=c=>c==null?'·':r1(cT(c))+'°';
+const fDiff=d=>r1(U.imp?d*9/5:d)+'°';
+const wU=()=>U.imp?'mph':t('kmh');
+const cW=k=>U.imp?k*0.621371:k;
+const fW=k=>Math.round(cW(k))+' '+wU();
+const rU=()=>U.imp?'in':t('mm');
+const cR=m=>U.imp?m/25.4:m;
+const nR=m=>U.imp?Math.round(m/25.4*100)/100:r1(m);
+const fR=m=>nR(m)+' '+rU();
+const fDist=k=>U.imp?r1(k*0.621371)+' mi':r1(k)+' '+t('km');
+const tUnit=()=>U.imp?'°F':'°C';
+function fmtH(iso){const h=+iso.slice(11,13),m=iso.slice(14,16);if(!U.imp)return iso.slice(11,16);return (h%12||12)+(m!=='00'?':'+m:'')+(h<12?' AM':' PM')}
+function wd(dateStr,style){try{return new Intl.DateTimeFormat(LOC,{weekday:style,timeZone:'UTC'}).format(new Date(dateStr+'T12:00:00Z'))}catch(e){return dateStr}}
+function dayRef(dateStr,i){return i===0?t('today'):i===1?t('tomorrow'):t('onDay',{d:wd(dateStr,'long')})}
+function dayLabel(dateStr,i){return cap(i===0?t('today'):i===1?t('tomorrow'):wd(dateStr,'long'))}
+function dayShort(dateStr,i){return cap(i===0?t('today'):i===1?t('tomorrow'):wd(dateStr,'short'))}
+function dmy(s){const [y,m,d]=s.split('-');return U.imp?`${+m}/${+d}`:`${+d}.${+m}`}
+
+// ===== מודלים =====
+const MODELS=[
+  {id:'ecmwf_ifs025',name:'ECMWF',org:'ECMWF · EU',flag:'🇪🇺',color:'#4f9cf9'},
+  {id:'gfs_seamless',name:'GFS',org:'NOAA · USA',flag:'🇺🇸',color:'#f59e0b'},
+  {id:'icon_seamless',name:'ICON',org:'DWD · Germany',flag:'🇩🇪',color:'#22c55e'},
+  {id:'ukmo_seamless',name:'UKMO',org:'Met Office · UK',flag:'🇬🇧',color:'#ec4899'},
+  {id:'meteofrance_seamless',name:'Météo-France',org:'Météo-France · France',flag:'🇫🇷',color:'#a78bfa'}
+];
+const WCK={0:['☀️','clear'],1:['🌤️','mostlyClear'],2:['⛅','partly'],3:['☁️','cloudy'],45:['🌫️','fog'],48:['🌫️','fog'],
+51:['🌦️','drizzle'],53:['🌦️','drizzle'],55:['🌦️','drizzle'],56:['🌧️','freezing'],57:['🌧️','freezing'],
+61:['🌧️','lightRain'],63:['🌧️','rain'],65:['🌧️','heavyRain'],66:['🌧️','freezing'],67:['🌧️','freezing'],
+71:['🌨️','snow'],73:['🌨️','snow'],75:['❄️','snow'],77:['🌨️','snow'],80:['🌦️','showers'],81:['🌧️','showers'],82:['⛈️','heavyRain'],
+85:['🌨️','snow'],86:['🌨️','snow'],95:['⛈️','thunder'],96:['⛈️','hail'],99:['⛈️','hail']};
+const wc=c=>{const w=WCK[c]||['🌡️','unknown'];return [w[0],t('c_'+w[1])]};
+
+let state={place:null,data:null,tab:'temp',obs:null,cached:false};
+
+async function fetchForecast(p){
+  const ids=MODELS.map(m=>m.id).join(',');
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+   `&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,cape`+
+   `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max,weather_code`+
+   `&models=${ids}&timezone=auto&forecast_days=7`;
+  const r=await fetch(u);
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+
+// מדידה מתחנה (דרך api.php בהוסטינגר).
+const OBS_API='https://maromcyber.com/weather/api.php'; // אם הקובץ לא קיים, האפליקציה ממשיכה בלי מדידות.
+async function fetchObs(p){
+  if(!/^https?:/.test(location.protocol))return null;
+  try{
+    const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),7000);
+    const r=await fetch(`${OBS_API}?lat=${p.lat}&lon=${p.lon}`,{signal:ac.signal});clearTimeout(tm);
+    if(!r.ok)return null;const j=await r.json();
+    if(!j||!j.ok||typeof j.temp_c!=='number')return null;
+    const age=Math.round((Date.now()/1000-j.time)/60);
+    if(j.dist_km>25||age>120||age<-10)return null;
+    j.age=Math.max(0,age);return j;
+  }catch(e){return null}
+}
+
+function pick(obj,key,id){return obj[`${key}_${id}`]||null}
+
+function process(d){
+  const H=d.hourly,D=d.daily;
+  const models=MODELS.filter(m=>{const a=pick(H,'temperature_2m',m.id);return a&&a.some(v=>v!==null)});
+  const nowLocal=new Date(Date.now()+d.utc_offset_seconds*1000).toISOString().slice(0,13);
+  let ni=H.time.findIndex(x=>x.slice(0,13)===nowLocal); if(ni<0)ni=0;
+  const days=D.time.map((tm,i)=>{
+    const per=models.map(m=>({m,
+      max:pick(D,'temperature_2m_max',m.id)?.[i],min:pick(D,'temperature_2m_min',m.id)?.[i],
+      rain:pick(D,'precipitation_sum',m.id)?.[i],gust:pick(D,'wind_gusts_10m_max',m.id)?.[i],
+      code:pick(D,'weather_code',m.id)?.[i],
+      cape:(()=>{const c=pick(H,'cape',m.id);if(!c)return null;const s=c.slice(i*24,i*24+24).filter(v=>v!==null);return s.length?Math.max(...s):null})()
+    })).filter(x=>x.max!=null);
+    const n=per.length;
+    const maxs=per.map(x=>x.max),mins=per.map(x=>x.min);
+    const rains=per.map(x=>x.rain??0);
+    const codes=per.map(x=>x.code??0).sort((a,b)=>a-b);
+    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,rainAvg:n?avg(rains):0,rainMax:n?Math.max(...rains):0,
+      rainN:per.filter(x=>(x.rain??0)>=1).length,heavyN:per.filter(x=>(x.rain??0)>=20).length,
+      thunderN:per.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length,
+      windN:per.filter(x=>(x.gust??0)>=60).length,spread:n?Math.max(...maxs)-Math.min(...maxs):0,
+      code:codes[Math.floor(codes.length/2)]||0,gustMax:n?Math.max(...per.map(x=>x.gust??0)):0};
+  });
+  return {models,ni,days,H};
+}
+
+function conf(d){
+  if(!d.n)return 0;
+  const p=d.rainN/d.n;
+  let c=100-Math.min(40,d.spread*7)-(1-Math.abs(2*p-1))*35-(d.idx||0)*3;
+  if(d.n<3)c-=10;
+  return Math.max(30,Math.min(97,Math.round(c)));
+}
+function agree(day){const c=conf(day);return [c>=80?'hi':c>=60?'md':'lo',t('conf',{n:c})]}
+
+function hourStats(P,i,key,thr){
+  const v=P.models.map(m=>(pick(P.H,key,m.id)||[])[i]).filter(x=>x!=null);
+  return {n:v.length,k:v.filter(x=>x>=thr).length,mean:v.length?avg(v):null};
+}
+const majority=s=>s.n>0&&s.k>=Math.max(2,Math.ceil(s.n/2));
+function dph(P,i){return dayRef(P.H.time[i].slice(0,10),Math.floor(i/24))}
+
+function rainLine(P){
+  const T=P.H.time,end=Math.min(P.ni+72,T.length);
+  const rs=i=>hourStats(P,i,'precipitation',0.2);
+  let st=-1;
+  for(let i=P.ni;i<end;i++){if(majority(rs(i))){st=i;break}}
+  if(st<0){
+    for(let i=P.ni;i<end;i++){const s=rs(i);if(s.k>=1)return ['🌦️',t('mostNo'),t('onlyK',{k:s.k,n:s.n,d:dph(P,i),t:fmtH(T[i])})]}
+    return ['☀️',t('noRain3'),t('noneModel')];
+  }
+  let en=st,gap=0,kmax=0,nn=0;
+  for(let i=st;i<T.length;i++){const s=rs(i);
+    if(majority(s)){en=i;gap=0;if(s.k>kmax){kmax=s.k;nn=s.n}}else if(++gap>2)break}
+  let sum=0;for(let i=st;i<=en;i++)sum+=rs(i).mean||0;
+  const e=T[en+1];
+  const endTxt=!e?t('endRange'):Math.floor((en+1)/24)===Math.floor(st/24)?fmtH(e):`${fmtH(e)} (${dph(P,en+1)})`;
+  const title=st===P.ni?t('rainNow',{e:endTxt}):t('rainAt',{d:dph(P,st),a:fmtH(T[st]),b:endTxt});
+  return ['🌧️',title,t('rainMeta',{k:kmax,n:nn,s:fR(sum)})];
+}
+
+function practical(P){
+  const T=P.H.time,out=[];
+  const rs=i=>hourStats(P,i,'precipitation',0.2);
+  const tm=i=>hourStats(P,i,'temperature_2m',-999).mean;
+  const wn=i=>hourStats(P,i,'wind_speed_10m',-999).mean;
+  const hr=i=>+T[i].slice(11,13);
+  const base=hr(P.ni)<15?0:24,lab=base?t('tomorrow'):t('today');
+  let maj=0,minr=0,wmax=0;
+  for(let i=Math.max(P.ni,base+8);i<Math.min(base+17,T.length);i++){const s=rs(i);if(majority(s))maj++;else if(s.k>=1)minr++;wmax=Math.max(wmax,wn(i)||0)}
+  out.push(['🧺',t('laundry'),...(maj?['lo',t('no'),t('laundryNo',{d:lab})]:
+    minr?['md',t('maybe'),t('laundryMaybe',{d:lab})]:
+    ['hi',t('yes'),t('laundryYes',{d:lab})+(wmax>=35?t('windyAdd'):'')])]);
+  let best=-1,bs=1e9;
+  for(let i=P.ni;i<Math.min(P.ni+24,T.length);i++){
+    if(hr(i)<6||hr(i)>21)continue;const s=rs(i);if(majority(s))continue;
+    const x=tm(i),w=wn(i)||0;if(x==null)continue;
+    const sc=Math.abs(x-16)+w/4+(s.k?5:0);if(sc<bs){bs=sc;best=i}}
+  out.push(['🏃',t('run'),...(best<0?['lo',t('no'),t('runNo')]:
+    ['hi',t('yes'),t('runYes',{d:dph(P,best),t:fmtH(T[best]),v:fT(tm(best)),w:fW(wn(best)||0)})])]);
+  let sum=0,mh=0;
+  for(let i=P.ni;i<Math.min(P.ni+48,T.length);i++){sum+=hourStats(P,i,'precipitation',0).mean||0;if(majority(rs(i)))mh++}
+  out.push(['🌱',t('garden'),...(sum>=5&&mh?['lo',t('no'),t('gardenNo',{v:fR(sum)})]:
+    sum>=1?['md',t('little'),t('gardenLittle',{v:fR(sum)})]:
+    ['hi',t('yes'),t('gardenYes')])]);
+  return out;
+}
+
+function render(){
+  const {data,place,obs}=state;
+  const P=process(data);
+  const {models,ni,days,H}=P;
+  if(!models.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return}
+  const nowPer=models.map(m=>({m,t:pick(H,'temperature_2m',m.id)[ni],c:pick(H,'weather_code',m.id)?.[ni],w:pick(H,'wind_speed_10m',m.id)?.[ni]})).filter(x=>x.t!=null);
+  nowPer.forEach(x=>{const o=nowPer.filter(y=>y!==x).map(y=>y.t);x.out=o.length>=3&&Math.abs(x.t-med(o))>=3});
+  const nowIn=nowPer.filter(x=>!x.out),outs=nowPer.filter(x=>x.out);
+  const nowT=med(nowIn.map(x=>x.t));
+  const nowMin=Math.min(...nowPer.map(x=>x.t)),nowMax=Math.max(...nowPer.map(x=>x.t));
+  const nowCodes=nowPer.map(x=>x.c??0).sort((a,b)=>a-b);
+  const nowCode=nowCodes[Math.floor(nowCodes.length/2)]||0;
+  const nowC=wc(nowCode);
+  const nowW=avg(nowPer.map(x=>x.w??0));
+  const today=days[0];
+  const ag=agree(today);
+  const rl=rainLine(P),qa=practical(P);
+  const hrNow=+H.time[ni].slice(11,13);
+  const nightNote=!obs&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
+
+  const al=[];
+  days.slice(0,4).forEach((d,i)=>{
+    const dr=dayRef(d.date,i);
+    const need=Math.max(2,Math.ceil(d.n/2));
+    if(d.thunderN>=need)al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.n})]);
+    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.n})]);
+    if(d.heavyN>=need)al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
+    if(d.windN>=need)al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
+  });
+  const nextRain=days.findIndex(d=>d.rainN>=Math.max(2,Math.ceil(d.n/2)));
+  if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(days[nextRain].date,nextRain)})]);
+
+  const bigT=obs?obs.temp_c:nowT;
+  const html=`
+  ${state.cached?`<div class="err" style="margin-bottom:14px">${t('cached')}</div>`:''}
+  <section class="card">
+    <div class="hero">
+      <div>
+        <div class="place">📍 ${esc(place.name)}</div>
+        ${obs?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:obs.name,d:fDist(obs.dist_km),m:obs.age}))}</div>
+          <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
+        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
+        <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
+        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})} · <span class="pill ${ag[0]}">${ag[1]}</span></div>
+      </div>
+      <div class="bigt">${Math.round(cT(bigT))}<sup>°</sup></div>
+    </div>
+    <div class="now-models">
+      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
+    </div>
+    <div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>
+    ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
+  </section>
+
+  <section class="card">
+    <div class="rainline"><div class="e">${rl[0]}</div><div><b>${rl[1]}</b><span>${rl[2]}</span></div></div>
+  </section>
+
+  <section class="card alerts">
+    <h2>${t('alertsTitle')}</h2>
+    <p class="sub">${t('alertsSub')}</p>
+    ${al.map(a=>`<div class="al ${a[0]}"><div style="font-size:22px">${a[1]}</div><div><b>${a[2]}</b><span>${a[3]}</span></div></div>`).join('')}
+  </section>
+
+  <section class="card">
+    <h2>${t('qaTitle')}</h2>
+    <p class="sub">${t('qaSub')}</p>
+    ${qa.map(q=>`<div class="qa"><div class="e">${q[0]}</div><div><b>${q[1]} <span class="pill ${q[2]}">${q[3]}</span></b><span class="t">${q[4]}</span></div></div>`).join('')}
+  </section>
+
+  <section class="card">
+    <h2>${t('daysTitle')}</h2>
+    <p class="sub">${t('daysSub')}</p>
+    <div class="days">
+      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=Math.round(d.rainN/d.n*100);return `
+      <div class="day" data-i="${i}">
+        <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
+        <div class="ico">${c[0]}</div>
+        <div class="sum">${c[1]} · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span><br>
+          <span class="m">${t('rainOf',{k:d.rainN,n:d.n})}${d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):''}</span>
+          <div class="bar"><i style="width:${pct}%"></i></div></div>
+        <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
+        <div class="detail"><div class="tbl-wrap"><table>
+          <tr><th class="l">${t('model')}</th><th>${t('max')}</th><th>${t('min')}</th><th>${t('rainH')} (${rU()})</th><th>${t('gustH')} (${wU()})</th><th>${t('condH')}</th></tr>
+          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${nR(x.rain??0)}</td><td>${Math.round(cW(x.gust??0))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
+          <tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${nR(d.rainAvg)}</td><td>${Math.round(cW(avg(d.per.map(x=>x.gust??0))))}</td><td>${c[0]}</td></tr>
+        </table></div></div>
+      </div>`}).join('')}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>${t('chartTitle')}</h2>
+    <p class="sub">${t('chartSub')}</p>
+    <div class="tabs" id="tabs">
+      <button class="tab ${state.tab==='temp'?'on':''}" data-t="temp">${t('tabTemp')}</button>
+      <button class="tab ${state.tab==='rain'?'on':''}" data-t="rain">${t('tabRain')}</button>
+      <button class="tab ${state.tab==='gust'?'on':''}" data-t="gust">${t('tabGust')}</button>
+    </div>
+    <div id="chart">${chart(P)}</div>
+    <div class="legend">${models.map(m=>`<span><i class="dot" style="background:${m.color}"></i>${m.name}</span>`).join('')}<span><i class="dot" style="background:#fff"></i>${t('mean')}</span></div>
+  </section>
+
+  <section class="card">
+    <h2>${t('hourlyTitle')}</h2>
+    <p class="sub">${t('hourlySub',{w:state.tab==='temp'?t('wTemp',{u:tUnit()}):state.tab==='rain'?t('wRain',{u:rU()}):t('wGust',{u:wU()})})}</p>
+    <div class="tbl-wrap" style="max-height:420px;overflow:auto">${hourly(P)}</div>
+  </section>
+
+  <section class="card">
+    <h2>${t('modelsTitle')}</h2>
+    <p class="sub">${t('modelsSub')}</p>
+    <div class="models-info">${models.map(m=>`<div class="mi"><b><span class="dot" style="background:${m.color}"></span>${m.flag} ${m.name}</b><span>${m.org}</span></div>`).join('')}</div>
+  </section>`;
+  $('#app').innerHTML=html;
+  document.querySelectorAll('.day').forEach(el=>el.addEventListener('click',()=>el.classList.toggle('open')));
+  document.querySelectorAll('.tab').forEach(el=>el.addEventListener('click',()=>{state.tab=el.dataset.t;render()}));
+}
+
+function seriesRaw(P,m){const k=state.tab==='temp'?'temperature_2m':state.tab==='rain'?'precipitation':'wind_gusts_10m';return pick(P.H,k,m.id)||[]}
+const conv=v=>v==null?null:state.tab==='temp'?cT(v):state.tab==='rain'?cR(v):cW(v);
+
+function chart(P){
+  const W=720,Hh=240,pl=34,pr=8,pt=12,pb=28;
+  const N=P.H.time.length;
+  const all=P.models.map(m=>seriesRaw(P,m).map(conv));
+  const mean=P.H.time.map((_,i)=>{const v=all.map(a=>a[i]).filter(x=>x!=null);return v.length?avg(v):null});
+  const vals=all.flat().filter(v=>v!=null);
+  let lo=Math.min(...vals),hi=Math.max(...vals);
+  if(state.tab!=='temp'){lo=0;hi=Math.max(hi,state.tab==='rain'?cR(2):cW(30))}
+  else{lo=Math.floor(lo-1);hi=Math.ceil(hi+1)}
+  const x=i=>pl+(W-pl-pr)*i/(N-1);
+  const y=v=>pt+(Hh-pt-pb)*(1-(v-lo)/(hi-lo||1));
+  let g='';
+  for(let s=0;s<=4;s++){const v=lo+(hi-lo)*s/4;g+=`<line x1="${pl}" x2="${W-pr}" y1="${y(v)}" y2="${y(v)}" stroke="#22305a" stroke-width="1"/><text x="${pl-5}" y="${y(v)+4}" fill="#8e9cc4" font-size="10" text-anchor="end">${state.tab==='rain'?(U.imp?Math.round(v*100)/100:r1(v)):Math.round(v)}</text>`}
+  P.H.time.forEach((tm,i)=>{if(tm.endsWith('T00:00'))g+=`<line x1="${x(i)}" x2="${x(i)}" y1="${pt}" y2="${Hh-pb}" stroke="#2c3c6c" stroke-dasharray="2 3"/>`;
+    if(tm.endsWith('T12:00'))g+=`<text x="${x(i)}" y="${Hh-8}" fill="#8e9cc4" font-size="11" text-anchor="middle">${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</text>`});
+  g+=`<line x1="${x(P.ni)}" x2="${x(P.ni)}" y1="${pt}" y2="${Hh-pb}" stroke="#4f9cf9" stroke-width="1.5"/><text x="${x(P.ni)}" y="${pt+9}" fill="#4f9cf9" font-size="10" text-anchor="middle">${t('now')}</text>`;
+  const path=a=>{let d='',on=false;a.forEach((v,i)=>{if(v==null){on=false;return}d+=(on?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1);on=true});return d};
+  if(state.tab==='rain'){const bw=(W-pl-pr)/N;mean.forEach((v,i)=>{if(v&&v>cR(0.05))g+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" fill="#3b82f655"/>`})}
+  P.models.forEach((m,k)=>{g+=`<path d="${path(all[k])}" fill="none" stroke="${m.color}" stroke-width="1.6" opacity=".85"/>`});
+  g+=`<path d="${path(mean)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 4"/>`;
+  return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" style="direction:ltr">${g}</svg>`;
+}
+
+function hourly(P){
+  const rows=[];
+  for(let i=P.ni;i<Math.min(P.ni+48,P.H.time.length);i++){
+    const tm=P.H.time[i];
+    const raw=P.models.map(m=>seriesRaw(P,m)[i]);
+    const ok=raw.filter(a=>a!=null);const mean=ok.length?avg(ok):null;
+    const fmt=a=>a==null?'·':state.tab==='temp'?fT1(a):state.tab==='rain'?(a<0.05?'0':nR(a)):Math.round(cW(a));
+    const hot=a=>{if(a==null)return '';if(state.tab==='rain'&&a>=1)return 'style="color:#93c5fd;font-weight:700"';if(state.tab==='gust'&&a>=50)return 'style="color:#fcd34d;font-weight:700"';return ''};
+    const lbl=tm.endsWith('T00:00')?`<b>${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</b> ${fmtH(tm)}`:fmtH(tm);
+    rows.push(`<tr><td class="l">${lbl}</td>${raw.map(a=>`<td ${hot(a)}>${fmt(a)}</td>`).join('')}<td class="cons">${fmt(mean)}</td></tr>`);
+  }
+  return `<table><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th><span class="dot" style="background:${m.color}"></span> ${m.name}</th>`).join('')}<th>${t('mean')}</th></tr>${rows.join('')}</table>`;
+}
+
+// ===== מיקום =====
+const norm=s=>(s||'').replace(/[֑-ׇ'"׳״\-\s()]/g,'').toLowerCase();
+const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
+function nearestCity(lat,lon){let best=null,bd=1e9;CITIES.forEach(c=>{const d=km(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}});return {c:best,d:bd}}
+
+async function reverseName(lat,lon){
+  const n=nearestCity(lat,lon);
+  if(LANG==='he'&&n.d<=4)return n.c[0];
+  try{
+    const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${LANG}`);
+    if(r.ok){const j=await r.json();const nm=j.city||j.locality;if(nm)return nm}
+  }catch(e){}
+  if(LANG==='he'&&n.d<=15)return t('near',{p:n.c[0]});
+  return t('myLoc');
+}
+function getPos(timeout=12000){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation)return rej(new Error('nogeo'));
+    navigator.geolocation.getCurrentPosition(p=>res(p.coords),e=>rej(e),{enableHighAccuracy:false,timeout,maximumAge:600000});
+  });
+}
+function setLocUI(p){$('#locName').textContent=p?p.name:t('pickTitle');$('#locTag').hidden=!(p&&p.auto)}
+function showBanner(html){const b=$('#banner');b.innerHTML=html;b.hidden=false}
+function hideBanner(){$('#banner').hidden=true}
+
+async function go(p){
+  state.place=p;state.obs=null;state.cached=false;store('mm_place',p);setLocUI(p);
+  $('#app').innerHTML=`<div class="loading"><div class="spin"></div>${t('loading')}</div>`;
+  const obsP=fetchObs(p);
+  try{
+    state.data=await fetchForecast(p);
+    store('mm_last',{lat:p.lat,lon:p.lon,data:state.data});
+  }catch(e){
+    const last=load('mm_last');
+    if(last&&km(last.lat,last.lon,p.lat,p.lon)<2){state.data=last.data;state.cached=true}
+    else{$('#app').innerHTML=`<div class="err"><b>${t('loadErr')}</b><br>${t('checkNet')}</div>`;return}
+  }
+  render();
+  const o=await obsP;
+  if(o&&state.place===p){state.obs=o;render()}
+}
+
+// ===== חלון בחירת מיקום: בחירה מרשימה ואישור =====
+let results=[],selected=null,active=-1,tmr,qid=0;
+function openPicker(){
+  $('#ov').classList.add('show');selected=null;$('#confirm').classList.remove('show');
+  $('#q').value='';renderList(defaultList(),'');setTimeout(()=>$('#q').focus(),50);
+}
+function closePicker(){$('#ov').classList.remove('show')}
+function defaultList(){
+  const recent=(load('mm_recent')||[]).slice(0,5).map(r=>({...r,recent:true}));
+  const pop=LANG==='he'?['פרדס חנה-כרכור','תל אביב-יפו','ירושלים','חיפה','באר שבע','אילת'].map(n=>{const c=CITIES.find(x=>x[0]===n);return {name:c[0],lat:c[1],lon:c[2],sub:c[3]+', ישראל'}}):[];
+  const seen=new Set();return [...recent,...pop].filter(x=>{const k=norm(x.name)+Math.round(x.lat*10);if(seen.has(k))return false;seen.add(k);return true});
+}
+function renderList(items,q){
+  results=items;active=-1;
+  const Lst=$('#list');
+  if(!items.length){Lst.innerHTML=`<div class="hint">${q?t('noResults'):t('typeCity')}</div>`;return}
+  Lst.innerHTML=(q?'':`<div class="hint" style="text-align:start;padding:8px 14px">${t('recentPop')}</div>`)+
+    items.map((x,i)=>`<button class="opt" data-i="${i}"><span>${x.recent?'🕘':'📍'}</span><span>${esc(x.name)}<small>${esc(x.sub||'')}</small></span><span class="ck">✓</span></button>`).join('');
+}
+function localMatches(q){
+  if(LANG!=='he')return [];
+  const n=norm(q);if(!n)return [];
+  const s=CITIES.filter(c=>norm(c[0]).startsWith(n)),inc=CITIES.filter(c=>!norm(c[0]).startsWith(n)&&norm(c[0]).includes(n));
+  return [...s,...inc].slice(0,8).map(c=>({name:c[0],lat:c[1],lon:c[2],sub:c[3]+', ישראל'}));
+}
+async function search(q){
+  const my=++qid;
+  const loc=localMatches(q);
+  renderList(loc,q);
+  if(q.trim().length<2)return;
+  try{
+    const r=await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=10&language=${LANG}&format=json`);
+    const j=await r.json();if(my!==qid)return;
+    const api=(j.results||[]).map(x=>({name:x.name,lat:x.latitude,lon:x.longitude,sub:[x.admin1,x.country].filter(Boolean).join(', ')}));
+    const all=[...loc];
+    api.forEach(a=>{if(!all.some(b=>norm(b.name)===norm(a.name)&&km(a.lat,a.lon,b.lat,b.lon)<5))all.push(a)});
+    renderList(all.slice(0,12),q);
+  }catch(e){}
+}
+function choose(i){
+  selected=results[i];if(!selected)return;
+  document.querySelectorAll('.opt').forEach(o=>o.classList.toggle('sel',+o.dataset.i===i));
+  $('#confirmTxt').innerHTML=`${t('switchTo',{p:esc(selected.name)})}<br><small style="color:var(--mut)">${esc(selected.sub||'')}</small>`;
+  $('#confirm').classList.add('show');$('#ok').focus();
+}
+function confirmSel(){
+  if(!selected)return;
+  const p={name:selected.name,lat:+selected.lat,lon:+selected.lon,sub:selected.sub,auto:false};
+  const rec=(load('mm_recent')||[]).filter(r=>!(norm(r.name)===norm(p.name)&&km(r.lat,r.lon,p.lat,p.lon)<5));
+  rec.unshift({name:p.name,lat:p.lat,lon:p.lon,sub:p.sub});store('mm_recent',rec.slice(0,5));
+  closePicker();hideBanner();go(p);
+}
+function geoErrText(e){return e&&e.code===1?t('permDenied'):t('geoFail')}
+
+// ===== הגדרות =====
+function openSettings(){
+  const pl=load('mm_lang')||'auto',pu=load('mm_units')||'auto';
+  $('#selLang').innerHTML=`<option value="auto">${t('langAuto')}</option>`+L.map(l=>`<option value="${l}">${LANG_NAMES[l]}</option>`).join('');
+  $('#selUnits').innerHTML=`<option value="auto">${t('unitsAuto')}</option><option value="metric">${t('metric')}</option><option value="imperial">${t('imperial')}</option>`;
+  $('#selLang').value=pl;$('#selUnits').value=pu;
+  $('#ovS').classList.add('show');
+}
+function closeSettings(){$('#ovS').classList.remove('show')}
+
+function applyStatic(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=t(el.dataset.i18n));
+  document.querySelectorAll('[data-tp]').forEach(el=>el.placeholder=t(el.dataset.tp));
+  document.querySelectorAll('[data-ta]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.ta)));
+  $('#credit').innerHTML=`<div class="made">👤 ${t('builtBy')}</div>
+    <div style="margin-top:10px">${t('dataCredit',{l:'<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>'})}</div>
+    <div>${t('obsCredit')}</div><div>${t('disclaimer')}</div>`;
+}
+
+function rerenderAll(){
+  applyPrefs();applyStatic();
+  if(state.place)setLocUI(state.place);
+  if(state.data)render();
+}
+
+function wire(){
+  $('#locBtn').addEventListener('click',openPicker);
+  $('#close').addEventListener('click',closePicker);
+  $('#ov').addEventListener('click',e=>{if(e.target.id==='ov')closePicker()});
+  $('#q').addEventListener('input',e=>{
+    selected=null;$('#confirm').classList.remove('show');
+    clearTimeout(tmr);const v=e.target.value.trim();
+    if(!v){renderList(defaultList(),'');return}
+    tmr=setTimeout(()=>search(v),250);
+  });
+  $('#q').addEventListener('keydown',e=>{
+    const opts=[...document.querySelectorAll('.opt')];
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();if(!opts.length)return;
+      active=(active+(e.key==='ArrowDown'?1:-1)+opts.length)%opts.length;
+      opts.forEach((o,i)=>o.classList.toggle('act',i===active));opts[active].scrollIntoView({block:'nearest'})}
+    if(e.key==='Enter'){e.preventDefault();if(selected)return confirmSel();if(opts.length)choose(active>=0?+opts[active].dataset.i:+opts[0].dataset.i)}
+    if(e.key==='Escape')closePicker();
+  });
+  $('#list').addEventListener('click',e=>{const b=e.target.closest('.opt');if(b)choose(+b.dataset.i)});
+  $('#ok').addEventListener('click',confirmSel);
+  $('#back').addEventListener('click',()=>{selected=null;$('#confirm').classList.remove('show');document.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));$('#q').focus()});
+  $('#geo').addEventListener('click',async()=>{
+    const b=$('#geo');b.disabled=true;b.textContent=t('detecting');
+    try{
+      const c=await getPos();const name=await reverseName(c.latitude,c.longitude);
+      selected={name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),sub:t('detectedSub')};
+      results=[selected];renderList(results,'x');choose(0);
+    }catch(e){$('#list').innerHTML=`<div class="hint">${geoErrText(e)}</div>`}
+    finally{b.disabled=false;b.textContent=t('detectBtn')}
+  });
+  $('#gear').addEventListener('click',openSettings);
+  $('#closeS').addEventListener('click',closeSettings);
+  $('#ovS').addEventListener('click',e=>{if(e.target.id==='ovS')closeSettings()});
+  $('#selLang').addEventListener('change',e=>{store('mm_lang',e.target.value);rerenderAll();openSettings()});
+  $('#selUnits').addEventListener('change',e=>{store('mm_units',e.target.value);rerenderAll();openSettings()});
+}
+
+// ===== הפעלה =====
+async function init(){
+  applyPrefs();applyStatic();wire();
+  const saved=load('mm_place');
+  if(saved){
+    go(saved);
+    try{
+      const st=navigator.permissions&&await navigator.permissions.query({name:'geolocation'});
+      if(st&&st.state==='granted'){
+        const c=await getPos(8000);
+        if(km(c.latitude,c.longitude,saved.lat,saved.lon)>8){
+          const name=await reverseName(c.latitude,c.longitude);
+          showBanner(`<div class="txt">${t('movedQ',{p:esc(name)})}</div><button class="btn" id="bNo">${t('stay')}</button><button class="btn pri" id="bYes">${t('switchYes')}</button>`);
+          $('#bYes').onclick=()=>{hideBanner();go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true})};
+          $('#bNo').onclick=hideBanner;
+        }
+      }
+    }catch(e){}
+    return;
+  }
+  $('#locName').textContent=t('locating');
+  $('#app').innerHTML=`<div class="loading"><div class="spin"></div>${t('locating')}</div>`;
+  try{
+    const c=await getPos();
+    const name=await reverseName(c.latitude,c.longitude);
+    go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true});
+    showBanner(`<div class="txt">${t('detectedQ',{p:esc(name)})}</div><button class="btn" id="bChg">${t('otherPlace')}</button><button class="btn pri" id="bOk">${t('yesBtn')}</button>`);
+    $('#bOk').onclick=hideBanner;$('#bChg').onclick=()=>{hideBanner();openPicker()};
+  }catch(e){
+    setLocUI(null);
+    $('#app').innerHTML=`<div class="card" style="text-align:center"><div style="font-size:34px">📍</div><b>${t('cantLocate')}</b><p class="sub" style="margin:6px 0 12px">${e&&e.code===1?t('permShort'):t('geoNA')} ${t('pickFromList')}</p><button class="btn pri" id="pick">${t('pickTitle')}</button></div>`;
+    $('#pick').onclick=openPicker;
+  }
+}
+if('serviceWorker' in navigator&&location.protocol==='https:'){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+init();
+
+</script>
+</body>
+</html>
