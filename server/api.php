@@ -47,6 +47,19 @@ function cache_get(string $key, int $ttl): ?array {
   return null;
 }
 function cache_put(string $key, $data): void { @file_put_contents($GLOBALS['CACHE'] . '/' . sha1($key) . '.json', json_encode(['v' => $data], JSON_UNESCAPED_UNICODE), LOCK_EX); }
+// Monitoring (IMS terms, section 10): every failed or stale fetch is logged with a timestamp,
+// so interruptions in the data feed can be identified and reported. The log is capped at ~200 lines.
+function log_issue(string $src, string $msg): void {
+  $f = $GLOBALS['CACHE'] . '/monitor.log';
+  $line = gmdate('Y-m-d H:i:s') . "Z [$src] $msg\n";
+  $old = is_file($f) ? (array)@file($f) : [];
+  $old = array_slice($old, -199);
+  @file_put_contents($f, implode('', $old) . $line, LOCK_EX);
+}
+function recent_issues(int $n = 20): array {
+  $f = $GLOBALS['CACHE'] . '/monitor.log';
+  return is_file($f) ? array_map('trim', array_slice((array)@file($f), -$n)) : [];
+}
 function dist_km(float $a, float $b, float $c, float $d): float {
   $r = M_PI / 180; $h = sin(($c - $a) * $r / 2) ** 2 + cos($a * $r) * cos($c * $r) * sin(($d - $b) * $r / 2) ** 2;
   return 2 * 6371 * asin(min(1.0, sqrt($h)));
@@ -56,8 +69,8 @@ function dist_km(float $a, float $b, float $c, float $d): float {
 function ims_stations(string $tok): array {
   $c = cache_get('ims_stations', 86400);
   if ($c !== null) return (array)$c['v'];
-  [$code, $body] = http_get('https://api.ims.gov.il/v1/envista/stations', ['Authorization: ApiToken ' . $tok], 20);
-  if ($code !== 200) return [];
+  [$code, $body, $err] = http_get('https://api.ims.gov.il/v1/envista/stations', ['Authorization: ApiToken ' . $tok], 20);
+  if ($code !== 200) { log_issue('IMS', "stations list failed: HTTP $code $err"); return []; }
   $list = [];
   foreach ((array)json_decode($body, true) as $s) {
     if (!is_array($s) || (isset($s['active']) && !$s['active'])) continue;
@@ -81,8 +94,9 @@ function ims_nearest(float $lat, float $lon, string $tok): ?array {
     $ck = 'ims_' . $s['id'];
     $c = cache_get($ck, 600);
     if ($c === null) {
-      [$code, $body] = http_get("https://api.ims.gov.il/v1/envista/stations/{$s['id']}/data/latest", ['Authorization: ApiToken ' . $tok]);
+      [$code, $body, $err] = http_get("https://api.ims.gov.il/v1/envista/stations/{$s['id']}/data/latest", ['Authorization: ApiToken ' . $tok]);
       $d = $code === 200 ? json_decode($body, true) : null;
+      if ($code !== 200) log_issue('IMS', "station {$s['id']} latest failed: HTTP $code $err");
       cache_put($ck, $d);
     } else { $d = $c['v']; }
     $row = $d['data'][0] ?? null;
@@ -92,7 +106,7 @@ function ims_nearest(float $lat, float $lon, string $tok): ?array {
       if (($ch['name'] ?? '') === 'TD' && (!isset($ch['valid']) || $ch['valid']) && is_numeric($ch['value'] ?? null)) { $td = (float)$ch['value']; break; }
     }
     $ts = strtotime((string)($row['datetime'] ?? ''));
-    if ($td === null || !$ts || time() - $ts > 7200) continue;
+    if ($td === null || !$ts || time() - $ts > 7200) { log_issue('IMS', "station {$s['id']} has no valid recent TD reading"); continue; }
     $name = ucwords(strtolower($s['name']));
     return ['source' => 'IMS', 'name' => $name, 'lat' => $s['lat'], 'lon' => $s['lon'], 'dist_km' => round($s['d'], 1), 'temp_c' => $td, 'time' => $ts];
   }
@@ -103,8 +117,8 @@ function ims_nearest(float $lat, float $lon, string $tok): ?array {
 function metar_nearest(float $lat, float $lon): ?array {
   $b = 0.7;
   $bbox = sprintf('%.2f,%.2f,%.2f,%.2f', $lat - $b, $lon - $b, $lat + $b, $lon + $b);
-  [$code, $body] = http_get('https://aviationweather.gov/api/data/metar?format=json&bbox=' . $bbox);
-  if ($code !== 200) return null;
+  [$code, $body, $err] = http_get('https://aviationweather.gov/api/data/metar?format=json&bbox=' . $bbox);
+  if ($code !== 200 && $code !== 204) { log_issue('METAR', "bbox $bbox failed: HTTP $code $err"); return null; }
   $j = json_decode($body, true);
   if (!is_array($j)) return null;
   $best = null;
@@ -136,6 +150,7 @@ if (isset($_GET['diag'])) {
       $r['ims_test_pardes_hanna'] = ims_nearest(32.47, 34.97, $IMS_TOKEN);
     }
   }
+  $r['recent_issues'] = recent_issues();
   out($r);
 }
 

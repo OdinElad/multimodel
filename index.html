@@ -204,6 +204,9 @@ const L=['he','en','ar','ru','zh','ja'];
 const LANG_NAMES={he:'עברית',en:'English',ar:'العربية',ru:'Русский',zh:'中文',ja:'日本語'};
 const RTL={he:1,ar:1};
 const S={
+imsName:["השירות המטאורולוגי", "Israel Meteorological Service", "خدمة الأرصاد الجوية الإسرائيلية", "Израильская метеорологическая служба", "以色列气象局", "イスラエル気象局"],
+srcLine:["מקור המדידה: {s}", "Source: {s}", "المصدر: {s}", "Источник: {s}", "数据来源：{s}", "出典: {s}"],
+imsDisc:["מקור נתוני התצפית בישראל הוא השירות המטאורולוגי. השירות המטאורולוגי אינו אחראי למידע או לשימוש בו, ואינו צד לפרסומו באפליקציה זו.", "Observation data in Israel comes from the Israel Meteorological Service (IMS). The IMS is not responsible for the data or its use, and is not a party to its publication in this app.", "مصدر بيانات القياس في إسرائيل هو خدمة الأرصاد الجوية الإسرائيلية، وهي غير مسؤولة عن البيانات أو استخدامها، وليست طرفًا في نشرها في هذا التطبيق.", "Данные наблюдений в Израиле предоставлены Израильской метеорологической службой. Служба не несёт ответственности за данные и их использование и не является стороной их публикации в этом приложении.", "以色列境内的实测数据来自以色列气象局。以色列气象局不对数据及其使用负责，也不是本应用发布这些数据的一方。", "イスラエル国内の観測データはイスラエル気象局によるものです。同局はデータおよびその利用について責任を負わず、本アプリでの公開の当事者ではありません。"],
 appName:['מולטי מודל','MultiModel','ملتي مودل','МультиМодель','多模型天气','マルチモデル'],
 tagline:['כל מודלי התחזית המובילים בעולם, במקום אחד','The world\'s leading forecast models, in one place','أهم نماذج التنبؤ في العالم في مكان واحد','Ведущие модели прогноза погоды в одном месте','全球主流天气预报模型，一站对比','世界の主要な予報モデルをひとつに'],
 locating:['מזהה את המיקום שלך...','Detecting your location...','جارٍ تحديد موقعك...','Определяем ваше местоположение...','正在定位...','現在地を検出中...'],
@@ -354,6 +357,9 @@ c_unknown:['לא ידוע','Unknown','غير معروف','Нет данных','
 const L_EU=['fr','de','es','it','pt','nl','pl','uk'];
 Object.assign(LANG_NAMES,{fr:"Français",de:"Deutsch",es:"Español",it:"Italiano",pt:"Português",nl:"Nederlands",pl:"Polski",uk:"Українська"});
 const S_EU={
+imsName:["Service météorologique d'Israël", "Israelischer Wetterdienst", "Servicio Meteorológico de Israel", "Servizio meteorologico israeliano", "Serviço Meteorológico de Israel", "Israëlische weerdienst", "Izraelska Służba Meteorologiczna", "Метеорологічна служба Ізраїлю"],
+srcLine:["Source : {s}", "Quelle: {s}", "Fuente: {s}", "Fonte: {s}", "Fonte: {s}", "Bron: {s}", "Źródło: {s}", "Джерело: {s}"],
+imsDisc:["Les observations en Israël proviennent du Service météorologique d'Israël. Celui-ci n'est pas responsable des données ni de leur utilisation, et n'est pas partie à leur publication dans cette application.", "Die Messdaten in Israel stammen vom Israelischen Wetterdienst. Dieser ist nicht für die Daten oder ihre Nutzung verantwortlich und nicht an ihrer Veröffentlichung in dieser App beteiligt.", "Los datos de observación en Israel proceden del Servicio Meteorológico de Israel, que no es responsable de los datos ni de su uso, ni es parte de su publicación en esta aplicación.", "I dati di osservazione in Israele provengono dal Servizio meteorologico israeliano, che non è responsabile dei dati né del loro utilizzo e non è parte della loro pubblicazione in questa app.", "Os dados de observação em Israel provêm do Serviço Meteorológico de Israel, que não é responsável pelos dados nem pela sua utilização, nem é parte da sua publicação nesta aplicação.", "Waarnemingen in Israël komen van de Israëlische weerdienst. Die is niet verantwoordelijk voor de gegevens of het gebruik ervan en is geen partij bij de publicatie in deze app.", "Dane pomiarowe w Izraelu pochodzą z Izraelskiej Służby Meteorologicznej, która nie odpowiada za dane ani ich wykorzystanie i nie jest stroną ich publikacji w tej aplikacji.", "Дані спостережень в Ізраїлі надає Метеорологічна служба Ізраїлю. Служба не несе відповідальності за дані та їх використання і не є стороною їх публікації в цьому застосунку."],
 appName:["MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","МультіМодель"],
 tagline:["Les principaux modèles de prévision du monde, au même endroit","Die führenden Wettermodelle der Welt an einem Ort","Los principales modelos de previsión del mundo, en un solo lugar","I principali modelli di previsione del mondo, in un unico posto","Os principais modelos de previsão do mundo, num só lugar","De belangrijkste weermodellen ter wereld op één plek","Najważniejsze modele prognoz świata w jednym miejscu","Провідні моделі прогнозу погоди в одному місці"],
 locating:["Localisation en cours...","Standort wird ermittelt...","Detectando tu ubicación...","Rilevamento della posizione...","A detetar a sua localização...","Locatie wordt bepaald...","Ustalanie lokalizacji...","Визначаємо ваше місцезнаходження..."],
@@ -764,6 +770,8 @@ function render(){
       <div>
         <div class="place">📍 ${esc(place.name)}</div>
         ${obs?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:obs.name,d:fDist(obs.dist_km),m:obs.age}))}</div>
+          <div class="updated">${t('srcLine',{s:obs.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)'})}</div>
+          ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
@@ -995,7 +1003,7 @@ function applyStatic(){
   document.querySelectorAll('[data-ta]').forEach(el=>el.setAttribute('aria-label',t(el.dataset.ta)));
   $('#credit').innerHTML=`<div class="made">👤 ${t('builtBy')}</div>
     <div style="margin-top:10px">${t('dataCredit',{l:'<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>'})}</div>
-    <div>${t('obsCredit')}</div><div>${t('disclaimer')}</div>`;
+    <div>${t('obsCredit')}</div><div>${t('imsDisc')}</div><div>${t('disclaimer')}</div>`;
 }
 
 function rerenderAll(){
