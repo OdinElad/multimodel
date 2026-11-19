@@ -544,10 +544,19 @@ function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return 
 // ===== שפה ויחידות (לפי האדם, לא לפי המקום) =====
 function navLangs(){const a=(navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en']);return a.map(x=>String(x))}
 function detectLang(){for(const l of navLangs()){let p=l.toLowerCase().split(/[-_]/)[0];if(p==='iw')p='he';if(L.includes(p))return p}return 'en'}
+// אזור "אמריקאי" נקבע רק אם גם הגדרת האזור וגם אזור הזמן מתאימים (הרבה מחשבים בישראל מוגדרים en-US).
+// התוצאה נשמרת בפעם הראשונה, כך שמי שטס לחו"ל ממשיך לקבל את אותן יחידות.
 function detectImperial(){
+  const saved=load('mm_units_det');if(saved==='imperial'||saved==='metric')return saved==='imperial';
   const IMP=['US','LR','MM','PR','GU','VI','AS','MP','UM','BS','BZ','KY','PW','FM','MH'];
-  for(const l of navLangs()){const m=l.match(/[-_]([A-Za-z]{2})\b/);if(m)return IMP.includes(m[1].toUpperCase())}
-  try{const r=new Intl.Locale(Intl.DateTimeFormat().resolvedOptions().locale).maximize().region;return IMP.includes(r)}catch(e){return false}
+  let region='';
+  for(const l of navLangs()){const m=l.match(/[-_]([A-Za-z]{2})\b/);if(m){region=m[1].toUpperCase();break}}
+  if(!region){try{region=new Intl.Locale(Intl.DateTimeFormat().resolvedOptions().locale).maximize().region||''}catch(e){}}
+  let tz='';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||''}catch(e){}
+  const tzOk=!tz||/^(America|Pacific|US)\//.test(tz)||tz==='Africa/Monrovia'||tz==='Asia/Yangon'||tz==='Asia/Rangoon';
+  const imp=IMP.includes(region)&&tzOk;
+  store('mm_units_det',imp?'imperial':'metric');
+  return imp;
 }
 let LANG='en',LI=1,LOC='en';
 const U={imp:false};
