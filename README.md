@@ -13,9 +13,11 @@ A free, open-source weather app that compares forecasts from the world's leading
 - 14 languages, metric or imperial units, saved per user
 - Installable as a web app (PWA), works offline with the last saved forecast
 
-## Data sources
-- Forecasts: [Open-Meteo.com](https://open-meteo.com/) (CC BY 4.0)
-- Observations: Israel Meteorological Service (IMS) and NOAA Aviation Weather Center (METAR)
+## Data sources and attribution
+- Weather data by [Open-Meteo.com](https://open-meteo.com/), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The data is processed by this app: medians, averages, confidence scores and alerts are derived from it, and units are converted. Open-Meteo does not endorse this project.
+- Place search: Open-Meteo Geocoding API, based on GeoNames (CC BY 4.0).
+- Observations in Israel: Israel Meteorological Service (IMS). The IMS is not responsible for the data or its use, and is not a party to its publication in this app.
+- Observations elsewhere: NOAA Aviation Weather Center (METAR), public domain.
 
 ## Structure
 - `index.html` the whole app (HTML, CSS, JS)
