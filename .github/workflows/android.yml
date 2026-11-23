@@ -14,6 +14,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+          cache: gradle
       - name: Decrypt upload key
         env:
           PW: ${{ secrets.KEYSTORE_PASSWORD }}
@@ -27,7 +28,7 @@ jobs:
           MM_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
           chmod +x gradlew
-          ./gradlew --no-daemon bundleRelease assembleRelease
+          ./gradlew --no-daemon bundleRelease assembleRelease || (echo 'Retrying once in 60s (Maven rate limit)'; sleep 60; ./gradlew --no-daemon bundleRelease assembleRelease)
       - name: Upload key fingerprint
         env:
           PW: ${{ secrets.KEYSTORE_PASSWORD }}
