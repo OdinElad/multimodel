@@ -162,6 +162,13 @@ function mm_app_url(): string { return 'https://odinelad.github.io/multimodel/';
 /** Send to one subscriber; drops subscriptions the push service reports as gone. */
 function mm_push(array $s, string $title, string $body, string $tag): int {
   $payload = json_encode(['title' => $title, 'body' => $body, 'tag' => $tag, 'url' => mm_app_url()], JSON_UNESCAPED_UNICODE);
+  // Web Push allows about 4 KB of encrypted payload: stay well below it. Shorten the body if needed, otherwise do not send.
+  if (strlen($payload) >= 3000) {
+    $over = strlen($payload) - 2900;
+    $body = mb_strcut($body, 0, max(0, strlen($body) - $over - 3), 'UTF-8') . '...';
+    $payload = json_encode(['title' => $title, 'body' => $body, 'tag' => $tag, 'url' => mm_app_url()], JSON_UNESCAPED_UNICODE);
+  }
+  if (!is_string($payload) || strlen($payload) >= 3000) { mm_log('push payload too large, not sent'); return 413; }
   try { $code = webpush_send($s, $payload, mm_vapid()); }
   catch (Throwable $e) { mm_log('push error: ' . $e->getMessage()); $code = 0; }
   $db = mm_db();
