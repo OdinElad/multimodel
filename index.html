@@ -151,6 +151,13 @@ img.logo{width:42px;height:42px;border-radius:12px;box-shadow:0 6px 20px #4f9cf9
 footer .made{cursor:default}
 [dir=ltr] .locbtn,[dir=ltr] .opt{text-align:left}
 .opt .ck{margin-inline-start:auto}
+.alertsBox{border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.tgl{display:flex;align-items:center;gap:10px;color:var(--txt);font-size:15px;cursor:pointer}
+.tgl input{width:20px;height:20px;accent-color:var(--acc)}
+.alertsBox small{color:var(--mut);font-size:12.5px;line-height:1.5}
+.amsg{font-size:13px;color:#6ee7a0;min-height:0}
+.amsg.err{color:#fca5a5}
+footer a.pp{color:#9cc3ff}
 
 </style>
 </head>
@@ -191,6 +198,12 @@ footer .made{cursor:default}
       <h3><span data-i18n="settings"></span> <button class="x" id="closeS" data-ta="done">×</button></h3>
       <label class="fld"><span data-i18n="language"></span><select id="selLang"></select></label>
       <label class="fld"><span data-i18n="units"></span><select id="selUnits"></select></label>
+      <div class="fld alertsBox">
+        <label class="tgl"><input type="checkbox" id="alertsTgl"><span data-i18n="alertsOpt"></span></label>
+        <small data-i18n="alertsOptSub"></small>
+        <div id="alertsMsg" class="amsg"></div>
+        <button class="btn" id="alertsTest" data-i18n="testBtn" hidden></button>
+      </div>
     </div>
   </div>
 
@@ -204,6 +217,15 @@ const L=['he','en','ar','ru','zh','ja'];
 const LANG_NAMES={he:'עברית',en:'English',ar:'العربية',ru:'Русский',zh:'中文',ja:'日本語'};
 const RTL={he:1,ar:1};
 const S={
+alertsOpt:["התראות על מזג אוויר חריג", "Unusual weather alerts", "تنبيهات الطقس غير الاعتيادي", "Уведомления о необычной погоде", "异常天气预警", "異常気象の通知"],
+alertsOptSub:["התראה בערב שלפני, בסביבות 20:00 לפי השעה במקום, כשצפוי קור או חום חריגים יחסית למקום ולעונה.", "A notification the evening before, around 20:00 local time, when unusual cold or heat for the place and season is expected.", "إشعار في المساء السابق قرابة الساعة 20:00 بالتوقيت المحلي، عند توقع برد أو حر غير اعتيادي بالنسبة للمكان والموسم.", "Уведомление накануне вечером, около 20:00 по местному времени, если ожидается необычный для места и сезона холод или жара.", "当预计出现相对于当地和季节的异常寒冷或炎热时，在前一天当地时间20:00左右发送通知。", "その場所と季節にしては異例の寒さや暑さが予想される場合、前日の現地時間20:00頃に通知します。"],
+alertsOn:["ההתראות פעילות עבור {p}", "Alerts are on for {p}", "التنبيهات مفعلة لـ {p}", "Уведомления включены: {p}", "已为{p}开启预警", "{p}の通知はオンです"],
+alertsDenied:["ההרשאה להתראות נחסמה. אפשר לאשר אותה בהגדרות הטלפון או הדפדפן.", "Notification permission is blocked. You can allow it in your phone or browser settings.", "تم حظر إذن الإشعارات. يمكنك السماح به من إعدادات الهاتف أو المتصفح.", "Разрешение на уведомления заблокировано. Его можно включить в настройках телефона или браузера.", "通知权限已被阻止，可在手机或浏览器设置中允许。", "通知の許可がブロックされています。端末またはブラウザの設定で許可できます。"],
+alertsUnsupported:["המכשיר או הדפדפן הזה לא תומכים בהתראות.", "This device or browser does not support notifications.", "هذا الجهاز أو المتصفح لا يدعم الإشعارات.", "Это устройство или браузер не поддерживает уведомления.", "此设备或浏览器不支持通知。", "この端末またはブラウザは通知に対応していません。"],
+alertsErr:["לא הצלחתי להפעיל את ההתראות. נסה שוב.", "Could not turn on alerts. Please try again.", "تعذّر تفعيل التنبيهات. حاول مرة أخرى.", "Не удалось включить уведомления. Попробуйте ещё раз.", "无法开启预警，请重试。", "通知をオンにできませんでした。もう一度お試しください。"],
+testBtn:["שלח התראת בדיקה", "Send a test notification", "إرسال إشعار تجريبي", "Отправить тестовое уведомление", "发送测试通知", "テスト通知を送信"],
+testSent:["נשלחה התראת בדיקה.", "Test notification sent.", "تم إرسال إشعار تجريبي.", "Тестовое уведомление отправлено.", "测试通知已发送。", "テスト通知を送信しました。"],
+privacy:["מדיניות פרטיות", "Privacy policy", "سياسة الخصوصية", "Политика конфиденциальности", "隐私政策", "プライバシーポリシー"],
 modNote:["הנתונים עובדו: האפליקציה מחשבת מהם חציון, ממוצעים, ציוני ביטחון והתראות, וממירה יחידות.", "Data has been processed: the app derives medians, averages, confidence scores and alerts from it, and converts units.", "تمت معالجة البيانات: يحسب التطبيق منها الوسيط والمتوسطات ودرجات الثقة والتنبيهات، ويحوّل الوحدات.", "Данные обработаны: приложение рассчитывает по ним медиану, средние значения, уверенность и предупреждения, а также переводит единицы.", "数据已经过处理：本应用据此计算中位数、平均值、可信度和预警，并进行单位换算。", "データは加工されています。本アプリは中央値、平均、信頼度、警報を算出し、単位を換算しています。"],
 geoCredit:["חיפוש מקומות: Open-Meteo Geocoding API, על בסיס GeoNames (CC BY 4.0).", "Place search: Open-Meteo Geocoding API, based on GeoNames (CC BY 4.0).", "البحث عن الأماكن: Open-Meteo Geocoding API، استنادًا إلى GeoNames (CC BY 4.0).", "Поиск мест: Open-Meteo Geocoding API на основе GeoNames (CC BY 4.0).", "地点搜索：Open-Meteo Geocoding API，基于GeoNames（CC BY 4.0）。", "地名検索: Open-Meteo Geocoding API（GeoNamesに基づく、CC BY 4.0）。"],
 imsName:["השירות המטאורולוגי", "Israel Meteorological Service", "خدمة الأرصاد الجوية الإسرائيلية", "Израильская метеорологическая служба", "以色列气象局", "イスラエル気象局"],
@@ -359,6 +381,15 @@ c_unknown:['לא ידוע','Unknown','غير معروف','Нет данных','
 const L_EU=['fr','de','es','it','pt','nl','pl','uk'];
 Object.assign(LANG_NAMES,{fr:"Français",de:"Deutsch",es:"Español",it:"Italiano",pt:"Português",nl:"Nederlands",pl:"Polski",uk:"Українська"});
 const S_EU={
+alertsOpt:["Alertes météo inhabituelle", "Warnungen bei ungewöhnlichem Wetter", "Alertas de tiempo inusual", "Allerte meteo insolito", "Alertas de tempo invulgar", "Waarschuwingen voor ongewoon weer", "Ostrzeżenia o nietypowej pogodzie", "Сповіщення про незвичну погоду"],
+alertsOptSub:["Une notification la veille vers 20 h, heure locale, quand un froid ou une chaleur inhabituels pour le lieu et la saison sont prévus.", "Eine Benachrichtigung am Vorabend gegen 20:00 Uhr Ortszeit, wenn für Ort und Jahreszeit ungewöhnliche Kälte oder Hitze erwartet wird.", "Un aviso la noche anterior, hacia las 20:00 hora local, cuando se prevé frío o calor inusual para el lugar y la estación.", "Una notifica la sera prima, verso le 20:00 ora locale, quando è previsto freddo o caldo insolito per il luogo e la stagione.", "Uma notificação na véspera, por volta das 20:00 hora local, quando se prevê frio ou calor invulgar para o local e a estação.", "Een melding de avond ervoor, rond 20:00 lokale tijd, als er ongewone kou of hitte voor de plek en het seizoen wordt verwacht.", "Powiadomienie wieczorem dzień wcześniej, około 20:00 czasu lokalnego, gdy prognozowane jest zimno lub upał nietypowe dla miejsca i pory roku.", "Сповіщення напередодні ввечері, близько 20:00 за місцевим часом, якщо очікується незвичний для місця і сезону холод або спека."],
+alertsOn:["Alertes activées pour {p}", "Warnungen aktiv für {p}", "Alertas activadas para {p}", "Allerte attive per {p}", "Alertas ativos para {p}", "Waarschuwingen staan aan voor {p}", "Ostrzeżenia włączone: {p}", "Сповіщення увімкнено: {p}"],
+alertsDenied:["L'autorisation des notifications est bloquée. Vous pouvez l'activer dans les réglages du téléphone ou du navigateur.", "Benachrichtigungen sind blockiert. Sie können sie in den Telefon- oder Browsereinstellungen erlauben.", "El permiso de notificaciones está bloqueado. Puedes permitirlo en los ajustes del teléfono o del navegador.", "Il permesso per le notifiche è bloccato. Puoi consentirlo nelle impostazioni del telefono o del browser.", "A permissão de notificações está bloqueada. Pode permiti-la nas definições do telemóvel ou do navegador.", "Meldingen zijn geblokkeerd. Je kunt ze toestaan in de instellingen van je telefoon of browser.", "Powiadomienia są zablokowane. Możesz je włączyć w ustawieniach telefonu lub przeglądarki.", "Дозвіл на сповіщення заблоковано. Його можна увімкнути в налаштуваннях телефона або браузера."],
+alertsUnsupported:["Cet appareil ou navigateur ne prend pas en charge les notifications.", "Dieses Gerät oder dieser Browser unterstützt keine Benachrichtigungen.", "Este dispositivo o navegador no admite notificaciones.", "Questo dispositivo o browser non supporta le notifiche.", "Este dispositivo ou navegador não suporta notificações.", "Dit apparaat of deze browser ondersteunt geen meldingen.", "To urządzenie lub przeglądarka nie obsługuje powiadomień.", "Цей пристрій або браузер не підтримує сповіщення."],
+alertsErr:["Impossible d'activer les alertes. Réessayez.", "Warnungen konnten nicht aktiviert werden. Bitte erneut versuchen.", "No se pudieron activar las alertas. Inténtalo de nuevo.", "Impossibile attivare le allerte. Riprova.", "Não foi possível ativar os alertas. Tente novamente.", "Waarschuwingen konden niet worden ingeschakeld. Probeer het opnieuw.", "Nie udało się włączyć ostrzeżeń. Spróbuj ponownie.", "Не вдалося увімкнути сповіщення. Спробуйте ще раз."],
+testBtn:["Envoyer une notification de test", "Testbenachrichtigung senden", "Enviar notificación de prueba", "Invia una notifica di prova", "Enviar notificação de teste", "Testmelding sturen", "Wyślij powiadomienie testowe", "Надіслати тестове сповіщення"],
+testSent:["Notification de test envoyée.", "Testbenachrichtigung gesendet.", "Notificación de prueba enviada.", "Notifica di prova inviata.", "Notificação de teste enviada.", "Testmelding verstuurd.", "Wysłano powiadomienie testowe.", "Тестове сповіщення надіслано."],
+privacy:["Politique de confidentialité", "Datenschutzerklärung", "Política de privacidad", "Informativa sulla privacy", "Política de privacidade", "Privacybeleid", "Polityka prywatności", "Політика конфіденційності"],
 modNote:["Les données ont été modifiées : l'application en calcule des médianes, des moyennes, des indices de confiance et des alertes, et convertit les unités.", "Die Daten wurden bearbeitet: Die App berechnet daraus Mediane, Mittelwerte, Sicherheitswerte und Warnungen und rechnet Einheiten um.", "Los datos han sido procesados: la aplicación calcula medianas, medias, índices de confianza y alertas, y convierte unidades.", "I dati sono stati elaborati: l'app ne ricava mediane, medie, indici di affidabilità e allerte, e converte le unità.", "Os dados foram processados: a aplicação calcula medianas, médias, índices de confiança e alertas, e converte unidades.", "De gegevens zijn bewerkt: de app berekent er medianen, gemiddelden, zekerheidsscores en waarschuwingen uit en rekent eenheden om.", "Dane zostały przetworzone: aplikacja wylicza z nich mediany, średnie, wskaźniki pewności i ostrzeżenia oraz przelicza jednostki.", "Дані оброблено: застосунок обчислює з них медіану, середні значення, впевненість і попередження та перераховує одиниці."],
 geoCredit:["Recherche de lieux : Open-Meteo Geocoding API, basée sur GeoNames (CC BY 4.0).", "Ortssuche: Open-Meteo Geocoding API auf Basis von GeoNames (CC BY 4.0).", "Búsqueda de lugares: Open-Meteo Geocoding API, basada en GeoNames (CC BY 4.0).", "Ricerca località: Open-Meteo Geocoding API, basata su GeoNames (CC BY 4.0).", "Pesquisa de locais: Open-Meteo Geocoding API, com base no GeoNames (CC BY 4.0).", "Plaatsen zoeken: Open-Meteo Geocoding API, gebaseerd op GeoNames (CC BY 4.0).", "Wyszukiwanie miejsc: Open-Meteo Geocoding API na podstawie GeoNames (CC BY 4.0).", "Пошук місць: Open-Meteo Geocoding API на основі GeoNames (CC BY 4.0)."],
 imsName:["Service météorologique d'Israël", "Israelischer Wetterdienst", "Servicio Meteorológico de Israel", "Servizio meteorologico israeliano", "Serviço Meteorológico de Israel", "Israëlische weerdienst", "Izraelska Służba Meteorologiczna", "Метеорологічна служба Ізраїлю"],
@@ -934,6 +965,7 @@ async function go(p){
     else{$('#app').innerHTML=`<div class="err"><b>${t('loadErr')}</b><br>${t('checkNet')}</div>`;return}
   }
   render();
+  alertsSync();
   const o=await obsP;
   if(o&&state.place===p){state.obs=o;render()}
 }
@@ -992,13 +1024,53 @@ function confirmSel(){
 }
 function geoErrText(e){return e&&e.code===1?t('permDenied'):t('geoFail')}
 
+
+// ===== התראות על מזג אוויר חריג (Web Push) =====
+const SUB_API='https://maromcyber.com/weather/subscribe.php';
+const pushOK=()=>('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window)&&location.protocol==='https:';
+function b64uToU8(s){s=s.replace(/-/g,'+').replace(/_/g,'/');s+='='.repeat((4-s.length%4)%4);const r=atob(s);return Uint8Array.from(r,c=>c.charCodeAt(0))}
+function alertsMsg(txt,err){const m=$('#alertsMsg');if(!m)return;m.textContent=txt||'';m.classList.toggle('err',!!err)}
+async function postSub(body){const r=await fetch(SUB_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return r.json()}
+async function currentSub(){if(!pushOK())return null;const reg=await navigator.serviceWorker.ready;return reg.pushManager.getSubscription()}
+async function sendSub(sub){
+  const p=state.place;if(!p||!sub)return false;
+  let tz='UTC';try{tz=(state.data&&state.data.timezone)||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){}
+  const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:p.lat,lon:p.lon,name:p.name,lang:LANG,imperial:U.imp,tz});
+  return !!(j&&j.ok);
+}
+async function alertsEnable(){
+  if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){alertsMsg(t('alertsDenied'),1);return false}
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub){const k=await (await fetch(SUB_API+'?key=1')).json();sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(k.key)})}
+    if(!(await sendSub(sub)))throw new Error('server');
+    store('mm_alerts',true);return true;
+  }catch(e){alertsMsg(t('alertsErr'),1);return false}
+}
+async function alertsDisable(){
+  store('mm_alerts',false);
+  try{const sub=await currentSub();if(sub){await postSub({action:'unsubscribe',endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+}
+async function alertsSync(){ // עדכון המיקום, השפה והיחידות בשרת אחרי כל שינוי
+  if(!load('mm_alerts'))return;
+  try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
+}
+function alertsUI(){
+  const on=!!load('mm_alerts');const tg=$('#alertsTgl');if(!tg)return;
+  tg.checked=on;$('#alertsTest').hidden=!on;
+  if(on&&state.place)alertsMsg(t('alertsOn',{p:state.place.name}));else if(!pushOK())alertsMsg(t('alertsUnsupported'),1);else alertsMsg('');
+}
+
 // ===== הגדרות =====
 function openSettings(){
   const pl=load('mm_lang')||'auto',pu=load('mm_units')||'auto';
   $('#selLang').innerHTML=`<option value="auto">${t('langAuto')}</option>`+L.map(l=>`<option value="${l}">${LANG_NAMES[l]}</option>`).join('');
   $('#selUnits').innerHTML=`<option value="auto">${t('unitsAuto')}</option><option value="metric">${t('metric')}</option><option value="imperial">${t('imperial')}</option>`;
   $('#selLang').value=pl;$('#selUnits').value=pu;
-  $('#ovS').classList.add('show');
+  $('#ovS').classList.add('show');alertsUI();
 }
 function closeSettings(){$('#ovS').classList.remove('show')}
 
@@ -1010,7 +1082,7 @@ function applyStatic(){
     <div style="margin-top:10px">${t('dataCredit',{l:'<a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>'}).replace('CC BY 4.0','<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>')}</div>
     <div>${t('modNote')}</div>
     <div>${t('geoCredit').replace('CC BY 4.0','<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>')}</div>
-    <div>${t('obsCredit')}</div><div>${t('imsDisc')}</div><div>${t('disclaimer')}</div>`;
+    <div>${t('obsCredit')}</div><div>${t('imsDisc')}</div><div>${t('disclaimer')}</div><div><a class="pp" href="privacy.html">${t('privacy')}</a></div>`;
 }
 
 function rerenderAll(){
@@ -1052,8 +1124,17 @@ function wire(){
   $('#gear').addEventListener('click',openSettings);
   $('#closeS').addEventListener('click',closeSettings);
   $('#ovS').addEventListener('click',e=>{if(e.target.id==='ovS')closeSettings()});
-  $('#selLang').addEventListener('change',e=>{store('mm_lang',e.target.value);rerenderAll();openSettings()});
-  $('#selUnits').addEventListener('change',e=>{store('mm_units',e.target.value);rerenderAll();openSettings()});
+  $('#selLang').addEventListener('change',e=>{store('mm_lang',e.target.value);rerenderAll();openSettings();alertsSync()});
+  $('#selUnits').addEventListener('change',e=>{store('mm_units',e.target.value);rerenderAll();openSettings();alertsSync()});
+  $('#alertsTgl').addEventListener('change',async e=>{
+    const tg=e.target;tg.disabled=true;
+    if(tg.checked){const ok=await alertsEnable();tg.checked=ok}else{await alertsDisable()}
+    tg.disabled=false;if(tg.checked||!$('#alertsMsg').classList.contains('err'))alertsUI();
+  });
+  $('#alertsTest').addEventListener('click',async()=>{
+    try{const sub=await currentSub();if(!sub)return alertsUI();const j=await postSub({action:'test',endpoint:sub.endpoint});
+      alertsMsg(j&&j.ok?t('testSent'):t('alertsErr'),!(j&&j.ok))}catch(e){alertsMsg(t('alertsErr'),1)}
+  });
 }
 
 // ===== הפעלה =====
