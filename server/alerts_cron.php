@@ -8,6 +8,25 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/alerts_lib.php';
 $dry = in_array('--dry', $argv, true); $force = in_array('--force', $argv, true);
+// --skill LAT LON: diagnostic for the in-app accuracy card (Previous Runs API field names and per-model error)
+if (($i = array_search('--skill', $argv, true)) !== false) {
+  $ids = 'ecmwf_ifs025,gfs_seamless,icon_seamless,ukmo_seamless,meteofrance_seamless';
+  $j = mm_http_json('https://previous-runs-api.open-meteo.com/v1/forecast?latitude=' . (float)$argv[$i + 1] . '&longitude=' . (float)$argv[$i + 2]
+    . '&hourly=temperature_2m,temperature_2m_previous_day1&models=' . $ids . '&past_days=7&forecast_days=1&timezone=auto');
+  if (!$j) { echo "fetch failed\n"; exit; }
+  $H = $j['hourly']; $out = ['keys' => array_keys($H), 'n' => count($H['time'])];
+  $now = gmdate('Y-m-d\TH', time() + (int)$j['utc_offset_seconds']);
+  foreach (explode(',', $ids) as $id) {
+    $a = $H['temperature_2m_' . $id] ?? null; $f = $H['temperature_2m_previous_day1_' . $id] ?? null; $e = [];
+    if ($a && $f) foreach ($H['time'] as $k => $tm) {
+      if (substr($tm, 0, 13) >= $now) break;
+      $act = []; foreach (explode(',', $ids) as $id2) { $v = $H['temperature_2m_' . $id2][$k] ?? null; if ($v !== null) $act[] = $v; }
+      if (count($act) >= 3 && $f[$k] !== null) $e[] = $f[$k] - mm_median($act);
+    }
+    $out[$id] = $e ? ['n' => count($e), 'mae' => round(array_sum(array_map('abs', $e)) / count($e), 2), 'bias' => round(array_sum($e) / count($e), 2)] : null;
+  }
+  echo json_encode($out), "\n"; exit;
+}
 // --probe LAT LON: evaluate one location and print the result (no subscribers needed, sends nothing)
 if (($i = array_search('--probe', $argv, true)) !== false) {
   $lat = (float)($argv[$i + 1] ?? 0); $lon = (float)($argv[$i + 2] ?? 0);
