@@ -275,6 +275,7 @@ table.stg th small{color:var(--mut);font-weight:400}
         <div id="alertsMsg" class="amsg"></div>
         <button class="btn" id="alertsTest" data-i18n="testBtn" hidden></button>
       </div>
+      <button class="btn pri" id="doneS" data-i18n="sDone" style="width:100%;margin-top:6px"></button>
     </div>
   </div>
 
@@ -677,6 +678,13 @@ stDet:['{m}, {d}: מקסימום {x}, מינימום {n}, גשם {r}, משבים
 stNoData:['אין נתונים למודל הזה ביום הזה.','No data for this model on this day.','لا توجد بيانات لهذا النموذج في هذا اليوم.','Нет данных этой модели на этот день.','该模型当天无数据。','このモデルのこの日のデータはありません。','Pas de données pour ce modèle ce jour-là.','Keine Daten für dieses Modell an diesem Tag.','No hay datos de este modelo para este día.','Nessun dato per questo modello in questo giorno.','Sem dados deste modelo neste dia.','Geen gegevens voor dit model op deze dag.','Brak danych tego modelu na ten dzień.','Немає даних цієї моделі на цей день.'],
 updReady:['יש גרסה חדשה של האפליקציה.','A new version of the app is available.','يتوفر إصدار جديد من التطبيق.','Доступна новая версия приложения.','应用有新版本。','アプリの新しいバージョンがあります。','Une nouvelle version de l\'application est disponible.','Eine neue Version der App ist verfügbar.','Hay una nueva versión de la app.','È disponibile una nuova versione dell\'app.','Há uma nova versão da app.','Er is een nieuwe versie van de app.','Dostępna jest nowa wersja aplikacji.','Доступна нова версія застосунку.'],
 updBtn:['רענן','Refresh','تحديث','Обновить','刷新','更新','Actualiser','Aktualisieren','Actualizar','Aggiorna','Atualizar','Vernieuwen','Odśwież','Оновити'],
+aWorking:["רגע...", "One moment...", "لحظة...", "Секунду...", "请稍候...", "少々お待ちください...", "Un instant...", "Einen Moment...", "Un momento...", "Un attimo...", "Um momento...", "Even geduld...", "Chwileczkę...", "Хвилинку..."],
+aOnSent:["✅ ההתראות הופעלו עבור {p}. שלחנו לטלפון התראת בדיקה, היא אמורה להגיע תוך כמה שניות.", "✅ Alerts are on for {p}. We sent a test notification to your phone; it should arrive within seconds.", "✅ تم تفعيل التنبيهات لـ {p}. أرسلنا إشعارًا تجريبيًا إلى هاتفك، وسيصل خلال ثوانٍ.", "✅ Предупреждения включены для {p}. Мы отправили тестовое уведомление, оно придёт через несколько секунд.", "✅ 已为 {p} 开启预警。我们已向手机发送测试通知，几秒内应会收到。", "✅ {p} の警報をオンにしました。テスト通知を送信しました。数秒で届くはずです。", "✅ Alertes activées pour {p}. Nous avons envoyé une notification de test, elle devrait arriver dans quelques secondes.", "✅ Warnungen für {p} sind an. Wir haben eine Testbenachrichtigung gesendet, sie sollte in Sekunden ankommen.", "✅ Alertas activadas para {p}. Enviamos una notificación de prueba; debería llegar en segundos.", "✅ Avvisi attivati per {p}. Abbiamo inviato una notifica di prova, dovrebbe arrivare in pochi secondi.", "✅ Alertas ativados para {p}. Enviámos uma notificação de teste; deve chegar em segundos.", "✅ Waarschuwingen staan aan voor {p}. We hebben een testmelding gestuurd, die binnen enkele seconden aankomt.", "✅ Ostrzeżenia włączone dla {p}. Wysłaliśmy powiadomienie testowe, powinno dotrzeć w ciągu kilku sekund.", "✅ Попередження увімкнено для {p}. Ми надіслали тестове сповіщення, воно має прийти за кілька секунд."],
+aSent:["✅ נשלחה התראת בדיקה. אם לא הגיעה תוך דקה, בדוק שההתראות של האפליקציה מופעלות בהגדרות הטלפון.", "✅ Test notification sent. If it does not arrive within a minute, check that notifications for the app are allowed in the phone settings.", "✅ تم إرسال إشعار تجريبي. إن لم يصل خلال دقيقة، تحقق من السماح بإشعارات التطبيق في إعدادات الهاتف.", "✅ Тестовое уведомление отправлено. Если оно не придёт в течение минуты, проверьте, что уведомления приложения разрешены в настройках телефона.", "✅ 测试通知已发送。如一分钟内未收到，请在手机设置中检查是否允许该应用的通知。", "✅ テスト通知を送信しました。1分以内に届かない場合は、端末の設定でアプリの通知が許可されているか確認してください。", "✅ Notification de test envoyée. Si elle n'arrive pas dans la minute, vérifiez que les notifications de l'app sont autorisées dans les réglages du téléphone.", "✅ Testbenachrichtigung gesendet. Falls sie nicht innerhalb einer Minute ankommt, prüfe, ob Benachrichtigungen der App in den Telefoneinstellungen erlaubt sind.", "✅ Notificación de prueba enviada. Si no llega en un minuto, comprueba que las notificaciones de la app estén permitidas en los ajustes del teléfono.", "✅ Notifica di prova inviata. Se non arriva entro un minuto, controlla che le notifiche dell'app siano consentite nelle impostazioni del telefono.", "✅ Notificação de teste enviada. Se não chegar num minuto, verifique se as notificações da app estão permitidas nas definições do telefone.", "✅ Testmelding verstuurd. Komt die niet binnen een minuut, controleer dan of meldingen van de app zijn toegestaan in de telefooninstellingen.", "✅ Wysłano powiadomienie testowe. Jeśli nie dotrze w ciągu minuty, sprawdź, czy powiadomienia aplikacji są dozwolone w ustawieniach telefonu.", "✅ Тестове сповіщення надіслано. Якщо воно не прийде за хвилину, перевірте, чи дозволені сповіщення застосунку в налаштуваннях телефону."],
+aTooSoon:["אפשר לשלוח התראת בדיקה פעם בדקה. נסה שוב בעוד רגע.", "You can send a test once a minute. Try again shortly.", "يمكن إرسال إشعار تجريبي مرة كل دقيقة. حاول بعد قليل.", "Тест можно отправлять раз в минуту. Попробуйте чуть позже.", "每分钟只能发送一次测试，请稍后再试。", "テストは1分に1回送信できます。少し後でもう一度お試しください。", "Un test par minute maximum. Réessayez dans un instant.", "Ein Test pro Minute. Versuche es gleich noch einmal.", "Puedes enviar una prueba por minuto. Inténtalo en un momento.", "Puoi inviare una prova al minuto. Riprova tra poco.", "Pode enviar um teste por minuto. Tente daqui a pouco.", "Je kunt één test per minuut sturen. Probeer het zo opnieuw.", "Test można wysłać raz na minutę. Spróbuj za chwilę.", "Тест можна надіслати раз на хвилину. Спробуйте трохи пізніше."],
+aFail:["לא הצלחנו לשלוח התראה לטלפון הזה.", "We could not send a notification to this phone.", "تعذّر إرسال إشعار إلى هذا الهاتف.", "Не удалось отправить уведомление на этот телефон.", "无法向此手机发送通知。", "この端末に通知を送信できませんでした。", "Impossible d'envoyer une notification à ce téléphone.", "Wir konnten keine Benachrichtigung an dieses Telefon senden.", "No pudimos enviar una notificación a este teléfono.", "Non siamo riusciti a inviare una notifica a questo telefono.", "Não foi possível enviar uma notificação para este telefone.", "We konden geen melding naar deze telefoon sturen.", "Nie udało się wysłać powiadomienia na ten telefon.", "Не вдалося надіслати сповіщення на цей телефон."],
+aOff:["ההתראות כבויות.", "Alerts are off.", "التنبيهات متوقفة.", "Предупреждения выключены.", "预警已关闭。", "警報はオフです。", "Les alertes sont désactivées.", "Warnungen sind aus.", "Las alertas están desactivadas.", "Gli avvisi sono disattivati.", "Os alertas estão desativados.", "Waarschuwingen staan uit.", "Ostrzeżenia są wyłączone.", "Попередження вимкнено."],
+sDone:["סיום", "Done", "تم", "Готово", "完成", "完了", "Terminé", "Fertig", "Listo", "Fatto", "Concluído", "Klaar", "Gotowe", "Готово"],
 };
 {const ALL=L;for(const k in S2){if(S2[k].length!==ALL.length)console.warn('i18n length',k);S[k]=S2[k]}}
 const CITIES=[
@@ -712,7 +720,7 @@ const CITIES=[
 // ===== הגדרות בסיס =====
 const $=s=>document.querySelector(s);
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.0';
+const APP_VER='2.0.1';
 
 // --- Which models are shown. Default: only the most accurate one here. ---
 const MSEL='mm_models';
@@ -1412,6 +1420,24 @@ async function alertsSync(){ // עדכון המיקום, השפה והיחידו
   if(!load('mm_alerts'))return;
   try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
 }
+async function sendTest(fresh){
+  const b=$('#alertsTest');b.disabled=true;alertsMsg(t('aWorking'));
+  try{
+    let sub=await currentSub();
+    if(!sub){if(!(await alertsEnable()))return;sub=await currentSub()}   // subscription was lost (e.g. after an app update): renew it
+    let j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null);
+    if(j&&j.error==='not_found'){await sendSub(sub);j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null)}
+    if(j&&j.ok)alertsMsg(t(fresh?'aOnSent':'aSent',{p:state.place?state.place.name:''}));
+    else if(j&&j.error==='too_soon')alertsMsg(t('aTooSoon'),1);
+    else alertsMsg(t('aFail')+(j&&j.status?` (${j.status})`:''),1);
+  }catch(e){alertsMsg(t('aFail'),1)}
+  finally{b.disabled=false}
+}
+async function alertsHeal(){ // on startup: if alerts are on but the phone lost its subscription, renew it quietly
+  if(!load('mm_alerts')||!pushOK())return;
+  try{if(await currentSub())return;
+    if(Notification.permission==='granted'){await alertsEnable()}else{store('mm_alerts',false)}}catch(e){}
+}
 function alertsUI(){
   const on=!!load('mm_alerts');const tg=$('#alertsTgl');if(!tg)return;
   tg.checked=on;$('#alertsTest').hidden=!on;
@@ -1483,18 +1509,20 @@ function wire(){
   $('#selUnits').addEventListener('change',e=>{store('mm_units',e.target.value);rerenderAll();openSettings();alertsSync()});
   $('#alertsTgl').addEventListener('change',async e=>{
     const tg=e.target;tg.disabled=true;
-    if(tg.checked){const ok=await alertsEnable();tg.checked=ok}else{await alertsDisable()}
-    tg.disabled=false;if(tg.checked||!$('#alertsMsg').classList.contains('err'))alertsUI();
+    if(tg.checked){
+      alertsMsg(t('aWorking'));
+      const ok=await alertsEnable();tg.checked=ok;
+      if(ok){$('#alertsTest').hidden=false;await sendTest(true)}
+    }else{await alertsDisable();alertsMsg(t('aOff'))}
+    tg.disabled=false;
   });
-  $('#alertsTest').addEventListener('click',async()=>{
-    try{const sub=await currentSub();if(!sub)return alertsUI();const j=await postSub({action:'test',endpoint:sub.endpoint});
-      alertsMsg(j&&j.ok?t('testSent'):t('alertsErr'),!(j&&j.ok))}catch(e){alertsMsg(t('alertsErr'),1)}
-  });
+  $('#alertsTest').addEventListener('click',()=>sendTest(false));
+  $('#doneS').addEventListener('click',closeSettings);
 }
 
 // ===== הפעלה =====
 async function init(){
-  applyPrefs();applyStatic();wire();
+  applyPrefs();applyStatic();wire();setTimeout(alertsHeal,3000);
   const saved=load('mm_place');
   if(saved){
     go(saved);

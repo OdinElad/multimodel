@@ -550,6 +550,24 @@ async function alertsSync(){ // עדכון המיקום, השפה והיחידו
   if(!load('mm_alerts'))return;
   try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
 }
+async function sendTest(fresh){
+  const b=$('#alertsTest');b.disabled=true;alertsMsg(t('aWorking'));
+  try{
+    let sub=await currentSub();
+    if(!sub){if(!(await alertsEnable()))return;sub=await currentSub()}   // subscription was lost (e.g. after an app update): renew it
+    let j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null);
+    if(j&&j.error==='not_found'){await sendSub(sub);j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null)}
+    if(j&&j.ok)alertsMsg(t(fresh?'aOnSent':'aSent',{p:state.place?state.place.name:''}));
+    else if(j&&j.error==='too_soon')alertsMsg(t('aTooSoon'),1);
+    else alertsMsg(t('aFail')+(j&&j.status?` (${j.status})`:''),1);
+  }catch(e){alertsMsg(t('aFail'),1)}
+  finally{b.disabled=false}
+}
+async function alertsHeal(){ // on startup: if alerts are on but the phone lost its subscription, renew it quietly
+  if(!load('mm_alerts')||!pushOK())return;
+  try{if(await currentSub())return;
+    if(Notification.permission==='granted'){await alertsEnable()}else{store('mm_alerts',false)}}catch(e){}
+}
 function alertsUI(){
   const on=!!load('mm_alerts');const tg=$('#alertsTgl');if(!tg)return;
   tg.checked=on;$('#alertsTest').hidden=!on;
@@ -621,18 +639,20 @@ function wire(){
   $('#selUnits').addEventListener('change',e=>{store('mm_units',e.target.value);rerenderAll();openSettings();alertsSync()});
   $('#alertsTgl').addEventListener('change',async e=>{
     const tg=e.target;tg.disabled=true;
-    if(tg.checked){const ok=await alertsEnable();tg.checked=ok}else{await alertsDisable()}
-    tg.disabled=false;if(tg.checked||!$('#alertsMsg').classList.contains('err'))alertsUI();
+    if(tg.checked){
+      alertsMsg(t('aWorking'));
+      const ok=await alertsEnable();tg.checked=ok;
+      if(ok){$('#alertsTest').hidden=false;await sendTest(true)}
+    }else{await alertsDisable();alertsMsg(t('aOff'))}
+    tg.disabled=false;
   });
-  $('#alertsTest').addEventListener('click',async()=>{
-    try{const sub=await currentSub();if(!sub)return alertsUI();const j=await postSub({action:'test',endpoint:sub.endpoint});
-      alertsMsg(j&&j.ok?t('testSent'):t('alertsErr'),!(j&&j.ok))}catch(e){alertsMsg(t('alertsErr'),1)}
-  });
+  $('#alertsTest').addEventListener('click',()=>sendTest(false));
+  $('#doneS').addEventListener('click',closeSettings);
 }
 
 // ===== הפעלה =====
 async function init(){
-  applyPrefs();applyStatic();wire();
+  applyPrefs();applyStatic();wire();setTimeout(alertsHeal,3000);
   const saved=load('mm_place');
   if(saved){
     go(saved);

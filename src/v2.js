@@ -1,5 +1,5 @@
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.0';
+const APP_VER='2.0.1';
 
 // --- Which models are shown. Default: only the most accurate one here. ---
 const MSEL='mm_models';
