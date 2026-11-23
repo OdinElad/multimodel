@@ -744,6 +744,48 @@ function resolveName(o){
   return o.t('myLoc');
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={geoKm,nearestIn,resolveName};
+// ===== Pure calculation helpers (no DOM, no globals). Tested by tests/calc.test.js =====
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// Strict majority of n models, never fewer than 2 (4 models need 3, 5 need 3, 2 need 2). Same rule in server/alerts_lib.php.
+const needFor=n=>Math.max(2,Math.floor(n/2)+1);
+// s = {n: models that have a value, k: models that cross the threshold}. With a single selected model, that model decides.
+const majority=s=>s.n>0&&s.k>=(s.n===1?1:needFor(s.n));
+
+// Consensus of the models' values for one moment. Outlier: differs from the median of the others by 3 or more (needs 3 others).
+// If fewer than 2 values would be left after filtering, nothing is filtered, the median of all is used and disagree=true.
+// Returns {empty,med,min,max,inMin,inMax,out:[bool per input],disagree}.
+function consensus(vals){
+  const v=vals.map(x=>x==null?NaN:+x),ok=v.filter(Number.isFinite);
+  if(!ok.length)return {empty:true,med:null,min:null,max:null,inMin:null,inMax:null,out:v.map(()=>false),disagree:false};
+  // compare each value with the others (by position, so equal values are handled correctly)
+  const idx=v.map((x,i)=>Number.isFinite(x)?i:-1).filter(i=>i>=0);
+  let out=v.map((x,i)=>{
+    if(!Number.isFinite(x))return false;
+    const others=idx.filter(j=>j!==i).map(j=>v[j]);
+    return others.length>=3&&Math.abs(x-med(others))>=3;
+  });
+  let disagree=false;
+  let inl=idx.filter(i=>!out[i]);
+  if(inl.length<2&&ok.length>=2){out=out.map(()=>false);inl=idx;disagree=true}
+  const iv=inl.map(i=>v[i]);
+  return {empty:false,med:med(iv),min:Math.min(...ok),max:Math.max(...ok),inMin:Math.min(...iv),inMax:Math.max(...iv),out,disagree};
+}
+
+// Per-day counts from the per-model rows [{max,min,rain,gust,code,cape}] (a missing value is null/undefined).
+// A model with no value for a hazard is not counted in that hazard's denominator (n*), it does not count as "0".
+function dayCounts(per){
+  const has=k=>per.filter(x=>x[k]!=null);
+  const rains=has('rain'),gusts=has('gust');
+  const thunderPer=per.filter(x=>x.code!=null||x.cape!=null);
+  return {
+    nRain:rains.length,rainN:rains.filter(x=>x.rain>=1).length,heavyN:rains.filter(x=>x.rain>=20).length,
+    rainAvg:rains.length?avg(rains.map(x=>x.rain)):0,rainMax:rains.length?Math.max(...rains.map(x=>x.rain)):0,
+    nWind:gusts.length,windN:gusts.filter(x=>x.gust>=60).length,gustMax:gusts.length?Math.max(...gusts.map(x=>x.gust)):0,
+    nThunder:thunderPer.length,thunderN:thunderPer.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length
+  };
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts};
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
 const APP_VER='2.0.3';
 
@@ -810,8 +852,9 @@ function drawStorm(){
       const x=get(d,m),c=stCell(x),sel=stSel&&stSel[0]===m.id&&stSel[1]===di;
       return `<td class="sc ${c[0]}${sel?' sel':''}" data-m="${m.id}" data-d="${di}">${c[1]}</td>`}).join('')}</tr>`;
   });
-  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length,n=d.n;
-    const need=Math.max(2,Math.ceil(n/2));return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
+  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length;
+    const n=stMode==='rain'?d.nRain:stMode==='wind'?d.nWind:stMode==='thunder'?d.nThunder:d.n; // models that have a value for this hazard
+    const need=needFor(n);return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
   let det='';
   if(stSel){const m=MODELS.find(x=>x.id===stSel[0]),d=days[stSel[1]],x=d&&get(d,m);
     det=x?t('stDet',{m:m.name,d:dayLabel(d.date,stSel[1]),x:fT1(x.max),n:fT1(x.min),r:fR(x.rain??0),g:fW(x.gust??0),c:x.cape!=null?Math.round(x.cape):'·'})+` ${wc(x.code??0).join(' ')}`:t('stNoData')}
@@ -893,8 +936,7 @@ function wireV2(){
   $('#mAll').onclick=()=>{store(MSEL,null);closeModels();if(state.data)render()};
   $('#closeW').onclick=closeStorm;$('#ovW').addEventListener('click',e=>{if(e.target.id==='ovW')closeStorm()});
 }
-const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// avg, med, majority, consensus and dayCounts live in calc.js (pure functions, tested in tests/calc.test.js)
 const r1=v=>Math.round(v*10)/10;
 const q2=v=>Math.round(+v*100)/100; // coordinates leave the device rounded to 2 decimals (about 1 km)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1011,20 +1053,18 @@ function process(d,ids){
     })).filter(x=>x.max!=null);
     const n=per.length;
     const maxs=per.map(x=>x.max),mins=per.map(x=>x.min);
-    const rains=per.map(x=>x.rain??0);
-    const codes=per.map(x=>x.code??0).sort((a,b)=>a-b);
-    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,rainAvg:n?avg(rains):0,rainMax:n?Math.max(...rains):0,
-      rainN:per.filter(x=>(x.rain??0)>=1).length,heavyN:per.filter(x=>(x.rain??0)>=20).length,
-      thunderN:per.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length,
-      windN:per.filter(x=>(x.gust??0)>=60).length,spread:n?Math.max(...maxs)-Math.min(...maxs):0,
-      code:codes[Math.floor(codes.length/2)]||0,gustMax:n?Math.max(...per.map(x=>x.gust??0)):0};
+    const dc=dayCounts(per);
+    const codes=per.map(x=>x.code).filter(c=>c!=null).sort((a,b)=>a-b);
+    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,...dc,
+      spread:n?Math.max(...maxs)-Math.min(...maxs):0,
+      code:codes.length?codes[Math.floor(codes.length/2)]:0};
   });
   return {models,ni,days,H,D};
 }
 
 function conf(d){
   if(!d.n)return 0;
-  const p=d.rainN/d.n;
+  const p=d.nRain?d.rainN/d.nRain:0;
   let c=100-Math.min(40,d.spread*7)-(1-Math.abs(2*p-1))*35-(d.idx||0)*3;
   if(d.n<3)c-=10;
   return Math.max(30,Math.min(97,Math.round(c)));
@@ -1035,7 +1075,6 @@ function hourStats(P,i,key,thr){
   const v=P.models.map(m=>(pick(P.H,key,m.id)||[])[i]).filter(x=>x!=null);
   return {n:v.length,k:v.filter(x=>x>=thr).length,mean:v.length?avg(v):null};
 }
-const majority=s=>s.n>0&&s.k>=Math.max(Math.min(2,s.n),Math.ceil(s.n/2));
 function dph(P,i){return dayRef(P.H.time[i].slice(0,10),Math.floor(i/24))}
 
 function rainLine(P){
@@ -1111,13 +1150,12 @@ function render(){
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
     const dr=dayRef(d.date,i);
-    const need=Math.max(2,Math.ceil(d.n/2));
-    if(d.thunderN>=need)al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.n})]);
-    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.n})]);
-    if(d.heavyN>=need)al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
-    if(d.windN>=need)al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
+    if(d.nThunder&&d.thunderN>=needFor(d.nThunder))al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.nThunder})]);
+    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.nThunder})]);
+    if(d.nRain&&d.heavyN>=needFor(d.nRain))al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
+    if(d.nWind&&d.windN>=needFor(d.nWind))al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
   });
-  const nextRain=PA.days.findIndex(d=>d.rainN>=Math.max(2,Math.ceil(d.n/2)));
+  const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
   const bigT=obs?obs.temp_c:nowT;
@@ -1170,18 +1208,18 @@ function render(){
     <h2>${t('daysTitle')}</h2>
     <p class="sub">${t('daysSub')}</p>
     <div class="days">
-      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=Math.round(d.rainN/d.n*100);return `
+      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=d.nRain?Math.round(d.rainN/d.nRain*100):0;return `
       <div class="day" data-i="${i}">
         <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
         <div class="ico">${c[0]}</div>
         <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>`}<br>
-          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):t('rainOf',{k:d.rainN,n:d.n})+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
+          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):(d.nRain?t('rainOf',{k:d.rainN,n:d.nRain}):'·')+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
         <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
         <div class="detail"><div class="tbl-wrap"><table>
           <tr><th class="l">${t('model')}</th><th>${t('max')}</th><th>${t('min')}</th><th>${t('rainH')} (${rU()})</th><th>${t('gustH')} (${wU()})</th><th>${t('condH')}</th></tr>
-          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${nR(x.rain??0)}</td><td>${Math.round(cW(x.gust??0))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
-          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${nR(d.rainAvg)}</td><td>${Math.round(cW(avg(d.per.map(x=>x.gust??0))))}</td><td>${c[0]}</td></tr>`}
+          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${x.rain==null?'·':nR(x.rain)}</td><td>${x.gust==null?'·':Math.round(cW(x.gust))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
+          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${d.nRain?nR(d.rainAvg):'·'}</td><td>${d.nWind?Math.round(cW(avg(d.per.filter(x=>x.gust!=null).map(x=>x.gust)))):'·'}</td><td>${c[0]}</td></tr>`}
         </table></div></div>
       </div>`}).join('')}
     </div>

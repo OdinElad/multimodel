@@ -118,16 +118,17 @@ function mm_tomorrow(float $lat, float $lon): ?array {
   return ['date' => $j['daily']['time'][1], 'tz' => $j['timezone'] ?? 'UTC', 'mins' => $mins, 'maxs' => $maxs];
 }
 
+function mm_need(int $n): int { return max(2, intdiv($n, 2) + 1); } // strict majority, at least 2 (same rule as src/calc.js)
 /** Decide whether tomorrow is unusual. Returns null or ['type'=>'cold'|'heat', 'value', 'normal', 'k', 'n']. */
 function mm_evaluate(array $fc, array $cl): ?array {
-  $n = count($fc['mins']); $need = (int)ceil($n / 2);
+  $nMin = count($fc['mins']); $nMax = count($fc['maxs']); // cold and heat each use their own number of models
   $minMed = mm_median($fc['mins']); $maxMed = mm_median($fc['maxs']);
   $kCold = count(array_filter($fc['mins'], fn($v) => $v < $cl['min_p02']));
   $kHeat = count(array_filter($fc['maxs'], fn($v) => $v > $cl['max_p98']));
-  if ($minMed < $cl['min_p02'] && $cl['min_mean'] - $minMed >= 5 && $kCold >= $need)
-    return ['type' => 'cold', 'value' => $minMed, 'normal' => $cl['min_mean'], 'k' => $kCold, 'n' => $n];
-  if ($maxMed > $cl['max_p98'] && $maxMed - $cl['max_mean'] >= 5 && $kHeat >= $need)
-    return ['type' => 'heat', 'value' => $maxMed, 'normal' => $cl['max_mean'], 'k' => $kHeat, 'n' => count($fc['maxs'])];
+  if ($minMed < $cl['min_p02'] && $cl['min_mean'] - $minMed >= 5 && $kCold >= mm_need($nMin))
+    return ['type' => 'cold', 'value' => $minMed, 'normal' => $cl['min_mean'], 'k' => $kCold, 'n' => $nMin];
+  if ($maxMed > $cl['max_p98'] && $maxMed - $cl['max_mean'] >= 5 && $kHeat >= mm_need($nMax))
+    return ['type' => 'heat', 'value' => $maxMed, 'normal' => $cl['max_mean'], 'k' => $kHeat, 'n' => $nMax];
   return null;
 }
 

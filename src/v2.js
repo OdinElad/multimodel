@@ -64,8 +64,9 @@ function drawStorm(){
       const x=get(d,m),c=stCell(x),sel=stSel&&stSel[0]===m.id&&stSel[1]===di;
       return `<td class="sc ${c[0]}${sel?' sel':''}" data-m="${m.id}" data-d="${di}">${c[1]}</td>`}).join('')}</tr>`;
   });
-  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length,n=d.n;
-    const need=Math.max(2,Math.ceil(n/2));return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
+  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length;
+    const n=stMode==='rain'?d.nRain:stMode==='wind'?d.nWind:stMode==='thunder'?d.nThunder:d.n; // models that have a value for this hazard
+    const need=needFor(n);return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
   let det='';
   if(stSel){const m=MODELS.find(x=>x.id===stSel[0]),d=days[stSel[1]],x=d&&get(d,m);
     det=x?t('stDet',{m:m.name,d:dayLabel(d.date,stSel[1]),x:fT1(x.max),n:fT1(x.min),r:fR(x.rain??0),g:fW(x.gust??0),c:x.cape!=null?Math.round(x.cape):'·'})+` ${wc(x.code??0).join(' ')}`:t('stNoData')}

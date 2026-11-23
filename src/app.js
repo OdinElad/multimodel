@@ -1,5 +1,4 @@
-const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// avg, med, majority, consensus and dayCounts live in calc.js (pure functions, tested in tests/calc.test.js)
 const r1=v=>Math.round(v*10)/10;
 const q2=v=>Math.round(+v*100)/100; // coordinates leave the device rounded to 2 decimals (about 1 km)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -116,20 +115,18 @@ function process(d,ids){
     })).filter(x=>x.max!=null);
     const n=per.length;
     const maxs=per.map(x=>x.max),mins=per.map(x=>x.min);
-    const rains=per.map(x=>x.rain??0);
-    const codes=per.map(x=>x.code??0).sort((a,b)=>a-b);
-    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,rainAvg:n?avg(rains):0,rainMax:n?Math.max(...rains):0,
-      rainN:per.filter(x=>(x.rain??0)>=1).length,heavyN:per.filter(x=>(x.rain??0)>=20).length,
-      thunderN:per.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length,
-      windN:per.filter(x=>(x.gust??0)>=60).length,spread:n?Math.max(...maxs)-Math.min(...maxs):0,
-      code:codes[Math.floor(codes.length/2)]||0,gustMax:n?Math.max(...per.map(x=>x.gust??0)):0};
+    const dc=dayCounts(per);
+    const codes=per.map(x=>x.code).filter(c=>c!=null).sort((a,b)=>a-b);
+    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,...dc,
+      spread:n?Math.max(...maxs)-Math.min(...maxs):0,
+      code:codes.length?codes[Math.floor(codes.length/2)]:0};
   });
   return {models,ni,days,H,D};
 }
 
 function conf(d){
   if(!d.n)return 0;
-  const p=d.rainN/d.n;
+  const p=d.nRain?d.rainN/d.nRain:0;
   let c=100-Math.min(40,d.spread*7)-(1-Math.abs(2*p-1))*35-(d.idx||0)*3;
   if(d.n<3)c-=10;
   return Math.max(30,Math.min(97,Math.round(c)));
@@ -140,7 +137,6 @@ function hourStats(P,i,key,thr){
   const v=P.models.map(m=>(pick(P.H,key,m.id)||[])[i]).filter(x=>x!=null);
   return {n:v.length,k:v.filter(x=>x>=thr).length,mean:v.length?avg(v):null};
 }
-const majority=s=>s.n>0&&s.k>=Math.max(Math.min(2,s.n),Math.ceil(s.n/2));
 function dph(P,i){return dayRef(P.H.time[i].slice(0,10),Math.floor(i/24))}
 
 function rainLine(P){
@@ -216,13 +212,12 @@ function render(){
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
     const dr=dayRef(d.date,i);
-    const need=Math.max(2,Math.ceil(d.n/2));
-    if(d.thunderN>=need)al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.n})]);
-    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.n})]);
-    if(d.heavyN>=need)al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
-    if(d.windN>=need)al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
+    if(d.nThunder&&d.thunderN>=needFor(d.nThunder))al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.nThunder})]);
+    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.nThunder})]);
+    if(d.nRain&&d.heavyN>=needFor(d.nRain))al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
+    if(d.nWind&&d.windN>=needFor(d.nWind))al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
   });
-  const nextRain=PA.days.findIndex(d=>d.rainN>=Math.max(2,Math.ceil(d.n/2)));
+  const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
   const bigT=obs?obs.temp_c:nowT;
@@ -275,18 +270,18 @@ function render(){
     <h2>${t('daysTitle')}</h2>
     <p class="sub">${t('daysSub')}</p>
     <div class="days">
-      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=Math.round(d.rainN/d.n*100);return `
+      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=d.nRain?Math.round(d.rainN/d.nRain*100):0;return `
       <div class="day" data-i="${i}">
         <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
         <div class="ico">${c[0]}</div>
         <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>`}<br>
-          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):t('rainOf',{k:d.rainN,n:d.n})+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
+          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):(d.nRain?t('rainOf',{k:d.rainN,n:d.nRain}):'·')+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
         <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
         <div class="detail"><div class="tbl-wrap"><table>
           <tr><th class="l">${t('model')}</th><th>${t('max')}</th><th>${t('min')}</th><th>${t('rainH')} (${rU()})</th><th>${t('gustH')} (${wU()})</th><th>${t('condH')}</th></tr>
-          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${nR(x.rain??0)}</td><td>${Math.round(cW(x.gust??0))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
-          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${nR(d.rainAvg)}</td><td>${Math.round(cW(avg(d.per.map(x=>x.gust??0))))}</td><td>${c[0]}</td></tr>`}
+          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${x.rain==null?'·':nR(x.rain)}</td><td>${x.gust==null?'·':Math.round(cW(x.gust))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
+          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${d.nRain?nR(d.rainAvg):'·'}</td><td>${d.nWind?Math.round(cW(avg(d.per.filter(x=>x.gust!=null).map(x=>x.gust)))):'·'}</td><td>${c[0]}</td></tr>`}
         </table></div></div>
       </div>`}).join('')}
     </div>
