@@ -59,11 +59,12 @@ check "first test claims the slot (not 429)" "$([ "$r1" = 429 ] && echo 429 || e
 check "second test within a minute is 429" "$r2" 429
 php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");$d->exec("DELETE FROM rl");$d->exec("DELETE FROM subs");'
 n=0; last=0
-while [ $n -lt 20 ]; do n=$((n+1)); last=$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"x\"}"); done
-check "20th POST still allowed" "$last" 200
-check "21st POST from the same address is 429" "$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"x\"}")" 429
+while [ $n -lt 60 ]; do n=$((n+1)); last=$(post "{\"action\":\"test\",\"endpoint\":\"x\"}"); done
+check "60th counted POST still allowed (404 not_found, not 429)" "$last" 404
+check "61st counted POST from the same address is 429" "$(post "{\"action\":\"test\",\"endpoint\":\"x\"}")" 429
+check "unsubscribe is never rate limited" "$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"x\"}")" 200
 check "no raw IP stored" "$(php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");echo (int)(strpos(json_encode($d->query("select * from rl")->fetchAll()),"127.0.0.1")!==false);')" 0
-# daily cap on new subscribers (300): fill the table directly, then try one more
-php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");$d->exec("DELETE FROM rl");$s=$d->prepare("INSERT INTO subs (endpoint,p256dh,auth,lat,lon,created,updated) VALUES (?,?,?,0,0,?,?)");for($i=0;$i<300;$i++)$s->execute(["https://fcm.googleapis.com/x$i","p","a",time(),time()]);'
-check "301st new subscriber in 24h is 503" "$(post "$SUB")" 503
+# daily cap on new subscribers (5000): fill the table directly, then try one more
+php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");$d->exec("DELETE FROM rl");$s=$d->prepare("INSERT INTO subs (endpoint,p256dh,auth,lat,lon,created,updated) VALUES (?,?,?,0,0,?,?)");for($i=0;$i<5000;$i++)$s->execute(["https://fcm.googleapis.com/x$i","p","a",time(),time()]);'
+check "5001st new subscriber in 24h is 503" "$(post "$SUB")" 503
 if [ $fail = 0 ]; then echo "ALL OK"; else echo "SOME FAILED"; exit 1; fi

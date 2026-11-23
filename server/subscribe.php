@@ -4,8 +4,8 @@
  * POST   {action:"subscribe", subscription:{endpoint,keys:{p256dh,auth}}, lat, lon, name, lang, imperial, tz}
  * POST   {action:"unsubscribe", endpoint}
  * POST   {action:"test", endpoint}            sends a test notification to that same subscription (max once a minute)
- * Limits: POST only (405 otherwise), body up to 8 KB (413), 20 POST requests per client address per hour (429),
- *         300 new subscribers per day overall (503 full). The client address is stored only as a keyed hash for up to two hours.
+ * Limits: POST only (405 otherwise), body up to 8 KB (413), 60 requests per client address per hour except unsubscribe (429),
+ *         5000 new subscribers per day overall (503 full). All three numbers can be changed in config.php. The client address is stored only as a keyed hash for up to two hours.
  * GET    ?key=1                                returns the public VAPID key
  * Privacy: only the push address, a rounded location (~1 km), language, units and time zone are stored.
  */
@@ -29,13 +29,6 @@ if ($method === 'GET') {
 }
 if ($method !== 'POST') { header('Allow: GET, POST, OPTIONS'); reply(['ok' => false, 'error' => 'method'], 405); }
 try { $db = mm_db(); } catch (Throwable $e) { reply(['ok' => false, 'error' => 'storage'], 503); } // reason is already in error_log
-// Rate limit: at most 20 POST requests per client address per hour (counted before anything else is done).
-$win = intdiv(time(), 3600);
-$db->prepare('DELETE FROM rl WHERE win < ?')->execute([$win - 1]);
-$rk = mm_client_key();
-$db->prepare('INSERT INTO rl (k, win, n) VALUES (?, ?, 1) ON CONFLICT(k, win) DO UPDATE SET n = n + 1')->execute([$rk, $win]);
-$q = $db->prepare('SELECT n FROM rl WHERE k=? AND win=?'); $q->execute([$rk, $win]);
-if ((int)$q->fetchColumn() > 20) { header('Retry-After: 3600'); reply(['ok' => false, 'error' => 'rate_limited'], 429); }
 if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 8192) reply(['ok' => false, 'error' => 'too_large'], 413);
 $raw = (string)file_get_contents('php://input', false, null, 0, 8193);
 if (strlen($raw) > 8192) reply(['ok' => false, 'error' => 'too_large'], 413);
@@ -46,6 +39,15 @@ if (!is_string($action)) reply(['ok' => false, 'error' => 'bad_action'], 400);
 // Endpoint of unsubscribe/test must be a plain string (anything else is rejected before it reaches the database).
 $epIn = $in['endpoint'] ?? '';
 if (!is_string($epIn) || strlen($epIn) > 1000) reply(['ok' => false, 'error' => 'bad_endpoint'], 400);
+// Rate limit per client address and hour (default 60, config 'rl_per_hour'). Unsubscribe is never limited, so deleting data always works.
+if ($action !== 'unsubscribe') {
+  $win = intdiv(time(), 3600);
+  $db->prepare('DELETE FROM rl WHERE win < ?')->execute([$win - 1]);
+  $rk = mm_client_key();
+  $db->prepare('INSERT INTO rl (k, win, n) VALUES (?, ?, 1) ON CONFLICT(k, win) DO UPDATE SET n = n + 1')->execute([$rk, $win]);
+  $q = $db->prepare('SELECT n FROM rl WHERE k=? AND win=?'); $q->execute([$rk, $win]);
+  if ((int)$q->fetchColumn() > mm_limit('rl_per_hour', 60)) { header('Retry-After: 3600'); reply(['ok' => false, 'error' => 'rate_limited'], 429); }
+}
 
 if ($action === 'subscribe') {
   // B1: strict validation. Expected types only; anything else is a 400 (never a PHP warning or error).
@@ -70,7 +72,7 @@ if ($action === 'subscribe') {
   $exists = $db->prepare('SELECT 1 FROM subs WHERE endpoint=?'); $exists->execute([$ep]);
   if (!$exists->fetchColumn()) {
     $new24 = $db->prepare('SELECT COUNT(*) FROM subs WHERE created >= ?'); $new24->execute([time() - 86400]);
-    if ($count >= 50000 || (int)$new24->fetchColumn() >= 300) reply(['ok' => false, 'error' => 'full'], 503); // global caps: 300 new per day
+    if ($count >= mm_limit('max_subs', 50000) || (int)$new24->fetchColumn() >= mm_limit('new_per_day', 5000)) reply(['ok' => false, 'error' => 'full'], 503); // global caps (config.php)
   }
   $now = time();
   $db->prepare('INSERT INTO subs (endpoint,p256dh,auth,lat,lon,name,lang,imperial,tz,created,updated,fails) VALUES (?,?,?,?,?,?,?,?,?,?,?,0)

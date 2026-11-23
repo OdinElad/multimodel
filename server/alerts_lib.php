@@ -15,6 +15,8 @@ function mm_cfg(): array {
   if ($c === null) { $f = __DIR__ . '/config.php'; $c = is_file($f) ? (array)(require $f) : []; }
   return $c;
 }
+/** Numeric limit from config.php, or the default. */
+function mm_limit(string $k, int $def): int { $v = mm_cfg()[$k] ?? null; return is_int($v) && $v > 0 ? $v : $def; }
 /** Private data folder, outside the public web root. No fallback inside public_html: if it is not usable, fail closed. */
 function mm_data_dir(): string {
   static $d = null;
