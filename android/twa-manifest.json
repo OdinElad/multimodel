@@ -1,8 +1,8 @@
 {
   "packageId": "io.github.odinelad.multimodel",
   "host": "odinelad.github.io",
-  "name": "MultiModel Weather",
-  "launcherName": "MultiModel",
+  "name": "Tahazit: Weather Forecast",
+  "launcherName": "Tahazit",
   "display": "standalone",
   "themeColor": "#070B16",
   "themeColorDark": "#000000",
@@ -20,8 +20,8 @@
     "path": "./upload.jks",
     "alias": "upload"
   },
-  "appVersionName": "1.0.0",
-  "appVersionCode": 1,
+  "appVersionName": "2.0.0",
+  "appVersionCode": 2,
   "shortcuts": [],
   "generatorApp": "unknown",
   "webManifestUrl": "https://odinelad.github.io/multimodel/manifest.json",

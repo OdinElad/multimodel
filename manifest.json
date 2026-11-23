@@ -1,6 +1,6 @@
 {
-  "name": "MultiModel Weather",
-  "short_name": "MultiModel",
+  "name": "Tahazit: Weather Forecast",
+  "short_name": "Tahazit",
   "description": "Compare the world's leading weather models in one place, with consensus-based storm alerts.",
   "start_url": "./",
   "scope": "./",
