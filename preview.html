@@ -773,7 +773,7 @@ function drawStorm(){
   let h=`<div class="tabs st-tabs">${['all','thunder','rain','wind'].map(k=>`<button class="tab ${stMode===k?'on':''}" data-st="${k}">${t({all:'stAll',thunder:'stThunder',rain:'stRain',wind:'stWind'}[k])}</button>`).join('')}</div>`;
   h+=`<div class="tbl-wrap"><table class="stg"><tr><th class="l">${unit}</th>${days.map((d,i)=>`<th>${esc(dayShort(d.date,i))}<br><small>${dmy(d.date)}</small></th>`).join('')}</tr>`;
   ms.forEach(m=>{
-    h+=`<tr><td class="l"><span class="dot" style="background:${m.color}"></span> ${m.name}</td>${days.map((d,di)=>{
+    h+=`<tr><td class="l"><span class="dot" style="background:${m.color}"></span> ${m.short||m.name}</td>${days.map((d,di)=>{
       const x=get(d,m),c=stCell(x),sel=stSel&&stSel[0]===m.id&&stSel[1]===di;
       return `<td class="sc ${c[0]}${sel?' sel':''}" data-m="${m.id}" data-d="${di}">${c[1]}</td>`}).join('')}</tr>`;
   });
@@ -924,7 +924,7 @@ const MODELS=[
   {id:'gfs_seamless',name:'GFS',org:'NOAA · USA',flag:'🇺🇸',color:'#f59e0b'},
   {id:'icon_seamless',name:'ICON',org:'DWD · Germany',flag:'🇩🇪',color:'#22c55e'},
   {id:'ukmo_seamless',name:'UKMO',org:'Met Office · UK',flag:'🇬🇧',color:'#ec4899'},
-  {id:'meteofrance_seamless',name:'Météo-France',org:'Météo-France · France',flag:'🇫🇷',color:'#a78bfa'}
+  {id:'meteofrance_seamless',name:'Météo-France',short:'Météo-Fr',org:'Météo-France · France',flag:'🇫🇷',color:'#a78bfa'}
 ];
 const WCK={0:['☀️','clear'],1:['🌤️','mostlyClear'],2:['⛅','partly'],3:['☁️','cloudy'],45:['🌫️','fog'],48:['🌫️','fog'],
 51:['🌦️','drizzle'],53:['🌦️','drizzle'],55:['🌦️','drizzle'],56:['🌧️','freezing'],57:['🌧️','freezing'],

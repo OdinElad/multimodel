@@ -1,0 +1,73 @@
+</head>
+<body>
+<div id="sky" class="sky night wx-clear" aria-hidden="true">
+  <div class="stars"></div><div class="moon"></div><div class="sun"></div>
+  <div class="cl c1"></div><div class="cl c2"></div><div class="cl c3"></div><div class="fogl"></div>
+  <canvas id="wxc"></canvas><div class="flash"></div>
+</div>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <img class="logo" src="icons/icon-192.png" alt="">
+      <div><h1 data-i18n="appName"></h1><small data-i18n="tagline"></small></div>
+    </div>
+    <button class="gear" id="gear" data-ta="settings">⚙️</button>
+  </header>
+
+  <div class="search">
+    <button class="locbtn" id="locBtn" data-ta="pickTitle">
+      <span>📍</span><span class="nm2" id="locName"></span>
+      <span class="tag" id="locTag" data-i18n="autoTag" hidden></span><span class="chg" data-i18n="change"></span>
+    </button>
+    <div class="banner" id="banner" hidden></div>
+  </div>
+
+  <div class="ov" id="ov" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3><span data-i18n="pickTitle"></span> <button class="x" id="close" data-ta="done">×</button></h3>
+      <button class="btn" id="geo" data-i18n="detectBtn"></button>
+      <input id="q" type="search" data-tp="searchPh" autocomplete="off" enterkeyhint="search">
+      <div class="list" id="list"></div>
+      <div class="confirm" id="confirm">
+        <div class="txt" id="confirmTxt"></div>
+        <button class="btn" id="back" data-i18n="back"></button>
+        <button class="btn pri" id="ok" data-i18n="confirm"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovS" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3><span data-i18n="settings"></span> <button class="x" id="closeS" data-ta="done">×</button></h3>
+      <label class="fld"><span data-i18n="language"></span><select id="selLang"></select></label>
+      <label class="fld"><span data-i18n="units"></span><select id="selUnits"></select></label>
+      <div class="fld alertsBox">
+        <label class="tgl"><input type="checkbox" id="alertsTgl"><span data-i18n="alertsOpt"></span></label>
+        <small data-i18n="alertsOptSub"></small>
+        <div id="alertsMsg" class="amsg"></div>
+        <button class="btn" id="alertsTest" data-i18n="testBtn" hidden></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovM" role="dialog" aria-modal="true">
+    <div class="sheet">
+      <h3><span data-i18n="mTitle"></span> <button class="x" id="closeM" data-ta="done">×</button></h3>
+      <p class="sub" id="mSub" style="margin:0"></p>
+      <div class="list" id="mList"></div>
+      <div class="mbtns"><button class="btn" id="mReset" data-i18n="mReset"></button><button class="btn" id="mAll" data-i18n="mAll"></button></div>
+    </div>
+  </div>
+
+  <div class="ov" id="ovW" role="dialog" aria-modal="true">
+    <div class="sheet wide">
+      <h3><span data-i18n="stTitle"></span> <button class="x" id="closeW" data-ta="done">×</button></h3>
+      <p class="sub" data-i18n="stSub" style="margin:0"></p>
+      <div id="stBody"></div>
+    </div>
+  </div>
+
+  <div id="app"><div class="loading"><div class="spin"></div></div></div>
+
+  <footer id="credit"></footer>
+</div>
