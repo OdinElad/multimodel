@@ -1,6 +1,6 @@
 # Play Console: תשובות מוכנות למילוי (Tahazit)
 
-עודכן: 23.11.2026. מבוסס על privacy.html ועל הקוד הנוכחי.
+עודכן: 24.11.2026. מבוסס על privacy.html ועל הקוד הנוכחי.
 
 ## 1. פרטי האפליקציה (Create app)
 - App name: Tahazit: Weather Forecast
@@ -25,7 +25,7 @@
 | Ads | No, my app does not contain ads |
 | App access | All functionality is available without special access |
 | Content rating | ראו סעיף 4 |
-| Target audience | 18 and over (הכי פשוט, בלי בדיקות Families) |
+| Target audience | 18 and over (האפליקציה לא מיועדת לילדים ולא תוכננה עבורם) |
 | News app | No |
 | Government app | No |
 | Financial features | My app doesn't provide any financial features |
@@ -47,13 +47,15 @@
 - Account creation: My app does not allow users to create an account
 - Data deletion: אפשר לבקש מחיקה במייל, וכיבוי התראות מוחק את הנתונים מהשרת
 
-נתונים שנאספים (Collected, לא Shared, כי ספקי שירות אינם "שיתוף" לפי הגדרת גוגל):
+נתונים שנאספים (Collected, לא Shared):
 
 | סוג | Collected | Shared | Ephemeral | Required/Optional | Purpose |
 | --- | --- | --- | --- | --- | --- |
-| Location > Approximate location | Yes | No | No (נשמר לשרת ההתראות, מעוגל לכ-1 ק"מ) | Optional | App functionality |
-| Location > Precise location | Yes | No | Yes (נשלח לספק התחזית ולא נשמר אצלנו) | Optional | App functionality |
-| Device or other IDs | Yes (כתובת push) | No | No | Optional | App functionality |
+| Location > Precise location | Yes | No | No | Optional | App functionality |
+| Location > Approximate location | No | | | | |
+| Device or other IDs | Yes (כתובת Push) | No | No | Optional | App functionality |
+
+מיקום מעוגל לכקילומטר עדיין נחשב Precise לפי גוגל (פחות מ-3 קמ"ר). Optional כי אפשר להשתמש באפליקציה עם עיר שנבחרה ידנית. Data deletion: מחיקה במייל, וכיבוי התראות מוחק מהשרת.
 
 לא נאספים: שם, מייל, טלפון, אנשי קשר, תמונות, היסטוריית גלישה, נתוני שימוש או אנליטיקס, מזהי פרסום.
 
