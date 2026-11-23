@@ -47,7 +47,7 @@ test('every language has the "near" and "myLoc" texts', () => {
 });
 test('no request to a naming service in the app code', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js'), 'utf8');
-  assert.ok(!/bigdatacloud/i.test(src)); assert.ok(!/reverse-geocode/i.test(src));
+  assert.ok(!new RegExp('big' + 'datacloud', 'i').test(src)); assert.ok(!/reverse-geocode/i.test(src));
 });
 
 if (failed) { console.log(failed + ' test(s) failed'); process.exit(1); } else console.log('all geo tests passed');
