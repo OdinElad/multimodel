@@ -6,9 +6,9 @@ const MSEL='mm_models';
 function activeIds(){
   const u=load(MSEL);
   if(Array.isArray(u)){const v=u.filter(id=>MODELS.some(m=>m.id===id));if(v.length)return v}
-  const s=state.skill;
-  return [s&&s.list&&s.list[0]?s.list[0].id:'ecmwf_ifs025'];
+  return MODELS.map(m=>m.id);
 }
+const bestId=()=>state.skill&&state.skill.list&&state.skill.list[0]?state.skill.list[0].id:null;
 function openModels(){
   const s=state.skill,act=activeIds();
   const ranked=s?s.list.map(x=>x.id):[];
@@ -143,7 +143,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkUpdat
 function wireV2(){
   $('#closeM').onclick=closeModels;$('#ovM').addEventListener('click',e=>{if(e.target.id==='ovM')closeModels()});
   $('#mList').addEventListener('change',modelsChanged);
-  $('#mReset').onclick=()=>{store(MSEL,null);closeModels();if(state.data)render()};
-  $('#mAll').onclick=()=>{store(MSEL,MODELS.map(m=>m.id));closeModels();if(state.data)render()};
+  $('#mReset').onclick=()=>{const b=bestId();store(MSEL,b?[b]:null);closeModels();if(state.data)render()};
+  $('#mAll').onclick=()=>{store(MSEL,null);closeModels();if(state.data)render()};
   $('#closeW').onclick=closeStorm;$('#ovW').addEventListener('click',e=>{if(e.target.id==='ovW')closeStorm()});
 }

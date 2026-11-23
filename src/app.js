@@ -243,7 +243,7 @@ function render(){
       <div class="bigt">${Math.round(cT(bigT))}<sup>°</sup></div>
     </div>
     <div class="now-models">
-      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
+      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
     ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>`}
@@ -300,7 +300,7 @@ function render(){
       <button class="tab ${state.tab==='gust'?'on':''}" data-t="gust">${t('tabGust')}</button>
     </div>
     <div id="chart">${chart(P)}</div>
-    <div class="legend">${models.map(m=>`<span><i class="dot" style="background:${m.color}"></i>${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
+    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'🏆 ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
   </section>
 
   <section class="card">
@@ -343,7 +343,9 @@ function chart(P){
   g+=`<line x1="${x(P.ni)}" x2="${x(P.ni)}" y1="${pt}" y2="${Hh-pb}" stroke="#4f9cf9" stroke-width="1.5"/><text x="${x(P.ni)}" y="${pt+9}" fill="#4f9cf9" font-size="10" text-anchor="middle">${t('now')}</text>`;
   const path=a=>{let d='',on=false;a.forEach((v,i)=>{if(v==null){on=false;return}d+=(on?'L':'M')+x(i).toFixed(1)+' '+y(v).toFixed(1);on=true});return d};
   if(state.tab==='rain'){const bw=(W-pl-pr)/N;mean.forEach((v,i)=>{if(v&&v>cR(0.05))g+=`<rect x="${x(i)-bw/2}" y="${y(v)}" width="${bw}" height="${y(0)-y(v)}" fill="#3b82f655"/>`})}
-  P.models.forEach((m,k)=>{g+=`<path d="${path(all[k])}" fill="none" stroke="${m.color}" stroke-width="1.6" opacity=".85"/>`});
+  const bst=bestId(),hl=bst&&P.models.length>1&&P.models.some(m=>m.id===bst);
+  P.models.forEach((m,k)=>{if(m.id!==bst||!hl)g+=`<path d="${path(all[k])}" fill="none" stroke="${m.color}" stroke-width="${hl?1.3:1.6}" opacity="${hl?.55:.85}"/>`});
+  if(hl){const k=P.models.findIndex(m=>m.id===bst);g+=`<path d="${path(all[k])}" fill="none" stroke="${P.models[k].color}" stroke-width="3.2"/>`}
   if(P.models.length>1)g+=`<path d="${path(mean)}" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="5 4"/>`;
   return `<svg class="chart" viewBox="0 0 ${W} ${Hh}" style="direction:ltr">${g}</svg>`;
 }
@@ -359,7 +361,7 @@ function hourly(P){
     const lbl=tm.endsWith('T00:00')?`<b>${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</b> ${fmtH(tm)}`:fmtH(tm);
     rows.push(`<tr><td class="l">${lbl}</td>${raw.map(a=>`<td ${hot(a)}>${fmt(a)}</td>`).join('')}${P.models.length>1?`<td class="cons">${fmt(mean)}</td>`:''}</tr>`);
   }
-  return `<table><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th><span class="dot" style="background:${m.color}"></span> ${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
+  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'🏆 ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
 }
 
 // ===== מי המודל המדויק ביותר: בדיקה על 7 הימים האחרונים במקום הזה =====
@@ -412,11 +414,8 @@ function skillHTML(s){
 async function loadSkill(p){
   const el=$('#skillCard');if(!el)return;
   const s=await fetchSkill(p);
-  const before=activeIds().join();
   state.skill=s;
-  if(state.place!==p)return;
-  if(activeIds().join()!==before&&state.data)render();
-  else if($('#skillCard'))$('#skillCard').innerHTML=skillHTML(s);
+  if(state.place===p&&state.data)render();
 }
 
 // ===== מיקום =====
