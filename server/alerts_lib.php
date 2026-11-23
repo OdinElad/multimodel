@@ -36,8 +36,29 @@ function mm_db(): PDO {
     endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
     lat REAL NOT NULL, lon REAL NOT NULL, name TEXT, lang TEXT, imperial INTEGER DEFAULT 0, tz TEXT,
     created INTEGER, updated INTEGER, last_checked TEXT, last_sent TEXT, last_test INTEGER DEFAULT 0, fails INTEGER DEFAULT 0)');
+  // Rate limiting for subscribe.php: one row per (keyed hash of the client address, hour). Rows are deleted after two hours.
+  $db->exec('CREATE TABLE IF NOT EXISTS rl (k TEXT, win INTEGER, n INTEGER, PRIMARY KEY (k, win))');
   return $db;
 }
+/** Secret for hashing client addresses. Created once, kept in the private data folder (never in the repo). */
+function mm_rl_secret(): string {
+  $f = mm_data_dir() . '/rl_secret';
+  $s = is_file($f) ? trim((string)@file_get_contents($f)) : '';
+  if (strlen($s) >= 32) return $s;
+  $s = bin2hex(random_bytes(32));
+  $h = @fopen($f, 'x'); // exclusive create: if another request won the race, use its value
+  if ($h) { fwrite($h, $s); fclose($h); @chmod($f, 0600); return $s; }
+  $other = trim((string)@file_get_contents($f));
+  return strlen($other) >= 32 ? $other : $s;
+}
+/** Keyed hash of the client address (IPv6 reduced to its /64). The raw address is never stored. */
+function mm_client_key(): string {
+  $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+  $bin = @inet_pton($ip);
+  if ($bin !== false && strlen($bin) === 16) $bin = substr($bin, 0, 8);
+  return hash_hmac('sha256', $bin !== false ? bin2hex($bin) : 'unknown', mm_rl_secret());
+}
+
 function mm_http_json(string $url, int $timeout = 20): ?array {
   $ch = curl_init($url);
   curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 6,
