@@ -8,6 +8,15 @@ declare(strict_types=1);
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/alerts_lib.php';
 $dry = in_array('--dry', $argv, true); $force = in_array('--force', $argv, true);
+// --probe LAT LON: evaluate one location and print the result (no subscribers needed, sends nothing)
+if (($i = array_search('--probe', $argv, true)) !== false) {
+  $lat = (float)($argv[$i + 1] ?? 0); $lon = (float)($argv[$i + 2] ?? 0);
+  $fc = mm_tomorrow($lat, $lon); $cl = $fc ? mm_climate($lat, $lon, $fc['date']) : null;
+  $res = ($fc && $cl) ? mm_evaluate($fc, $cl) : null;
+  echo json_encode(['fc' => $fc ? ['date' => $fc['date'], 'mins' => $fc['mins'], 'maxs' => $fc['maxs']] : null,
+    'clim' => $cl ? ['min_p02' => $cl['min_p02'] ?? null, 'max_p98' => $cl['max_p98'] ?? null] : null, 'result' => $res ?: 'normal']), "\n";
+  exit;
+}
 $db = mm_db();
 $subs = $db->query('SELECT * FROM subs')->fetchAll(PDO::FETCH_ASSOC);
 $groups = []; $due = 0;
