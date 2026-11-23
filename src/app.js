@@ -529,8 +529,10 @@ async function sendSub(sub){
   const p=state.place;if(!p||!sub)return false;
   let tz='UTC';try{tz=(state.data&&state.data.timezone)||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){}
   const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:q2(p.lat),lon:q2(p.lon),name:p.name,lang:LANG,imperial:U.imp,tz});
-  return !!(j&&j.ok);
+  if(j&&j.ok){store('mm_alerts_sync',{sig:syncSig(p),at:Date.now()});return true}
+  return false;
 }
+const syncSig=p=>[q2(p.lat),q2(p.lon),p.name,LANG,U.imp?1:0].join('|');
 async function alertsEnable(){
   if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
   const perm=await Notification.requestPermission();
@@ -540,15 +542,42 @@ async function alertsEnable(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub){const k=await (await fetch(SUB_API+'?key=1')).json();sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(k.key)})}
     if(!(await sendSub(sub)))throw new Error('server');
+    if(load('mm_unsub_pending')===sub.endpoint)store('mm_unsub_pending',null); // re-enabled on the same subscription: nothing to delete
     store('mm_alerts',true);return true;
   }catch(e){alertsMsg(t('alertsErr'),1);return false}
 }
-async function alertsDisable(){
-  store('mm_alerts',false);
-  try{const sub=await currentSub();if(sub){await postSub({action:'unsubscribe',endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+// Turning alerts off must really delete the server copy. If the server cannot be reached, the endpoint is kept in
+// mm_unsub_pending and the deletion is retried on every app start. The browser subscription is removed only after the server confirmed.
+async function serverUnsub(endpoint){
+  try{const j=await postSub({action:'unsubscribe',endpoint});return !!(j&&j.ok)}catch(e){return false}
 }
-async function alertsSync(){ // עדכון המיקום, השפה והיחידות בשרת אחרי כל שינוי
+async function alertsDisable(){
+  store('mm_alerts',false);store('mm_alerts_sync',null);
+  let done=true;
+  try{
+    const sub=await currentSub();
+    if(sub){
+      if(await serverUnsub(sub.endpoint)){store('mm_unsub_pending',null);await sub.unsubscribe()}
+      else{store('mm_unsub_pending',sub.endpoint);done=false}
+    }
+  }catch(e){}
+  return done;
+}
+async function alertsPending(){ // on startup: finish a deletion that failed earlier
+  const ep=load('mm_unsub_pending');if(!ep||!pushOK())return;
+  try{
+    const sub=await currentSub();
+    if(load('mm_alerts')&&sub&&sub.endpoint===ep){store('mm_unsub_pending',null);return}
+    if(!(await serverUnsub(ep)))return;
+    store('mm_unsub_pending',null);
+    if(sub&&sub.endpoint===ep&&!load('mm_alerts'))await sub.unsubscribe();
+  }catch(e){}
+}
+async function alertsSync(force){ // update location, language and units on the server when they changed, and at most once every 7 days otherwise (keeps the subscription from expiring)
   if(!load('mm_alerts'))return;
+  const p=state.place;if(!p)return;
+  const last=load('mm_alerts_sync');
+  if(!force&&last&&last.sig===syncSig(p)&&Date.now()-last.at<7*864e5)return;
   try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
 }
 async function sendTest(fresh){
@@ -650,7 +679,7 @@ function wire(){
       alertsMsg(t('aWorking'));
       const ok=await alertsEnable();tg.checked=ok;
       if(ok){$('#alertsTest').hidden=false;await sendTest(true)}
-    }else{await alertsDisable();alertsMsg(t('aOff'))}
+    }else{const ok=await alertsDisable();alertsMsg(t(ok?'aOff':'aOffPending'))}
     tg.disabled=false;
   });
   $('#alertsTest').addEventListener('click',()=>sendTest(false));
@@ -659,7 +688,7 @@ function wire(){
 
 // ===== הפעלה =====
 async function init(){
-  applyPrefs();applyStatic();wire();setTimeout(alertsHeal,3000);
+  applyPrefs();applyStatic();wire();setTimeout(()=>alertsPending().then(alertsHeal),3000);
   const saved=load('mm_place');
   if(saved){
     go(saved);

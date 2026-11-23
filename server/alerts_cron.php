@@ -37,6 +37,11 @@ if (($i = array_search('--probe', $argv, true)) !== false) {
   exit;
 }
 $db = mm_db();
+// Retention: a subscription the app has not refreshed for 120 days is deleted (the app refreshes it at least every 7 days while it is opened).
+if (!$dry) {
+  $del = $db->prepare('DELETE FROM subs WHERE updated < ?'); $del->execute([time() - 120 * 86400]);
+  if ($del->rowCount() > 0) mm_log('retention: deleted ' . $del->rowCount() . ' subscriptions not refreshed for 120 days');
+}
 $subs = $db->query('SELECT * FROM subs')->fetchAll(PDO::FETCH_ASSOC);
 $groups = []; $due = 0;
 foreach ($subs as $s) {
