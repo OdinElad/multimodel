@@ -1,7 +1,7 @@
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
 const APP_VER='2.0.3';
 
-// --- Which models are shown. Default: only the most accurate one here. ---
+// --- Which models are shown. Default: all of them. The model closest to the consensus is only marked, not preferred. ---
 const MSEL='mm_models';
 function activeIds(){
   const u=load(MSEL);

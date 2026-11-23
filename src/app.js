@@ -235,12 +235,12 @@ function render(){
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
         :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
-        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}">${ag[1]}</span>`}</div>
+        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>
       <div class="bigt">${Math.round(cT(bigT))}<sup>°</sup></div>
     </div>
     <div class="now-models">
-      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
+      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'⭐ ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
     ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(cs.inMax-cs.inMin)}):''}</div>`}
@@ -275,7 +275,7 @@ function render(){
       <div class="day" data-i="${i}">
         <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
         <div class="ico">${c[0]}</div>
-        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>`}<br>
+        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px" title="${esc(t('confHint'))}">${a[1]}</span>`}<br>
           <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):(d.nRain?t('rainOf',{k:d.rainN,n:d.nRain}):'·')+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
         <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
@@ -297,7 +297,7 @@ function render(){
       <button class="tab ${state.tab==='gust'?'on':''}" data-t="gust">${t('tabGust')}</button>
     </div>
     <div id="chart">${chart(P)}</div>
-    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'🏆 ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
+    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'⭐ ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
   </section>
 
   <section class="card">
@@ -358,12 +358,12 @@ function hourly(P){
     const lbl=tm.endsWith('T00:00')?`<b>${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</b> ${fmtH(tm)}`:fmtH(tm);
     rows.push(`<tr><td class="l">${lbl}</td>${raw.map(a=>`<td ${hot(a)}>${fmt(a)}</td>`).join('')}${P.models.length>1?`<td class="cons">${fmt(mean)}</td>`:''}</tr>`);
   }
-  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'🏆 ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
+  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'⭐ ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
 }
 
-// ===== מי המודל המדויק ביותר: בדיקה על 7 הימים האחרונים במקום הזה =====
-// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול מה שקרה בפועל.
-// "בפועל" = החציון של כל המודלים לאותה שעה אחרי מעשה (ניתוח עדכני), בשעות שכבר עברו.
+// ===== איזה מודל הכי קרוב לקונצנזוס: בדיקה על 7 הימים האחרונים במקום הזה =====
+// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול החציון של כל המודלים.
+// ההשוואה היא לחציון של כל המודלים לאותה שעה אחרי מעשה, בשעות שכבר עברו. זו לא מדידה בפועל.
 async function fetchSkill(p){
   const key='mm_skill_'+p.lat.toFixed(1)+'_'+p.lon.toFixed(1);
   const c=load(key);
@@ -401,7 +401,7 @@ function skillHTML(s){
   const worst=s.list[s.list.length-1].mae||1;
   return `<h2>${t('skillTitle')}</h2>
     <p class="sub">${t('skillSub',{d:s.days})}</p>
-    <div class="al green"><div style="font-size:22px">🏆</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
+    <div class="al green"><div style="font-size:22px">⭐</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
     ${s.list.map((x,i)=>{const m=MODELS.find(y=>y.id===x.id);const b=Math.abs(x.bias)>=0.5?(x.bias>0?t('skillWarm',{v:fDiff(x.bias)}):t('skillCold',{v:fDiff(-x.bias)})):'';
       return `<div class="qa"><div class="e">${i+1}</div><div><b><span class="dot" style="background:${m.color}"></span> ${m.name} <span dir="ltr">±${fDiff(x.mae)}</span></b>
       <div class="bar"><i style="width:${Math.max(8,Math.round((1-x.mae/(worst*1.15))*100))}%;background:${m.color}"></i></div>
