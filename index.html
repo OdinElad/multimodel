@@ -720,7 +720,7 @@ const CITIES=[
 // ===== הגדרות בסיס =====
 const $=s=>document.querySelector(s);
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.1';
+const APP_VER='2.0.2';
 
 // --- Which models are shown. Default: only the most accurate one here. ---
 const MSEL='mm_models';
@@ -1427,6 +1427,12 @@ async function sendTest(fresh){
     if(!sub){if(!(await alertsEnable()))return;sub=await currentSub()}   // subscription was lost (e.g. after an app update): renew it
     let j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null);
     if(j&&j.error==='not_found'){await sendSub(sub);j=await postSub({action:'test',endpoint:sub.endpoint}).catch(()=>null)}
+    if(j&&(j.status===404||j.status===410)){ // the push service dropped this subscription (common after an app reinstall/update): make a fresh one
+      await postSub({action:'unsubscribe',endpoint:sub.endpoint}).catch(()=>{});
+      try{await sub.unsubscribe()}catch(e){}
+      if(!(await alertsEnable()))return;
+      sub=await currentSub();j=sub?await postSub({action:'test',endpoint:sub.endpoint,retry:1}).catch(()=>null):null;
+    }
     if(j&&j.ok)alertsMsg(t(fresh?'aOnSent':'aSent',{p:state.place?state.place.name:''}));
     else if(j&&j.error==='too_soon')alertsMsg(t('aTooSoon'),1);
     else alertsMsg(t('aFail')+(j&&j.status?` (${j.status})`:''),1);
