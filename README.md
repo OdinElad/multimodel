@@ -1,4 +1,4 @@
-# MultiModel Weather
+# Tahazit: Weather Forecast
 
 A free, open-source weather app that compares forecasts from the world's leading numerical weather models side by side (ECMWF, GFS, ICON, UKMO, Météo-France) and shows where they agree or disagree.
 
