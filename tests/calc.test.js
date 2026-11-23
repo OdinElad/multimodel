@@ -37,4 +37,30 @@ test('dayCounts: empty input is safe', () => {
 });
 test('avg and med', () => { assert.strictEqual(avg([1, 2, 3]), 2); assert.strictEqual(med([3, 1, 2]), 2); assert.strictEqual(med([1, 2, 3, 4]), 2.5); });
 
+test('consensus [10,10,20,20]: median 15, high disagreement flag, no NaN', () => {
+  const c = consensus([10, 10, 20, 20]);
+  assert.strictEqual(c.med, 15); assert.strictEqual(c.disagree, true); assert.strictEqual(c.empty, false);
+  assert.deepStrictEqual(c.out, [false, false, false, false]); // nothing filtered when fewer than 2 would remain
+  assert.ok(Number.isFinite(c.inMin) && Number.isFinite(c.inMax) && Number.isFinite(c.min) && Number.isFinite(c.max));
+});
+test('consensus []: empty state ("no data")', () => {
+  const c = consensus([]); assert.strictEqual(c.empty, true); assert.strictEqual(c.med, null);
+});
+test('consensus with only null values is empty too', () => assert.strictEqual(consensus([null, undefined]).empty, true));
+test('consensus [10,10,10,10,30]: 30 is an outlier, median 10', () => {
+  const c = consensus([10, 10, 10, 10, 30]);
+  assert.deepStrictEqual(c.out, [false, false, false, false, true]); assert.strictEqual(c.med, 10);
+  assert.strictEqual(c.disagree, false); assert.strictEqual(c.max, 30); assert.strictEqual(c.inMax, 10);
+});
+test('consensus keeps a normal spread untouched', () => {
+  const c = consensus([14, 15, 16, 15.5]); assert.strictEqual(c.disagree, false); assert.ok(c.out.every(x => !x)); assert.strictEqual(c.med, 15.25);
+});
+test('consensus with one or two models never filters', () => {
+  assert.strictEqual(consensus([12]).med, 12); assert.strictEqual(consensus([12]).disagree, false);
+  const c = consensus([10, 30]); assert.strictEqual(c.med, 20); assert.deepStrictEqual(c.out, [false, false]);
+});
+test('consensus ignores missing values in the middle', () => {
+  const c = consensus([10, null, 10, 10, 10, 30]); assert.deepStrictEqual(c.out, [false, false, false, false, false, true]); assert.strictEqual(c.med, 10);
+});
+
 if (failed) { console.log(failed + ' test(s) failed'); process.exit(1); } else console.log('all calc tests passed');

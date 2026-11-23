@@ -195,10 +195,11 @@ function render(){
   sky(P);
   if(!models.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return}
   const nowPer=models.map(m=>({m,t:pick(H,'temperature_2m',m.id)[ni],c:pick(H,'weather_code',m.id)?.[ni],w:pick(H,'wind_speed_10m',m.id)?.[ni]})).filter(x=>x.t!=null);
-  nowPer.forEach(x=>{const o=nowPer.filter(y=>y!==x).map(y=>y.t);x.out=o.length>=3&&Math.abs(x.t-med(o))>=3});
+  if(!nowPer.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return} // no model has a value for this hour
+  const cs=consensus(nowPer.map(x=>x.t)); // outliers are filtered only while at least 2 models remain; otherwise median of all + a disagreement note
+  nowPer.forEach((x,i)=>x.out=cs.out[i]);
   const nowIn=nowPer.filter(x=>!x.out),outs=nowPer.filter(x=>x.out);
-  const nowT=med(nowIn.map(x=>x.t));
-  const nowMin=Math.min(...nowPer.map(x=>x.t)),nowMax=Math.max(...nowPer.map(x=>x.t));
+  const nowT=cs.med,nowMin=cs.min,nowMax=cs.max;
   const nowCodes=nowPer.map(x=>x.c??0).sort((a,b)=>a-b);
   const nowCode=nowCodes[Math.floor(nowCodes.length/2)]||0;
   const nowC=wc(nowCode);
@@ -232,7 +233,7 @@ function render(){
           ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
-        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
+        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
         <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}">${ag[1]}</span>`}</div>
       </div>
@@ -242,7 +243,7 @@ function render(){
       ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
-    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>`}
+    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(cs.inMax-cs.inMin)}):''}</div>`}
     <div class="rangeline" style="font-size:11.5px"><a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#9cc3ff" dir="ltr">Weather data by Open-Meteo.com</a></div>
     ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
   </section>

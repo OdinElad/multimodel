@@ -686,6 +686,7 @@ aFail:["לא הצלחנו לשלוח התראה לטלפון הזה.", "We could
 aOff:["ההתראות כבויות.", "Alerts are off.", "التنبيهات متوقفة.", "Предупреждения выключены.", "预警已关闭。", "警報はオフです。", "Les alertes sont désactivées.", "Warnungen sind aus.", "Las alertas están desactivadas.", "Gli avvisi sono disattivati.", "Os alertas estão desativados.", "Waarschuwingen staan uit.", "Ostrzeżenia są wyłączone.", "Попередження вимкнено."],
 sDone:["אישור", "OK", "موافق", "ОК", "确定", "OK", "OK", "OK", "Aceptar", "OK", "OK", "OK", "OK", "OK"],
 aOffPending:["ההתראות כובו במכשיר. מחיקת הנתונים מהשרת תושלם כשיהיה חיבור.", "Alerts are off on this device. Deleting your data from the server will finish when you are back online.", "تم إيقاف التنبيهات على هذا الجهاز. سيكتمل حذف بياناتك من الخادم عند توفر الاتصال.", "Уведомления на этом устройстве отключены. Удаление данных с сервера завершится, когда появится соединение.", "此设备上的预警已关闭。联网后将完成从服务器删除您的数据。", "このデバイスでは警報をオフにしました。オンラインに戻ると、サーバー上のデータ削除が完了します。", "Les alertes sont désactivées sur cet appareil. La suppression de vos données sur le serveur se terminera dès que la connexion sera rétablie.", "Die Warnungen sind auf diesem Gerät aus. Das Löschen Ihrer Daten auf dem Server wird abgeschlossen, sobald wieder eine Verbindung besteht.", "Las alertas están desactivadas en este dispositivo. El borrado de tus datos del servidor se completará cuando haya conexión.", "Gli avvisi sono disattivati su questo dispositivo. L'eliminazione dei tuoi dati dal server verrà completata quando tornerà la connessione.", "Os alertas estão desativados neste dispositivo. A eliminação dos seus dados no servidor será concluída quando houver ligação.", "Waarschuwingen staan uit op dit apparaat. Het verwijderen van je gegevens op de server wordt afgerond zodra je weer verbinding hebt.", "Ostrzeżenia są wyłączone na tym urządzeniu. Usunięcie danych z serwera zakończy się, gdy pojawi się połączenie.", "Попередження на цьому пристрої вимкнено. Видалення даних із сервера завершиться, коли з'явиться з'єднання."],
+highDisagree:["אי־הסכמה גבוהה בין המודלים", "High disagreement between the models", "تباين كبير بين النماذج", "Модели сильно расходятся", "模型之间分歧较大", "モデル間の食い違いが大きい", "Fort désaccord entre les modèles", "Starke Uneinigkeit zwischen den Modellen", "Gran desacuerdo entre los modelos", "Forte disaccordo tra i modelli", "Grande desacordo entre os modelos", "Grote onenigheid tussen de modellen", "Duże rozbieżności między modelami", "Моделі сильно розходяться"],
 };
 {const ALL=L;for(const k in S2){if(S2[k].length!==ALL.length)console.warn('i18n length',k);S[k]=S2[k]}}
 const CITIES=[
@@ -1133,10 +1134,11 @@ function render(){
   sky(P);
   if(!models.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return}
   const nowPer=models.map(m=>({m,t:pick(H,'temperature_2m',m.id)[ni],c:pick(H,'weather_code',m.id)?.[ni],w:pick(H,'wind_speed_10m',m.id)?.[ni]})).filter(x=>x.t!=null);
-  nowPer.forEach(x=>{const o=nowPer.filter(y=>y!==x).map(y=>y.t);x.out=o.length>=3&&Math.abs(x.t-med(o))>=3});
+  if(!nowPer.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return} // no model has a value for this hour
+  const cs=consensus(nowPer.map(x=>x.t)); // outliers are filtered only while at least 2 models remain; otherwise median of all + a disagreement note
+  nowPer.forEach((x,i)=>x.out=cs.out[i]);
   const nowIn=nowPer.filter(x=>!x.out),outs=nowPer.filter(x=>x.out);
-  const nowT=med(nowIn.map(x=>x.t));
-  const nowMin=Math.min(...nowPer.map(x=>x.t)),nowMax=Math.max(...nowPer.map(x=>x.t));
+  const nowT=cs.med,nowMin=cs.min,nowMax=cs.max;
   const nowCodes=nowPer.map(x=>x.c??0).sort((a,b)=>a-b);
   const nowCode=nowCodes[Math.floor(nowCodes.length/2)]||0;
   const nowC=wc(nowCode);
@@ -1170,7 +1172,7 @@ function render(){
           ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
-        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
+        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
         <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}">${ag[1]}</span>`}</div>
       </div>
@@ -1180,7 +1182,7 @@ function render(){
       ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
-    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>`}
+    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(cs.inMax-cs.inMin)}):''}</div>`}
     <div class="rangeline" style="font-size:11.5px"><a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#9cc3ff" dir="ltr">Weather data by Open-Meteo.com</a></div>
     ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
   </section>
