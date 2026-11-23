@@ -421,17 +421,17 @@ async function loadSkill(p){
 // ===== מיקום =====
 const norm=s=>(s||'').replace(/[֑-ׇ'"׳״\-\s()]/g,'').toLowerCase();
 const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
-function nearestCity(lat,lon){let best=null,bd=1e9;CITIES.forEach(c=>{const d=km(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}});return {c:best,d:bd}}
-
+// On-device place naming: no request containing the user's position is sent to any naming service.
+let GEO=null,geoP=null;
+function loadGeo(){
+  if(GEO)return Promise.resolve(GEO);
+  if(!geoP)geoP=fetch('geo/cities15000.json').then(r=>r.ok?r.json():null).then(j=>{GEO=Array.isArray(j)?j:null;if(!GEO)geoP=null;return GEO}).catch(()=>{geoP=null;return null});
+  return geoP;
+}
 async function reverseName(lat,lon){
-  const n=nearestCity(lat,lon);
-  if(LANG==='he'&&n.d<=4)return n.c[0];
-  try{
-    const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${LANG}`);
-    if(r.ok){const j=await r.json();const nm=j.city||j.locality;if(nm)return nm}
-  }catch(e){}
-  if(LANG==='he'&&n.d<=15)return t('near',{p:n.c[0]});
-  return t('myLoc');
+  const near=LANG==='he'&&nearestIn(CITIES,lat,lon).d<=4;
+  const geo=near?null:await loadGeo(); // offline or missing file: falls back to the Hebrew list or "My location"
+  return resolveName({lang:LANG,cities:CITIES,geo,lat,lon,t});
 }
 function getPos(timeout=12000){
   return new Promise((res,rej)=>{
