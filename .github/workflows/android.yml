@@ -1,0 +1,43 @@
+name: Build Android app
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Decrypt upload key
+        env:
+          PW: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -z "$PW" ]; then echo "::error::Add the KEYSTORE_PASSWORD repository secret first"; exit 1; fi
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in android/upload.jks.enc -out android/app/upload.jks -pass env:PW
+      - name: Build AAB and APK
+        working-directory: android
+        env:
+          MM_KEYSTORE: upload.jks
+          MM_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon bundleRelease assembleRelease
+      - name: Upload key fingerprint
+        env:
+          PW: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: keytool -list -v -keystore android/app/upload.jks -storepass "$PW" | grep -E 'SHA256:'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: multimodel-android
+          path: |
+            android/app/build/outputs/bundle/release/*.aab
+            android/app/build/outputs/apk/release/*.apk
+      - name: Remove key
+        if: always()
+        run: rm -f android/app/upload.jks

@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "io.github.odinelad.multimodel",
+    "sha256_cert_fingerprints": [
+      "FA:65:19:DF:A4:F6:2A:0E:DF:F8:B4:65:DB:10:60:2C:F7:15:AC:68:27:92:BB:31:1F:C6:CD:79:4D:73:74:41"
+    ]
+  }
+}]
