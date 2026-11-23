@@ -53,13 +53,14 @@ foreach ($subs as $s) {
   $today = $now->format('Y-m-d');
   if (!$force && (!in_array((int)$now->format('G'), [20, 21], true) || $s['last_checked'] === $today)) continue; // 20:00 window, 21:00 is the retry window
   $due++;
-  $groups[sprintf('%.1f,%.1f', $s['lat'], $s['lon'])][] = $s + ['_today' => $today];
+  $gl = round((float)$s['lat'] * 10) / 10 + 0.0; $go = round((float)$s['lon'] * 10) / 10 + 0.0; // 0.1 degree cell centre
+  $groups[sprintf('%.1f,%.1f', $gl, $go)][] = $s + ['_today' => $today, '_gl' => $gl, '_go' => $go];
 }
 $sent = 0; $checked = 0; $failed = 0;
 foreach ($groups as $key => $list) {
-  $s0 = $list[0];
-  $fc = mm_tomorrow((float)$s0['lat'], (float)$s0['lon']);
-  $cl = $fc ? mm_climate((float)$s0['lat'], (float)$s0['lon'], $fc['date']) : null;
+  $s0 = $list[0]; // all subscribers of a group share one request, made for the cell centre (not for one person's position)
+  $fc = mm_tomorrow($s0['_gl'], $s0['_go']);
+  $cl = $fc ? mm_climate($s0['_gl'], $s0['_go'], $fc['date']) : null;
   if (!$fc || !$cl) { // not marked as checked: the next run this evening (20:xx or 21:xx local) tries again
     $failed += count($list);
     mm_log(sprintf('check %s: forecast or climate unavailable (%s), will retry', $key, $fc ? 'climate' : 'forecast'));

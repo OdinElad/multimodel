@@ -80,18 +80,21 @@ function mm_percentile(array $v, float $p): float {
 }
 function mm_median(array $v): float { return mm_percentile($v, 0.5); }
 
-/** Climate for a location around a date: samples of daily min/max, 2010-2024, +-7 days. Cached ~1 week. */
+/** Climate for a place around a date: samples of daily min/max, 2010-2024 (ERA5), +-7 days. Cached ~1 week per 0.25 degree cell.
+ *  The request is sent for the centre of the 0.25 degree cell (never for one subscriber's own position). */
 function mm_climate(float $lat, float $lon, string $date): ?array {
-  $key = sprintf('clim_%.2f_%.2f_%s', round($lat * 4) / 4, round($lon * 4) / 4, substr($date, 5, 5));
+  $cLat = round($lat * 4) / 4 + 0.0; $cLon = round($lon * 4) / 4 + 0.0; // cell centre (ERA5 native resolution is 0.25)
+  $key = sprintf('clim2_%.2f_%.2f_%s', $cLat, $cLon, substr($date, 5, 5));
   $f = mm_data_dir() . '/' . sha1($key) . '.json';
   if (is_file($f) && time() - filemtime($f) < 8 * 86400) { $j = json_decode((string)file_get_contents($f), true); if ($j) return $j; }
   $mins = []; $maxs = [];
   [$y0, $m, $d] = array_map('intval', explode('-', $date));
   for ($y = 2010; $y <= 2024; $y++) {
-    $c = mktime(12, 0, 0, $m, $d, $y);
+    $dd = ($m === 2 && $d === 29 && !checkdate(2, 29, $y)) ? 28 : $d; // 29 February in a non-leap year: use 28 February
+    $c = mktime(12, 0, 0, $m, $dd, $y);
     $s = date('Y-m-d', $c - 7 * 86400); $e = date('Y-m-d', $c + 7 * 86400);
-    $j = mm_http_json('https://archive-api.open-meteo.com/v1/archive?latitude=' . $lat . '&longitude=' . $lon .
-      "&start_date=$s&end_date=$e&daily=temperature_2m_max,temperature_2m_min&timezone=auto");
+    $j = mm_http_json('https://archive-api.open-meteo.com/v1/archive?latitude=' . $cLat . '&longitude=' . $cLon .
+      "&start_date=$s&end_date=$e&daily=temperature_2m_max,temperature_2m_min&models=era5&timezone=auto");
     if (!$j) continue;
     foreach ((array)($j['daily']['temperature_2m_min'] ?? []) as $v) if (is_numeric($v)) $mins[] = (float)$v;
     foreach ((array)($j['daily']['temperature_2m_max'] ?? []) as $v) if (is_numeric($v)) $maxs[] = (float)$v;
