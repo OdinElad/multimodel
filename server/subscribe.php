@@ -10,6 +10,7 @@
  * Privacy: only the push address, a rounded location (~1 km), language, units and time zone are stored.
  */
 declare(strict_types=1);
+ini_set('display_errors', '0'); // never print PHP errors into the JSON answer
 require_once __DIR__ . '/alerts_lib.php';
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -40,14 +41,28 @@ $raw = (string)file_get_contents('php://input', false, null, 0, 8193);
 if (strlen($raw) > 8192) reply(['ok' => false, 'error' => 'too_large'], 413);
 $in = json_decode($raw, true);
 if (!is_array($in)) reply(['ok' => false, 'error' => 'bad_json'], 400);
-$action = (string)($in['action'] ?? '');
+$action = $in['action'] ?? '';
+if (!is_string($action)) reply(['ok' => false, 'error' => 'bad_action'], 400);
+// Endpoint of unsubscribe/test must be a plain string (anything else is rejected before it reaches the database).
+$epIn = $in['endpoint'] ?? '';
+if (!is_string($epIn) || strlen($epIn) > 1000) reply(['ok' => false, 'error' => 'bad_endpoint'], 400);
 
 if ($action === 'subscribe') {
-  $s = $in['subscription'] ?? [];
-  $ep = (string)($s['endpoint'] ?? ''); $p = (string)($s['keys']['p256dh'] ?? ''); $a = (string)($s['keys']['auth'] ?? '');
-  if (!push_endpoint_allowed($ep) || strlen($ep) > 1000 || strlen(b64u_dec($p)) !== 65 || strlen(b64u_dec($a)) < 16) reply(['ok' => false, 'error' => 'bad_subscription'], 400);
-  $lat = filter_var($in['lat'] ?? null, FILTER_VALIDATE_FLOAT); $lon = filter_var($in['lon'] ?? null, FILTER_VALIDATE_FLOAT);
-  if (!is_float($lat) || !is_float($lon) || abs($lat) > 90 || abs($lon) > 180) reply(['ok' => false, 'error' => 'bad_coords'], 400);
+  // B1: strict validation. Expected types only; anything else is a 400 (never a PHP warning or error).
+  $s = $in['subscription'] ?? null;
+  if (!is_array($s) || !is_string($s['endpoint'] ?? null) || !is_array($s['keys'] ?? null)
+      || !is_string($s['keys']['p256dh'] ?? null) || !is_string($s['keys']['auth'] ?? null)) reply(['ok' => false, 'error' => 'bad_subscription'], 400);
+  $ep = $s['endpoint']; $p = $s['keys']['p256dh']; $a = $s['keys']['auth'];
+  $b64u = fn(string $x): bool => preg_match('/^[A-Za-z0-9_-]+$/', $x) === 1; // base64url only (no padding, no + or /)
+  if (!push_endpoint_allowed($ep) || strlen($ep) > 1000 || !$b64u($p) || !$b64u($a)) reply(['ok' => false, 'error' => 'bad_subscription'], 400);
+  $pRaw = b64u_dec($p); $aRaw = b64u_dec($a);
+  if (strlen($pRaw) !== 65 || $pRaw[0] !== "\x04" || strlen($aRaw) !== 16) reply(['ok' => false, 'error' => 'bad_subscription'], 400);
+  $lat = $in['lat'] ?? null; $lon = $in['lon'] ?? null;
+  if (!(is_int($lat) || is_float($lat)) || !(is_int($lon) || is_float($lon)) || !is_finite((float)$lat) || !is_finite((float)$lon)
+      || abs($lat) > 90 || abs($lon) > 180) reply(['ok' => false, 'error' => 'bad_coords'], 400);
+  $lat = (float)$lat; $lon = (float)$lon;
+  foreach (['lang', 'tz', 'name'] as $f) if (isset($in[$f]) && !is_string($in[$f])) reply(['ok' => false, 'error' => 'bad_' . $f], 400);
+  if (isset($in['imperial']) && !is_bool($in['imperial']) && $in['imperial'] !== 0 && $in['imperial'] !== 1) reply(['ok' => false, 'error' => 'bad_imperial'], 400);
   $lang = in_array($in['lang'] ?? '', MM_LANGS, true) ? $in['lang'] : 'en';
   $tz = (string)($in['tz'] ?? 'UTC'); try { new DateTimeZone($tz); } catch (Throwable $e) { $tz = 'UTC'; }
   $name = mb_substr(trim(strip_tags((string)($in['name'] ?? ''))), 0, 60);
@@ -65,15 +80,17 @@ if ($action === 'subscribe') {
   reply(['ok' => true]);
 }
 if ($action === 'unsubscribe') {
-  $db->prepare('DELETE FROM subs WHERE endpoint=?')->execute([(string)($in['endpoint'] ?? '')]);
+  $db->prepare('DELETE FROM subs WHERE endpoint=?')->execute([$epIn]);
   reply(['ok' => true]);
 }
 if ($action === 'test') {
-  $st = $db->prepare('SELECT * FROM subs WHERE endpoint=?'); $st->execute([(string)($in['endpoint'] ?? '')]);
+  $st = $db->prepare('SELECT * FROM subs WHERE endpoint=?'); $st->execute([$epIn]);
   $s = $st->fetch(PDO::FETCH_ASSOC);
   if (!$s) reply(['ok' => false, 'error' => 'not_found'], 404);
-  if (time() - (int)$s['last_test'] < 60) reply(['ok' => false, 'error' => 'too_soon'], 429);
-  $db->prepare('UPDATE subs SET last_test=? WHERE endpoint=?')->execute([time(), $s['endpoint']]);
+  // B2: atomic claim of the one-per-minute slot (two parallel requests cannot both pass)
+  $now = time();
+  $claim = $db->prepare('UPDATE subs SET last_test=? WHERE endpoint=? AND last_test<?'); $claim->execute([$now, $s['endpoint'], $now - 60]);
+  if ($claim->rowCount() !== 1) reply(['ok' => false, 'error' => 'too_soon'], 429);
   $place = $s['name'] ?: '';
   $code = mm_push($s, mm_t('testTitle', $s['lang'], []), mm_t('testBody', $s['lang'], ['p' => $place]), 'mm-test');
   reply(['ok' => $code >= 200 && $code < 300, 'status' => $code]);

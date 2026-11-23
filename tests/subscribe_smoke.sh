@@ -33,7 +33,32 @@ check "body over 8KB is 413 (2nd POST)" "$(post "$BIG")" 413
 check "bad json is 400 (3rd POST)" "$(post 'nope')" 400
 check "unsubscribe deletes (4th POST)" "$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"$EP\"}")" 200
 check "row is gone" "$(php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");echo $d->query("select count(*) from subs")->fetchColumn();')" 0
-n=4; last=0
+# B1 strict validation, B3 endpoint rules, B2 atomic test slot (these use up some of the hourly allowance, so it is reset before the rate-limit check)
+mk() { # $1=endpoint $2=p256dh $3=auth $4=lat json
+  echo "{\"action\":\"subscribe\",\"subscription\":{\"endpoint\":\"$1\",\"keys\":{\"p256dh\":\"$2\",\"auth\":\"$3\"}},\"lat\":$4,\"lon\":34.97,\"name\":\"T\",\"lang\":\"en\",\"tz\":\"UTC\"}"
+}
+NOT04=$(php -r 'echo rtrim(strtr(base64_encode("\x05".str_repeat("a",64)),"+/","-_"),"=");')
+AUTH15=$(php -r 'echo rtrim(strtr(base64_encode(str_repeat("b",15)),"+/","-_"),"=");')
+AUTH17=$(php -r 'echo rtrim(strtr(base64_encode(str_repeat("b",17)),"+/","-_"),"=");')
+check "p256dh not starting with 0x04 is 400" "$(post "$(mk $EP $NOT04 $AUTH 32.4)")" 400
+check "auth of 15 bytes is 400" "$(post "$(mk $EP $P256 $AUTH15 32.4)")" 400
+check "auth of 17 bytes is 400" "$(post "$(mk $EP $P256 $AUTH17 32.4)")" 400
+check "base64 with + / = is 400" "$(post "$(mk $EP "${P256}==" $AUTH 32.4)")" 400
+check "lat as a string is 400" "$(post "$(mk $EP $P256 $AUTH '\"32.4\"')")" 400
+check "endpoint on port 8443 is 400" "$(post "$(mk https://fcm.googleapis.com:8443/fcm/send/abc $P256 $AUTH 32.4)")" 400
+check "endpoint with userinfo is 400" "$(post "$(mk https://user:pw@fcm.googleapis.com/fcm/send/abc $P256 $AUTH 32.4)")" 400
+check "endpoint with fragment is 400" "$(post "$(mk 'https://fcm.googleapis.com/fcm/send/abc#x' $P256 $AUTH 32.4)")" 400
+check "endpoint on port 443 is accepted" "$(post "$(mk https://fcm.googleapis.com:443/fcm/send/ok443 $P256 $AUTH 32.4)")" 200
+check "subscription as a string is 400, no PHP error" "$(post '{"action":"subscribe","subscription":"x","lat":1,"lon":1}')" 400
+check "action as an array is 400" "$(post '{"action":["x"]}')" 400
+check "endpoint as an array is 400" "$(post '{"action":"unsubscribe","endpoint":["x"]}')" 400
+check "no PHP warning text in answers" "$(post '{"action":"subscribe","subscription":{"endpoint":5,"keys":"x"}}' >/dev/null; grep -c -i 'warning\|notice\|fatal' /tmp/mm_smoke_body)" 0
+post "$SUB" >/dev/null
+r1=$(post "{\"action\":\"test\",\"endpoint\":\"$EP\"}"); r2=$(post "{\"action\":\"test\",\"endpoint\":\"$EP\"}")
+check "first test claims the slot (not 429)" "$([ "$r1" = 429 ] && echo 429 || echo ok)" ok
+check "second test within a minute is 429" "$r2" 429
+php -r '$d=new PDO("sqlite:'"$ROOT"'/multimodel-data/subscriptions.sqlite");$d->exec("DELETE FROM rl");$d->exec("DELETE FROM subs");'
+n=0; last=0
 while [ $n -lt 20 ]; do n=$((n+1)); last=$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"x\"}"); done
 check "20th POST still allowed" "$last" 200
 check "21st POST from the same address is 429" "$(post "{\"action\":\"unsubscribe\",\"endpoint\":\"x\"}")" 429
