@@ -4,9 +4,9 @@
 set -e
 cd "$(dirname "$0")"
 BASE=https://raw.githubusercontent.com/OdinElad/multimodel/main/server
-for f in api.php push_lib.php alerts_lib.php subscribe.php alerts_cron.php setup_keys.php; do
+for f in api.php push_lib.php alerts_lib.php subscribe.php alerts_cron.php setup_keys.php .htaccess; do
   curl -fsS -o "$f.new" "$BASE/$f"
-  php -l "$f.new" >/dev/null
+  case "$f" in *.php) php -l "$f.new" >/dev/null;; esac
   mv "$f.new" "$f"
 done
 php setup_keys.php "${1:-}"

@@ -1,6 +1,6 @@
-const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// avg, med, majority, consensus and dayCounts live in calc.js (pure functions, tested in tests/calc.test.js)
 const r1=v=>Math.round(v*10)/10;
+const q2=v=>Math.round(+v*100)/100; // coordinates leave the device rounded to 2 decimals (about 1 km)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
@@ -75,7 +75,7 @@ let state={place:null,data:null,tab:'temp',obs:null,cached:false};
 
 async function fetchForecast(p){
   const ids=MODELS.map(m=>m.id).join(',');
-  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${q2(p.lat)}&longitude=${q2(p.lon)}`+
    `&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,cape`+
    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max,weather_code,sunrise,sunset`+
    `&models=${ids}&timezone=auto&forecast_days=7`;
@@ -90,7 +90,7 @@ async function fetchObs(p){
   if(!/^https?:/.test(location.protocol))return null;
   try{
     const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),7000);
-    const r=await fetch(`${OBS_API}?lat=${p.lat}&lon=${p.lon}`,{signal:ac.signal});clearTimeout(tm);
+    const r=await fetch(`${OBS_API}?lat=${q2(p.lat)}&lon=${q2(p.lon)}`,{signal:ac.signal});clearTimeout(tm);
     if(!r.ok)return null;const j=await r.json();
     if(!j||!j.ok||typeof j.temp_c!=='number')return null;
     const age=Math.round((Date.now()/1000-j.time)/60);
@@ -115,20 +115,18 @@ function process(d,ids){
     })).filter(x=>x.max!=null);
     const n=per.length;
     const maxs=per.map(x=>x.max),mins=per.map(x=>x.min);
-    const rains=per.map(x=>x.rain??0);
-    const codes=per.map(x=>x.code??0).sort((a,b)=>a-b);
-    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,rainAvg:n?avg(rains):0,rainMax:n?Math.max(...rains):0,
-      rainN:per.filter(x=>(x.rain??0)>=1).length,heavyN:per.filter(x=>(x.rain??0)>=20).length,
-      thunderN:per.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length,
-      windN:per.filter(x=>(x.gust??0)>=60).length,spread:n?Math.max(...maxs)-Math.min(...maxs):0,
-      code:codes[Math.floor(codes.length/2)]||0,gustMax:n?Math.max(...per.map(x=>x.gust??0)):0};
+    const dc=dayCounts(per);
+    const codes=per.map(x=>x.code).filter(c=>c!=null).sort((a,b)=>a-b);
+    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,...dc,
+      spread:n?Math.max(...maxs)-Math.min(...maxs):0,
+      code:codes.length?codes[Math.floor(codes.length/2)]:0};
   });
   return {models,ni,days,H,D};
 }
 
 function conf(d){
   if(!d.n)return 0;
-  const p=d.rainN/d.n;
+  const p=d.nRain?d.rainN/d.nRain:0;
   let c=100-Math.min(40,d.spread*7)-(1-Math.abs(2*p-1))*35-(d.idx||0)*3;
   if(d.n<3)c-=10;
   return Math.max(30,Math.min(97,Math.round(c)));
@@ -139,7 +137,6 @@ function hourStats(P,i,key,thr){
   const v=P.models.map(m=>(pick(P.H,key,m.id)||[])[i]).filter(x=>x!=null);
   return {n:v.length,k:v.filter(x=>x>=thr).length,mean:v.length?avg(v):null};
 }
-const majority=s=>s.n>0&&s.k>=Math.max(Math.min(2,s.n),Math.ceil(s.n/2));
 function dph(P,i){return dayRef(P.H.time[i].slice(0,10),Math.floor(i/24))}
 
 function rainLine(P){
@@ -198,10 +195,11 @@ function render(){
   sky(P);
   if(!models.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return}
   const nowPer=models.map(m=>({m,t:pick(H,'temperature_2m',m.id)[ni],c:pick(H,'weather_code',m.id)?.[ni],w:pick(H,'wind_speed_10m',m.id)?.[ni]})).filter(x=>x.t!=null);
-  nowPer.forEach(x=>{const o=nowPer.filter(y=>y!==x).map(y=>y.t);x.out=o.length>=3&&Math.abs(x.t-med(o))>=3});
+  if(!nowPer.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return} // no model has a value for this hour
+  const cs=consensus(nowPer.map(x=>x.t)); // outliers are filtered only while at least 2 models remain; otherwise median of all + a disagreement note
+  nowPer.forEach((x,i)=>x.out=cs.out[i]);
   const nowIn=nowPer.filter(x=>!x.out),outs=nowPer.filter(x=>x.out);
-  const nowT=med(nowIn.map(x=>x.t));
-  const nowMin=Math.min(...nowPer.map(x=>x.t)),nowMax=Math.max(...nowPer.map(x=>x.t));
+  const nowT=cs.med,nowMin=cs.min,nowMax=cs.max;
   const nowCodes=nowPer.map(x=>x.c??0).sort((a,b)=>a-b);
   const nowCode=nowCodes[Math.floor(nowCodes.length/2)]||0;
   const nowC=wc(nowCode);
@@ -215,13 +213,12 @@ function render(){
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
     const dr=dayRef(d.date,i);
-    const need=Math.max(2,Math.ceil(d.n/2));
-    if(d.thunderN>=need)al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.n})]);
-    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.n})]);
-    if(d.heavyN>=need)al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
-    if(d.windN>=need)al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
+    if(d.nThunder&&d.thunderN>=needFor(d.nThunder))al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.nThunder})]);
+    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.nThunder})]);
+    if(d.nRain&&d.heavyN>=needFor(d.nRain))al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
+    if(d.nWind&&d.windN>=needFor(d.nWind))al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
   });
-  const nextRain=PA.days.findIndex(d=>d.rainN>=Math.max(2,Math.ceil(d.n/2)));
+  const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
   const bigT=obs?obs.temp_c:nowT;
@@ -236,17 +233,17 @@ function render(){
           ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
-        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
+        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
-        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}">${ag[1]}</span>`}</div>
+        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>
       <div class="bigt">${Math.round(cT(bigT))}<sup>°</sup></div>
     </div>
     <div class="now-models">
-      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
+      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'⭐ ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
-    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>`}
+    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(cs.inMax-cs.inMin)}):''}</div>`}
     <div class="rangeline" style="font-size:11.5px"><a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#9cc3ff" dir="ltr">Weather data by Open-Meteo.com</a></div>
     ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
   </section>
@@ -274,18 +271,18 @@ function render(){
     <h2>${t('daysTitle')}</h2>
     <p class="sub">${t('daysSub')}</p>
     <div class="days">
-      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=Math.round(d.rainN/d.n*100);return `
+      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=d.nRain?Math.round(d.rainN/d.nRain*100):0;return `
       <div class="day" data-i="${i}">
         <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
         <div class="ico">${c[0]}</div>
-        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>`}<br>
-          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):t('rainOf',{k:d.rainN,n:d.n})+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
+        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px" title="${esc(t('confHint'))}">${a[1]}</span>`}<br>
+          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):(d.nRain?t('rainOf',{k:d.rainN,n:d.nRain}):'·')+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
         <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
         <div class="detail"><div class="tbl-wrap"><table>
           <tr><th class="l">${t('model')}</th><th>${t('max')}</th><th>${t('min')}</th><th>${t('rainH')} (${rU()})</th><th>${t('gustH')} (${wU()})</th><th>${t('condH')}</th></tr>
-          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${nR(x.rain??0)}</td><td>${Math.round(cW(x.gust??0))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
-          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${nR(d.rainAvg)}</td><td>${Math.round(cW(avg(d.per.map(x=>x.gust??0))))}</td><td>${c[0]}</td></tr>`}
+          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${x.rain==null?'·':nR(x.rain)}</td><td>${x.gust==null?'·':Math.round(cW(x.gust))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
+          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${d.nRain?nR(d.rainAvg):'·'}</td><td>${d.nWind?Math.round(cW(avg(d.per.filter(x=>x.gust!=null).map(x=>x.gust)))):'·'}</td><td>${c[0]}</td></tr>`}
         </table></div></div>
       </div>`}).join('')}
     </div>
@@ -300,7 +297,7 @@ function render(){
       <button class="tab ${state.tab==='gust'?'on':''}" data-t="gust">${t('tabGust')}</button>
     </div>
     <div id="chart">${chart(P)}</div>
-    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'🏆 ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
+    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'⭐ ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
   </section>
 
   <section class="card">
@@ -361,18 +358,18 @@ function hourly(P){
     const lbl=tm.endsWith('T00:00')?`<b>${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</b> ${fmtH(tm)}`:fmtH(tm);
     rows.push(`<tr><td class="l">${lbl}</td>${raw.map(a=>`<td ${hot(a)}>${fmt(a)}</td>`).join('')}${P.models.length>1?`<td class="cons">${fmt(mean)}</td>`:''}</tr>`);
   }
-  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'🏆 ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
+  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'⭐ ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
 }
 
-// ===== מי המודל המדויק ביותר: בדיקה על 7 הימים האחרונים במקום הזה =====
-// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול מה שקרה בפועל.
-// "בפועל" = החציון של כל המודלים לאותה שעה אחרי מעשה (ניתוח עדכני), בשעות שכבר עברו.
+// ===== איזה מודל הכי קרוב לקונצנזוס: בדיקה על 7 הימים האחרונים במקום הזה =====
+// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול החציון של כל המודלים.
+// ההשוואה היא לחציון של כל המודלים לאותה שעה אחרי מעשה, בשעות שכבר עברו. זו לא מדידה בפועל.
 async function fetchSkill(p){
   const key='mm_skill_'+p.lat.toFixed(1)+'_'+p.lon.toFixed(1);
   const c=load(key);
   if(c&&Date.now()-c.at<6*3600e3)return c.r;
   const ids=MODELS.map(m=>m.id).join(',');
-  const u=`https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+  const u=`https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${q2(p.lat)}&longitude=${q2(p.lon)}`+
     `&hourly=temperature_2m,temperature_2m_previous_day1&models=${ids}&past_days=7&forecast_days=1&timezone=auto`;
   try{
     const r=await fetch(u);if(!r.ok)return null;
@@ -404,7 +401,7 @@ function skillHTML(s){
   const worst=s.list[s.list.length-1].mae||1;
   return `<h2>${t('skillTitle')}</h2>
     <p class="sub">${t('skillSub',{d:s.days})}</p>
-    <div class="al green"><div style="font-size:22px">🏆</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
+    <div class="al green"><div style="font-size:22px">⭐</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
     ${s.list.map((x,i)=>{const m=MODELS.find(y=>y.id===x.id);const b=Math.abs(x.bias)>=0.5?(x.bias>0?t('skillWarm',{v:fDiff(x.bias)}):t('skillCold',{v:fDiff(-x.bias)})):'';
       return `<div class="qa"><div class="e">${i+1}</div><div><b><span class="dot" style="background:${m.color}"></span> ${m.name} <span dir="ltr">±${fDiff(x.mae)}</span></b>
       <div class="bar"><i style="width:${Math.max(8,Math.round((1-x.mae/(worst*1.15))*100))}%;background:${m.color}"></i></div>
@@ -421,17 +418,17 @@ async function loadSkill(p){
 // ===== מיקום =====
 const norm=s=>(s||'').replace(/[֑-ׇ'"׳״\-\s()]/g,'').toLowerCase();
 const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
-function nearestCity(lat,lon){let best=null,bd=1e9;CITIES.forEach(c=>{const d=km(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}});return {c:best,d:bd}}
-
+// On-device place naming: no request containing the user's position is sent to any naming service.
+let GEO=null,geoP=null;
+function loadGeo(){
+  if(GEO)return Promise.resolve(GEO);
+  if(!geoP)geoP=fetch('geo/cities15000.json').then(r=>r.ok?r.json():null).then(j=>{GEO=Array.isArray(j)?j:null;if(!GEO)geoP=null;return GEO}).catch(()=>{geoP=null;return null});
+  return geoP;
+}
 async function reverseName(lat,lon){
-  const n=nearestCity(lat,lon);
-  if(LANG==='he'&&n.d<=4)return n.c[0];
-  try{
-    const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${LANG}`);
-    if(r.ok){const j=await r.json();const nm=j.city||j.locality;if(nm)return nm}
-  }catch(e){}
-  if(LANG==='he'&&n.d<=15)return t('near',{p:n.c[0]});
-  return t('myLoc');
+  const near=LANG==='he'&&nearestIn(CITIES,lat,lon).d<=4;
+  const geo=near?null:await loadGeo(); // offline or missing file: falls back to the Hebrew list or "My location"
+  return resolveName({lang:LANG,cities:CITIES,geo,lat,lon,t});
 }
 function getPos(timeout=12000){
   return new Promise((res,rej)=>{
@@ -527,9 +524,11 @@ async function currentSub(){if(!pushOK())return null;const reg=await navigator.s
 async function sendSub(sub){
   const p=state.place;if(!p||!sub)return false;
   let tz='UTC';try{tz=(state.data&&state.data.timezone)||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){}
-  const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:p.lat,lon:p.lon,name:p.name,lang:LANG,imperial:U.imp,tz});
-  return !!(j&&j.ok);
+  const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:q2(p.lat),lon:q2(p.lon),name:p.name,lang:LANG,imperial:U.imp,tz});
+  if(j&&j.ok){store('mm_alerts_sync',{sig:syncSig(p),at:Date.now()});return true}
+  return false;
 }
+const syncSig=p=>[q2(p.lat),q2(p.lon),p.name,LANG,U.imp?1:0].join('|');
 async function alertsEnable(){
   if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
   const perm=await Notification.requestPermission();
@@ -539,15 +538,42 @@ async function alertsEnable(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub){const k=await (await fetch(SUB_API+'?key=1')).json();sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(k.key)})}
     if(!(await sendSub(sub)))throw new Error('server');
+    if(load('mm_unsub_pending')===sub.endpoint)store('mm_unsub_pending',null); // re-enabled on the same subscription: nothing to delete
     store('mm_alerts',true);return true;
   }catch(e){alertsMsg(t('alertsErr'),1);return false}
 }
-async function alertsDisable(){
-  store('mm_alerts',false);
-  try{const sub=await currentSub();if(sub){await postSub({action:'unsubscribe',endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+// Turning alerts off must really delete the server copy. If the server cannot be reached, the endpoint is kept in
+// mm_unsub_pending and the deletion is retried on every app start. The browser subscription is removed only after the server confirmed.
+async function serverUnsub(endpoint){
+  try{const j=await postSub({action:'unsubscribe',endpoint});return !!(j&&j.ok)}catch(e){return false}
 }
-async function alertsSync(){ // עדכון המיקום, השפה והיחידות בשרת אחרי כל שינוי
+async function alertsDisable(){
+  store('mm_alerts',false);store('mm_alerts_sync',null);
+  let done=true;
+  try{
+    const sub=await currentSub();
+    if(sub){
+      if(await serverUnsub(sub.endpoint)){store('mm_unsub_pending',null);await sub.unsubscribe()}
+      else{store('mm_unsub_pending',sub.endpoint);done=false}
+    }
+  }catch(e){}
+  return done;
+}
+async function alertsPending(){ // on startup: finish a deletion that failed earlier
+  const ep=load('mm_unsub_pending');if(!ep||!pushOK())return;
+  try{
+    const sub=await currentSub();
+    if(load('mm_alerts')&&sub&&sub.endpoint===ep){store('mm_unsub_pending',null);return}
+    if(!(await serverUnsub(ep)))return;
+    store('mm_unsub_pending',null);
+    if(sub&&sub.endpoint===ep&&!load('mm_alerts'))await sub.unsubscribe();
+  }catch(e){}
+}
+async function alertsSync(force){ // update location, language and units on the server when they changed, and at most once every 7 days otherwise (keeps the subscription from expiring)
   if(!load('mm_alerts'))return;
+  const p=state.place;if(!p)return;
+  const last=load('mm_alerts_sync');
+  if(!force&&last&&last.sig===syncSig(p)&&Date.now()-last.at<7*864e5)return;
   try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
 }
 async function sendTest(fresh){
@@ -633,7 +659,7 @@ function wire(){
     const b=$('#geo');b.disabled=true;b.textContent=t('detecting');
     try{
       const c=await getPos();const name=await reverseName(c.latitude,c.longitude);
-      selected={name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),sub:t('detectedSub')};
+      selected={name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),sub:t('detectedSub')};
       results=[selected];renderList(results,'x');choose(0);
     }catch(e){$('#list').innerHTML=`<div class="hint">${geoErrText(e)}</div>`}
     finally{b.disabled=false;b.textContent=t('detectBtn')}
@@ -649,7 +675,7 @@ function wire(){
       alertsMsg(t('aWorking'));
       const ok=await alertsEnable();tg.checked=ok;
       if(ok){$('#alertsTest').hidden=false;await sendTest(true)}
-    }else{await alertsDisable();alertsMsg(t('aOff'))}
+    }else{const ok=await alertsDisable();alertsMsg(t(ok?'aOff':'aOffPending'))}
     tg.disabled=false;
   });
   $('#alertsTest').addEventListener('click',()=>sendTest(false));
@@ -658,7 +684,7 @@ function wire(){
 
 // ===== הפעלה =====
 async function init(){
-  applyPrefs();applyStatic();wire();setTimeout(alertsHeal,3000);
+  applyPrefs();applyStatic();wire();setTimeout(()=>alertsPending().then(alertsHeal),3000);
   const saved=load('mm_place');
   if(saved){
     go(saved);
@@ -669,7 +695,7 @@ async function init(){
         if(km(c.latitude,c.longitude,saved.lat,saved.lon)>8){
           const name=await reverseName(c.latitude,c.longitude);
           showBanner(`<div class="txt">${t('movedQ',{p:esc(name)})}</div><button class="btn" id="bNo">${t('stay')}</button><button class="btn pri" id="bYes">${t('switchYes')}</button>`);
-          $('#bYes').onclick=()=>{hideBanner();go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true})};
+          $('#bYes').onclick=()=>{hideBanner();go({name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),auto:true})};
           $('#bNo').onclick=hideBanner;
         }
       }
@@ -681,7 +707,7 @@ async function init(){
   try{
     const c=await getPos();
     const name=await reverseName(c.latitude,c.longitude);
-    go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true});
+    go({name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),auto:true});
     showBanner(`<div class="txt">${t('detectedQ',{p:esc(name)})}</div><button class="btn" id="bChg">${t('otherPlace')}</button><button class="btn pri" id="bOk">${t('yesBtn')}</button>`);
     $('#bOk').onclick=hideBanner;$('#bChg').onclick=()=>{hideBanner();openPicker()};
   }catch(e){

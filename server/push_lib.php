@@ -79,6 +79,8 @@ function webpush_encrypt(string $payload, string $uaPublicB64u, string $authB64u
 function push_endpoint_allowed(string $endpoint): bool {
   $u = parse_url($endpoint);
   if (!$u || ($u['scheme'] ?? '') !== 'https' || empty($u['host'])) return false;
+  if (isset($u['port']) && $u['port'] !== 443) return false;                          // only the standard HTTPS port
+  if (isset($u['user']) || isset($u['pass']) || isset($u['fragment'])) return false;   // no userinfo, no fragment
   $h = strtolower($u['host']);
   foreach (['fcm.googleapis.com', 'android.googleapis.com', 'updates.push.services.mozilla.com', 'web.push.apple.com', 'notify.windows.com'] as $ok) {
     if ($h === $ok || str_ends_with($h, '.' . $ok)) return true;

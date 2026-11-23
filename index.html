@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#070b16">
 <title>Tahazit</title>
-<meta name="description" content="Compare weather forecasts from the world's leading models in one place, with consensus-based storm alerts.">
+<meta name="description" content="Compare five weather forecast models side by side, with consensus-based storm alerts.">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -306,14 +306,14 @@ const L=['he','en','ar','ru','zh','ja'];
 const LANG_NAMES={he:'עברית',en:'English',ar:'العربية',ru:'Русский',zh:'中文',ja:'日本語'};
 const RTL={he:1,ar:1};
 const S={
-skillTitle:["מי המודל המדויק ביותר כאן", "Which model is most accurate here", "أي نموذج هو الأدق هنا", "Какая модель здесь точнее всего", "哪个模型在这里最准确", "ここで最も正確なモデル"],
-skillSub:["בדיקה של {d} הימים האחרונים במקום הזה: מה כל מודל חזה יום מראש, מול מה שקרה בפועל.", "A check of the last {d} days at this place: what each model forecast a day ahead, against what actually happened.", "فحص آخر {d} أيام في هذا المكان: ما توقعه كل نموذج قبل يوم مقارنة بما حدث فعلًا.", "Проверка за последние {d} дн. в этом месте: прогноз каждой модели за сутки против того, что было на самом деле.", "检查此地过去 {d} 天：每个模型提前一天的预报与实际情况对比。", "この場所の過去{d}日間を検証：各モデルの前日予報と実際の結果を比較。"],
-skillBest:["הכי מדויק כאן לאחרונה: {m}", "Most accurate here lately: {m}", "الأدق هنا مؤخرًا: {m}", "Точнее всего здесь в последнее время: {m}", "近期这里最准确：{m}", "最近ここで最も正確：{m}"],
-skillErr:["טעות ממוצעת בטמפרטורה: {v}", "Average temperature error: {v}", "متوسط خطأ درجة الحرارة: {v}", "Средняя ошибка температуры: {v}", "平均温度误差：{v}", "平均気温誤差：{v}"],
-skillWarm:["נוטה לחזות חם מדי בכ-{v}", "Tends to forecast about {v} too warm", "يميل إلى توقع حرارة أعلى بنحو {v}", "Обычно завышает примерно на {v}", "通常预报偏暖约 {v}", "約{v}高めに予報する傾向"],
-skillCold:["נוטה לחזות קר מדי בכ-{v}", "Tends to forecast about {v} too cold", "يميل إلى توقع حرارة أقل بنحو {v}", "Обычно занижает примерно на {v}", "通常预报偏冷约 {v}", "約{v}低めに予報する傾向"],
-skillNote:["\"מה שקרה בפועל\" הוא החציון של כל המודלים לאותה שעה אחרי מעשה. התוצאה מתעדכנת כל כמה שעות ויכולה להשתנות לפי עונה ומקום.", "\"What actually happened\" is the median of all models for that hour after the fact. Updated every few hours; it can change by season and place.", "\"ما حدث فعلًا\" هو وسيط جميع النماذج لتلك الساعة بعد وقوعها. يُحدَّث كل بضع ساعات وقد يتغير حسب الموسم والمكان.", "«Что было на самом деле» это медиана всех моделей за этот час задним числом. Обновляется каждые несколько часов и может меняться по сезону и месту.", "“实际情况”指事后所有模型在该小时的中位数。每隔数小时更新，可能随季节和地点变化。", "「実際の結果」は、その時刻についての全モデルの事後の中央値です。数時間ごとに更新され、季節や場所によって変わることがあります。"],
-skillNA:["אין כרגע מספיק נתונים לבדיקת דיוק במקום הזה.", "Not enough data yet to check accuracy at this place.", "لا توجد بيانات كافية حاليًا لفحص الدقة في هذا المكان.", "Пока недостаточно данных для проверки точности в этом месте.", "目前此地数据不足，无法检查准确度。", "この場所では精度を検証するデータがまだ不足しています。"],
+skillTitle:["איזה מודל הכי קרוב לקונצנזוס כאן", "Which model best matches the consensus here", "أي نموذج هو الأقرب إلى الإجماع هنا", "Какая модель здесь ближе всего к консенсусу", "哪个模型在这里最接近共识", "ここで最もコンセンサスに近いモデル"],
+skillSub:["בדיקה של {d} הימים האחרונים במקום הזה: מה כל מודל חזה יום מראש, מול החציון של כל המודלים לאותה שעה.", "A check of the last {d} days at this place: what each model forecast a day ahead, against the median of all models for that hour.", "فحص آخر {d} أيام في هذا المكان: ما توقعه كل نموذج قبل يوم، مقارنة بوسيط جميع النماذج لتلك الساعة.", "Проверка за последние {d} дн. в этом месте: прогноз каждой модели за сутки против медианы всех моделей за этот час.", "检查此地过去 {d} 天：每个模型提前一天的预报，与所有模型在该小时的中位数对比。", "この場所の過去{d}日間を検証：各モデルの前日予報を、その時刻の全モデルの中央値と比較。"],
+skillBest:["הכי קרוב לקונצנזוס לאחרונה: {m}", "Closest to the consensus lately: {m}", "الأقرب إلى الإجماع مؤخرًا: {m}", "Ближе всего к консенсусу в последнее время: {m}", "近期最接近共识：{m}", "最近コンセンサスに最も近い：{m}"],
+skillErr:["סטייה ממוצעת מהקונצנזוס: {v}", "Average difference from the consensus: {v}", "متوسط الفرق عن الإجماع: {v}", "Среднее отклонение от консенсуса: {v}", "与共识的平均差：{v}", "コンセンサスとの平均差：{v}"],
+skillWarm:["נוטה לחזות חם יותר מהקונצנזוס בכ-{v}", "Tends to forecast about {v} warmer than the consensus", "يميل إلى توقع حرارة أعلى من الإجماع بنحو {v}", "Обычно показывает теплее консенсуса примерно на {v}", "通常比共识预报偏暖约 {v}", "コンセンサスより約{v}高めに予報する傾向"],
+skillCold:["נוטה לחזות קר יותר מהקונצנזוס בכ-{v}", "Tends to forecast about {v} colder than the consensus", "يميل إلى توقع حرارة أقل من الإجماع بنحو {v}", "Обычно показывает холоднее консенсуса примерно на {v}", "通常比共识预报偏冷约 {v}", "コンセンサスより約{v}低めに予報する傾向"],
+skillNote:["ההשוואה היא לחציון של כל המודלים לאותה שעה, לא למדידות בפועל. הסכמה בין מודלים אינה מבטיחה שהתחזית נכונה.", "The comparison is against the median of all models for that hour, not against real measurements. Agreement between models does not guarantee the forecast is right.", "المقارنة مع وسيط جميع النماذج لتلك الساعة، وليس مع قياسات فعلية. اتفاق النماذج لا يضمن صحة التوقع.", "Сравнение идёт с медианой всех моделей за этот час, а не с реальными измерениями. Согласие моделей не гарантирует, что прогноз верен.", "对比对象是所有模型在该小时的中位数，而不是实际测量值。模型之间一致并不保证预报正确。", "比較の基準は、その時刻の全モデルの中央値であり、実測値ではありません。モデル間の一致は、予報が正しいことを保証するものではありません。"],
+skillNA:["אין כרגע מספיק נתונים להשוואה לקונצנזוס במקום הזה.", "Not enough data yet to compare with the consensus at this place.", "لا توجد بيانات كافية حاليًا للمقارنة بالإجماع في هذا المكان.", "Пока недостаточно данных для сравнения с консенсусом в этом месте.", "目前此地数据不足，无法与共识对比。", "この場所では、コンセンサスと比較するデータがまだ不足しています。"],
 alertsOpt:["התראות על מזג אוויר חריג", "Unusual weather alerts", "تنبيهات الطقس غير الاعتيادي", "Уведомления о необычной погоде", "异常天气预警", "異常気象の通知"],
 alertsOptSub:["התראה בערב שלפני, בסביבות 20:00 לפי השעה במקום, כשצפוי קור או חום חריגים יחסית למקום ולעונה.", "A notification the evening before, around 20:00 local time, when unusual cold or heat for the place and season is expected.", "إشعار في المساء السابق قرابة الساعة 20:00 بالتوقيت المحلي، عند توقع برد أو حر غير اعتيادي بالنسبة للمكان والموسم.", "Уведомление накануне вечером, около 20:00 по местному времени, если ожидается необычный для места и сезона холод или жара.", "当预计出现相对于当地和季节的异常寒冷或炎热时，在前一天当地时间20:00左右发送通知。", "その場所と季節にしては異例の寒さや暑さが予想される場合、前日の現地時間20:00頃に通知します。"],
 alertsOn:["ההתראות פעילות עבור {p}", "Alerts are on for {p}", "التنبيهات مفعلة لـ {p}", "Уведомления включены: {p}", "已为{p}开启预警", "{p}の通知はオンです"],
@@ -323,13 +323,13 @@ alertsErr:["לא הצלחתי להפעיל את ההתראות. נסה שוב.",
 testBtn:["שלח התראת בדיקה", "Send a test notification", "إرسال إشعار تجريبي", "Отправить тестовое уведомление", "发送测试通知", "テスト通知を送信"],
 testSent:["נשלחה התראת בדיקה.", "Test notification sent.", "تم إرسال إشعار تجريبي.", "Тестовое уведомление отправлено.", "测试通知已发送。", "テスト通知を送信しました。"],
 privacy:["מדיניות פרטיות", "Privacy policy", "سياسة الخصوصية", "Политика конфиденциальности", "隐私政策", "プライバシーポリシー"],
-modNote:["הנתונים עובדו: האפליקציה מחשבת מהם חציון, ממוצעים, ציוני ביטחון והתראות, וממירה יחידות.", "Data has been processed: the app derives medians, averages, confidence scores and alerts from it, and converts units.", "تمت معالجة البيانات: يحسب التطبيق منها الوسيط والمتوسطات ودرجات الثقة والتنبيهات، ويحوّل الوحدات.", "Данные обработаны: приложение рассчитывает по ним медиану, средние значения, уверенность и предупреждения, а также переводит единицы.", "数据已经过处理：本应用据此计算中位数、平均值、可信度和预警，并进行单位换算。", "データは加工されています。本アプリは中央値、平均、信頼度、警報を算出し、単位を換算しています。"],
+modNote:["הנתונים עובדו: האפליקציה מחשבת מהם חציון, ממוצעים, ציוני הסכמה והתראות, וממירה יחידות.", "Data has been processed: the app derives medians, averages, agreement scores and alerts from it, and converts units.", "تمت معالجة البيانات: يحسب التطبيق منها الوسيط والمتوسطات ودرجات الاتفاق والتنبيهات، ويحوّل الوحدات.", "Данные обработаны: приложение рассчитывает по ним медиану, средние значения, показатели согласия и предупреждения, а также переводит единицы.", "数据已经过处理：本应用据此计算中位数、平均值、一致度和预警，并进行单位换算。", "データは加工されています。本アプリは中央値、平均、一致度、警報を算出し、単位を換算しています。"],
 geoCredit:["חיפוש מקומות: Open-Meteo Geocoding API, על בסיס GeoNames (CC BY 4.0).", "Place search: Open-Meteo Geocoding API, based on GeoNames (CC BY 4.0).", "البحث عن الأماكن: Open-Meteo Geocoding API، استنادًا إلى GeoNames (CC BY 4.0).", "Поиск мест: Open-Meteo Geocoding API на основе GeoNames (CC BY 4.0).", "地点搜索：Open-Meteo Geocoding API，基于GeoNames（CC BY 4.0）。", "地名検索: Open-Meteo Geocoding API（GeoNamesに基づく、CC BY 4.0）。"],
 imsName:["השירות המטאורולוגי", "Israel Meteorological Service", "خدمة الأرصاد الجوية الإسرائيلية", "Израильская метеорологическая служба", "以色列气象局", "イスラエル気象局"],
 srcLine:["מקור המדידה: {s}", "Source: {s}", "المصدر: {s}", "Источник: {s}", "数据来源：{s}", "出典: {s}"],
 imsDisc:["מקור נתוני התצפית בישראל הוא השירות המטאורולוגי. השירות המטאורולוגי אינו אחראי למידע או לשימוש בו, ואינו צד לפרסומו באפליקציה זו.", "Observation data in Israel comes from the Israel Meteorological Service (IMS). The IMS is not responsible for the data or its use, and is not a party to its publication in this app.", "مصدر بيانات القياس في إسرائيل هو خدمة الأرصاد الجوية الإسرائيلية، وهي غير مسؤولة عن البيانات أو استخدامها، وليست طرفًا في نشرها في هذا التطبيق.", "Данные наблюдений в Израиле предоставлены Израильской метеорологической службой. Служба не несёт ответственности за данные и их использование и не является стороной их публикации в этом приложении.", "以色列境内的实测数据来自以色列气象局。以色列气象局不对数据及其使用负责，也不是本应用发布这些数据的一方。", "イスラエル国内の観測データはイスラエル気象局によるものです。同局はデータおよびその利用について責任を負わず、本アプリでの公開の当事者ではありません。"],
 appName:['מולטי מודל','MultiModel','ملتي مودل','МультиМодель','多模型天气','マルチモデル'],
-tagline:['כל מודלי התחזית המובילים בעולם, במקום אחד','The world\'s leading forecast models, in one place','أهم نماذج التنبؤ في العالم في مكان واحد','Ведущие модели прогноза погоды в одном месте','全球主流天气预报模型，一站对比','世界の主要な予報モデルをひとつに'],
+tagline:['חמישה מודלים לחיזוי מזג אוויר, זה לצד זה','Five forecast models, side by side','خمسة نماذج للتنبؤ بالطقس جنبًا إلى جنب','Пять моделей прогноза погоды рядом','五个天气预报模型，并排对比','5つの天気予報モデルを並べて比較'],
 locating:['מזהה את המיקום שלך...','Detecting your location...','جارٍ تحديد موقعك...','Определяем ваше местоположение...','正在定位...','現在地を検出中...'],
 autoTag:['זוהה אוטומטית','Auto-detected','تم التحديد تلقائيًا','Определено автоматически','自动定位','自動検出'],
 change:['שינוי','Change','تغيير','Изменить','更改','変更'],
@@ -371,7 +371,7 @@ spreadNow:['פער בין המודלים כרגע: {v}','Model spread now: {v}',
 spreadEx:['(בלי החריג: {v})','(without the outlier: {v})','(بدون القيمة الشاذة: {v})','(без выброса: {v})','（排除异常值：{v}）','（外れ値を除く: {v}）'],
 nightNote:['🌙 לילה בהיר ושקט: מודלים נוטים להעריך ביתר את הטמפרטורה בשעות כאלה, והמדידה בפועל יכולה להיות נמוכה ב-{v}.','🌙 Clear, calm night: models tend to overestimate temperature at these hours. Actual readings can be {v} lower.','🌙 ليلة صافية وهادئة: تميل النماذج إلى المبالغة في تقدير الحرارة في هذه الساعات، وقد تكون القراءة الفعلية أقل بـ {v}.','🌙 Ясная тихая ночь: в такие часы модели обычно завышают температуру, реальные значения могут быть ниже на {v}.','🌙 晴朗无风的夜晚：模型在此时往往高估气温，实际读数可能低{v}。','🌙 晴れて風の弱い夜は、モデルが気温を高めに予測しがちで、実測は{v}低いことがあります。'],
 range24:['{a} עד {b} מעלות','{a} to {b}°','{a} إلى {b} درجات','{a}-{b}°','{a}至{b}°','{a}～{b}°'],
-conf:['ביטחון {n}%','Confidence {n}%','الثقة {n}%','Уверенность {n}%','可信度 {n}%','信頼度 {n}%'],
+conf:["הסכמה {n}/100", "Agreement {n}/100", "الاتفاق {n}/100", "Согласие {n}/100", "一致度 {n}/100", "一致度 {n}/100"],
 measuredNow:['נמדד עכשיו','Measured now','مقاس الآن','Измерено сейчас','实测','実測'],
 stationLine:['תחנת {s} · {d} · לפני {m} דק\'','{s} station · {d} · {m} min ago','محطة {s} · {d} · قبل {m} دقيقة','Станция {s} · {d} · {m} мин назад','{s}站 · {d} · {m}分钟前','{s}観測所 · {d} · {m}分前'],
 modelsSay:['המודלים: {v}','Models: {v}','النماذج: {v}','Модели: {v}','模型：{v}','モデル: {v}'],
@@ -418,7 +418,7 @@ gardenNo:['צפויים כ-{v} גשם ב-48 השעות הקרובות.','About {
 gardenLittle:['צפוי רק מעט גשם (כ-{v} ב-48 שעות), השקיה קלה מספיקה.','Only a little rain expected (about {v} in 48 hours). Light watering is enough.','يُتوقع القليل من الأمطار فقط (نحو {v} خلال 48 ساعة). يكفي ري خفيف.','Ожидается лишь небольшой дождь (около {v} за 48 часов). Достаточно лёгкого полива.','预计只有少量降雨（48小时约{v}），少量浇水即可。','雨は少しだけ（48時間で約{v}）。軽い水やりで十分です。'],
 gardenYes:['לא צפוי גשם ב-48 השעות הקרובות. עדיף בבוקר מוקדם או בערב.','No rain expected in the next 48 hours. Early morning or evening is best.','لا يُتوقع هطول أمطار خلال الـ 48 ساعة القادمة. الأفضل في الصباح الباكر أو المساء.','В ближайшие 48 часов дождя не ожидается. Лучше рано утром или вечером.','未来48小时预计无雨，最好在清晨或傍晚浇水。','今後48時間は雨の予報なし。早朝か夕方がおすすめです。'],
 daysTitle:['7 ימים לפי כלל המודלים','7 days across all models','7 أيام حسب جميع النماذج','7 дней по всем моделям','全部模型的7天预报','全モデルによる7日間'],
-daysSub:['ציון הביטחון הוא הערכה לפי הפער בין המודלים והמרחק בימים, ולא הסתברות סטטיסטית. לחיצה על יום פותחת את הטבלה של כל מודל.','The confidence score is an estimate based on model spread and lead time, not a statistical probability. Tap a day to see each model.','درجة الثقة تقدير يعتمد على تباين النماذج وبُعد اليوم، وليست احتمالًا إحصائيًا. اضغط على يوم لعرض كل نموذج.','Показатель уверенности оценивается по разбросу моделей и дальности прогноза и не является статистической вероятностью. Нажмите на день, чтобы увидеть каждую модель.','可信度是根据模型差异和预报时效得出的估计值，并非统计概率。点击某一天可查看各模型详情。','信頼度はモデル間の差と予報日数に基づく目安で、統計的な確率ではありません。日付をタップすると各モデルを表示します。'],
+daysSub:["ציון ההסכמה הוא הערכה לפי הפער בין המודלים והמרחק בימים. זה מדד עזר להסכמה בין המודלים, לא הסתברות. לחיצה על יום פותחת את הטבלה של כל מודל.", "The agreement score is an estimate based on model spread and lead time. It is a helper index of agreement between the models, not a probability. Tap a day to see each model.", "درجة الاتفاق تقدير يعتمد على تباين النماذج وبُعد اليوم. هي مؤشر مساعد لمدى اتفاق النماذج، وليست احتمالًا. اضغط على يوم لعرض كل نموذج.", "Показатель согласия оценивается по разбросу моделей и дальности прогноза. Это вспомогательный показатель согласия моделей, а не вероятность. Нажмите на день, чтобы увидеть каждую модель.", "一致度是根据模型差异和预报时效得出的估计值。它是反映模型一致程度的辅助指标，并非概率。点击某一天可查看各模型详情。", "一致度はモデル間の差と予報日数に基づく目安です。モデル間の一致度を示す参考指標であり、確率ではありません。日付をタップすると各モデルを表示します。"],
 rainOf:['גשם: {k}/{n} מודלים','Rain: {k}/{n} models','أمطار: {k}/{n} نماذج','Дождь: {k}/{n} моделей','降雨：{k}/{n}个模型','雨: {k}/{n}モデル'],
 upTo:['עד {v}','up to {v}','حتى {v}','до {v}','最多{v}','最大{v}'],
 model:['מודל','Model','النموذج','Модель','模型','モデル'],
@@ -478,14 +478,14 @@ c_unknown:['לא ידוע','Unknown','غير معروف','Нет данных','
 const L_EU=['fr','de','es','it','pt','nl','pl','uk'];
 Object.assign(LANG_NAMES,{fr:"Français",de:"Deutsch",es:"Español",it:"Italiano",pt:"Português",nl:"Nederlands",pl:"Polski",uk:"Українська"});
 const S_EU={
-skillTitle:["Quel modèle est le plus précis ici", "Welches Modell ist hier am genauesten", "Qué modelo es el más preciso aquí", "Quale modello è il più preciso qui", "Qual modelo é o mais preciso aqui", "Welk model is hier het nauwkeurigst", "Który model jest tu najdokładniejszy", "Яка модель тут найточніша"],
-skillSub:["Vérification des {d} derniers jours ici : la prévision de chaque modèle la veille, comparée à ce qui s'est réellement passé.", "Prüfung der letzten {d} Tage an diesem Ort: Vorhersage jedes Modells vom Vortag gegenüber dem tatsächlichen Wetter.", "Revisión de los últimos {d} días aquí: lo que cada modelo pronosticó un día antes frente a lo que realmente pasó.", "Verifica degli ultimi {d} giorni qui: la previsione di ogni modello del giorno prima, confrontata con ciò che è successo davvero.", "Verificação dos últimos {d} dias aqui: a previsão de cada modelo na véspera, comparada com o que realmente aconteceu.", "Controle van de afgelopen {d} dagen hier: de voorspelling van elk model een dag vooraf, tegenover wat er echt gebeurde.", "Sprawdzenie ostatnich {d} dni w tym miejscu: prognoza każdego modelu z dnia wcześniej w porównaniu z tym, co faktycznie się stało.", "Перевірка за останні {d} дн. тут: прогноз кожної моделі за добу проти того, що було насправді."],
-skillBest:["Le plus précis ici récemment : {m}", "Zuletzt hier am genauesten: {m}", "El más preciso aquí últimamente: {m}", "Il più preciso qui di recente: {m}", "O mais preciso aqui ultimamente: {m}", "Hier recent het nauwkeurigst: {m}", "Ostatnio najdokładniejszy tutaj: {m}", "Останнім часом найточніша тут: {m}"],
-skillErr:["Erreur moyenne de température : {v}", "Mittlerer Temperaturfehler: {v}", "Error medio de temperatura: {v}", "Errore medio di temperatura: {v}", "Erro médio de temperatura: {v}", "Gemiddelde temperatuurfout: {v}", "Średni błąd temperatury: {v}", "Середня похибка температури: {v}"],
-skillWarm:["A tendance à prévoir environ {v} trop chaud", "Sagt meist etwa {v} zu warm voraus", "Suele pronosticar unos {v} de más", "Tende a prevedere circa {v} di troppo", "Tende a prever cerca de {v} acima", "Voorspelt meestal ongeveer {v} te warm", "Zwykle zawyża o około {v}", "Зазвичай завищує приблизно на {v}"],
-skillCold:["A tendance à prévoir environ {v} trop froid", "Sagt meist etwa {v} zu kalt voraus", "Suele pronosticar unos {v} de menos", "Tende a prevedere circa {v} in meno", "Tende a prever cerca de {v} abaixo", "Voorspelt meestal ongeveer {v} te koud", "Zwykle zaniża o około {v}", "Зазвичай занижує приблизно на {v}"],
-skillNote:["« Ce qui s'est passé » est la médiane de tous les modèles pour cette heure, après coup. Mis à jour toutes les quelques heures ; peut varier selon la saison et le lieu.", "„Tatsächliches Wetter“ ist der Median aller Modelle für diese Stunde im Nachhinein. Wird alle paar Stunden aktualisiert und kann je nach Jahreszeit und Ort variieren.", "\"Lo que pasó\" es la mediana de todos los modelos para esa hora, a posteriori. Se actualiza cada pocas horas y puede variar según la estación y el lugar.", "\"Ciò che è successo\" è la mediana di tutti i modelli per quell'ora, a posteriori. Aggiornato ogni poche ore; può variare per stagione e luogo.", "\"O que aconteceu\" é a mediana de todos os modelos para essa hora, a posteriori. Atualizado a cada poucas horas; pode variar com a estação e o local.", "\"Wat er echt gebeurde\" is de mediaan van alle modellen voor dat uur, achteraf. Wordt elke paar uur bijgewerkt en kan per seizoen en plaats verschillen.", "„Co faktycznie się stało” to mediana wszystkich modeli dla tej godziny, po fakcie. Aktualizowane co kilka godzin; może się zmieniać zależnie od pory roku i miejsca.", "«Що було насправді» це медіана всіх моделей за цю годину заднім числом. Оновлюється кожні кілька годин і може змінюватися залежно від сезону та місця."],
-skillNA:["Pas encore assez de données pour vérifier la précision ici.", "Noch nicht genug Daten, um die Genauigkeit hier zu prüfen.", "Aún no hay datos suficientes para comprobar la precisión aquí.", "Non ci sono ancora dati sufficienti per verificare la precisione qui.", "Ainda não há dados suficientes para verificar a precisão aqui.", "Nog niet genoeg gegevens om de nauwkeurigheid hier te controleren.", "Za mało danych, by sprawdzić dokładność w tym miejscu.", "Поки що недостатньо даних, щоб перевірити точність тут."],
+skillTitle:["Quel modèle est le plus proche du consensus ici", "Welches Modell liegt hier am nächsten am Konsens", "Qué modelo se acerca más al consenso aquí", "Quale modello è più vicino al consenso qui", "Qual modelo está mais próximo do consenso aqui", "Welk model ligt hier het dichtst bij de consensus", "Który model jest tu najbliższy konsensusowi", "Яка модель тут найближча до консенсусу"],
+skillSub:["Vérification des {d} derniers jours ici : la prévision de chaque modèle la veille, comparée à la médiane de tous les modèles pour cette heure.", "Prüfung der letzten {d} Tage an diesem Ort: Vorhersage jedes Modells vom Vortag gegenüber dem Median aller Modelle für diese Stunde.", "Revisión de los últimos {d} días aquí: lo que cada modelo pronosticó un día antes frente a la mediana de todos los modelos para esa hora.", "Verifica degli ultimi {d} giorni qui: la previsione di ogni modello del giorno prima, confrontata con la mediana di tutti i modelli per quell'ora.", "Verificação dos últimos {d} dias aqui: a previsão de cada modelo na véspera, comparada com a mediana de todos os modelos para essa hora.", "Controle van de afgelopen {d} dagen hier: de voorspelling van elk model een dag vooraf, tegenover de mediaan van alle modellen voor dat uur.", "Sprawdzenie ostatnich {d} dni w tym miejscu: prognoza każdego modelu z dnia wcześniej w porównaniu z medianą wszystkich modeli dla tej godziny.", "Перевірка за останні {d} дн. тут: прогноз кожної моделі за добу проти медіани всіх моделей за цю годину."],
+skillBest:["Le plus proche du consensus récemment : {m}", "Zuletzt am nächsten am Konsens: {m}", "Más cercano al consenso últimamente: {m}", "Più vicino al consenso di recente: {m}", "Mais próximo do consenso ultimamente: {m}", "Recent het dichtst bij de consensus: {m}", "Ostatnio najbliższy konsensusowi: {m}", "Останнім часом найближча до консенсусу: {m}"],
+skillErr:["Écart moyen par rapport au consensus : {v}", "Mittlere Abweichung vom Konsens: {v}", "Diferencia media respecto al consenso: {v}", "Differenza media rispetto al consenso: {v}", "Diferença média em relação ao consenso: {v}", "Gemiddeld verschil met de consensus: {v}", "Średnia różnica względem konsensusu: {v}", "Середня різниця з консенсусом: {v}"],
+skillWarm:["A tendance à prévoir environ {v} de plus que le consensus", "Sagt meist etwa {v} wärmer als der Konsens voraus", "Suele pronosticar unos {v} más cálido que el consenso", "Tende a prevedere circa {v} in più rispetto al consenso", "Tende a prever cerca de {v} acima do consenso", "Voorspelt meestal ongeveer {v} warmer dan de consensus", "Zwykle prognozuje o około {v} cieplej niż konsensus", "Зазвичай прогнозує тепліше за консенсус приблизно на {v}"],
+skillCold:["A tendance à prévoir environ {v} de moins que le consensus", "Sagt meist etwa {v} kälter als der Konsens voraus", "Suele pronosticar unos {v} más frío que el consenso", "Tende a prevedere circa {v} in meno rispetto al consenso", "Tende a prever cerca de {v} abaixo do consenso", "Voorspelt meestal ongeveer {v} kouder dan de consensus", "Zwykle prognozuje o około {v} chłodniej niż konsensus", "Зазвичай прогнозує холодніше за консенсус приблизно на {v}"],
+skillNote:["La comparaison se fait avec la médiane de tous les modèles pour cette heure, pas avec des mesures réelles. L'accord entre les modèles ne garantit pas que la prévision soit juste.", "Verglichen wird mit dem Median aller Modelle für diese Stunde, nicht mit echten Messungen. Übereinstimmung der Modelle garantiert nicht, dass die Vorhersage stimmt.", "La comparación es con la mediana de todos los modelos para esa hora, no con mediciones reales. Que los modelos coincidan no garantiza que el pronóstico sea correcto.", "Il confronto è con la mediana di tutti i modelli per quell'ora, non con misurazioni reali. L'accordo tra i modelli non garantisce che la previsione sia corretta.", "A comparação é com a mediana de todos os modelos para essa hora, não com medições reais. A concordância entre os modelos não garante que a previsão esteja certa.", "De vergelijking is met de mediaan van alle modellen voor dat uur, niet met echte metingen. Overeenstemming tussen modellen garandeert niet dat de voorspelling klopt.", "Porównanie dotyczy mediany wszystkich modeli dla tej godziny, a nie rzeczywistych pomiarów. Zgodność modeli nie gwarantuje, że prognoza jest trafna.", "Порівняння робиться з медіаною всіх моделей за цю годину, а не з реальними вимірюваннями. Згода моделей не гарантує, що прогноз правильний."],
+skillNA:["Pas encore assez de données pour comparer au consensus ici.", "Noch nicht genug Daten, um hier mit dem Konsens zu vergleichen.", "Aún no hay datos suficientes para comparar con el consenso aquí.", "Non ci sono ancora dati sufficienti per confrontare con il consenso qui.", "Ainda não há dados suficientes para comparar com o consenso aqui.", "Nog niet genoeg gegevens om hier met de consensus te vergelijken.", "Za mało danych, by porównać z konsensusem w tym miejscu.", "Поки що недостатньо даних, щоб порівняти з консенсусом тут."],
 alertsOpt:["Alertes météo inhabituelle", "Warnungen bei ungewöhnlichem Wetter", "Alertas de tiempo inusual", "Allerte meteo insolito", "Alertas de tempo invulgar", "Waarschuwingen voor ongewoon weer", "Ostrzeżenia o nietypowej pogodzie", "Сповіщення про незвичну погоду"],
 alertsOptSub:["Une notification la veille vers 20 h, heure locale, quand un froid ou une chaleur inhabituels pour le lieu et la saison sont prévus.", "Eine Benachrichtigung am Vorabend gegen 20:00 Uhr Ortszeit, wenn für Ort und Jahreszeit ungewöhnliche Kälte oder Hitze erwartet wird.", "Un aviso la noche anterior, hacia las 20:00 hora local, cuando se prevé frío o calor inusual para el lugar y la estación.", "Una notifica la sera prima, verso le 20:00 ora locale, quando è previsto freddo o caldo insolito per il luogo e la stagione.", "Uma notificação na véspera, por volta das 20:00 hora local, quando se prevê frio ou calor invulgar para o local e a estação.", "Een melding de avond ervoor, rond 20:00 lokale tijd, als er ongewone kou of hitte voor de plek en het seizoen wordt verwacht.", "Powiadomienie wieczorem dzień wcześniej, około 20:00 czasu lokalnego, gdy prognozowane jest zimno lub upał nietypowe dla miejsca i pory roku.", "Сповіщення напередодні ввечері, близько 20:00 за місцевим часом, якщо очікується незвичний для місця і сезону холод або спека."],
 alertsOn:["Alertes activées pour {p}", "Warnungen aktiv für {p}", "Alertas activadas para {p}", "Allerte attive per {p}", "Alertas ativos para {p}", "Waarschuwingen staan aan voor {p}", "Ostrzeżenia włączone: {p}", "Сповіщення увімкнено: {p}"],
@@ -495,13 +495,13 @@ alertsErr:["Impossible d'activer les alertes. Réessayez.", "Warnungen konnten n
 testBtn:["Envoyer une notification de test", "Testbenachrichtigung senden", "Enviar notificación de prueba", "Invia una notifica di prova", "Enviar notificação de teste", "Testmelding sturen", "Wyślij powiadomienie testowe", "Надіслати тестове сповіщення"],
 testSent:["Notification de test envoyée.", "Testbenachrichtigung gesendet.", "Notificación de prueba enviada.", "Notifica di prova inviata.", "Notificação de teste enviada.", "Testmelding verstuurd.", "Wysłano powiadomienie testowe.", "Тестове сповіщення надіслано."],
 privacy:["Politique de confidentialité", "Datenschutzerklärung", "Política de privacidad", "Informativa sulla privacy", "Política de privacidade", "Privacybeleid", "Polityka prywatności", "Політика конфіденційності"],
-modNote:["Les données ont été modifiées : l'application en calcule des médianes, des moyennes, des indices de confiance et des alertes, et convertit les unités.", "Die Daten wurden bearbeitet: Die App berechnet daraus Mediane, Mittelwerte, Sicherheitswerte und Warnungen und rechnet Einheiten um.", "Los datos han sido procesados: la aplicación calcula medianas, medias, índices de confianza y alertas, y convierte unidades.", "I dati sono stati elaborati: l'app ne ricava mediane, medie, indici di affidabilità e allerte, e converte le unità.", "Os dados foram processados: a aplicação calcula medianas, médias, índices de confiança e alertas, e converte unidades.", "De gegevens zijn bewerkt: de app berekent er medianen, gemiddelden, zekerheidsscores en waarschuwingen uit en rekent eenheden om.", "Dane zostały przetworzone: aplikacja wylicza z nich mediany, średnie, wskaźniki pewności i ostrzeżenia oraz przelicza jednostki.", "Дані оброблено: застосунок обчислює з них медіану, середні значення, впевненість і попередження та перераховує одиниці."],
+modNote:["Les données ont été modifiées : l'application en calcule des médianes, des moyennes, des indices d'accord et des alertes, et convertit les unités.", "Die Daten wurden bearbeitet: Die App berechnet daraus Mediane, Mittelwerte, Einigkeitswerte und Warnungen und rechnet Einheiten um.", "Los datos han sido procesados: la aplicación calcula medianas, medias, índices de acuerdo y alertas, y convierte unidades.", "I dati sono stati elaborati: l'app ne ricava mediane, medie, indici di accordo e allerte, e converte le unità.", "Os dados foram processados: a aplicação calcula medianas, médias, índices de acordo e alertas, e converte unidades.", "De gegevens zijn bewerkt: de app berekent er medianen, gemiddelden, overeenstemmingsscores en waarschuwingen uit en rekent eenheden om.", "Dane zostały przetworzone: aplikacja wylicza z nich mediany, średnie, wskaźniki zgodności i ostrzeżenia oraz przelicza jednostki.", "Дані оброблено: застосунок обчислює з них медіану, середні значення, показники згоди та попередження та перераховує одиниці."],
 geoCredit:["Recherche de lieux : Open-Meteo Geocoding API, basée sur GeoNames (CC BY 4.0).", "Ortssuche: Open-Meteo Geocoding API auf Basis von GeoNames (CC BY 4.0).", "Búsqueda de lugares: Open-Meteo Geocoding API, basada en GeoNames (CC BY 4.0).", "Ricerca località: Open-Meteo Geocoding API, basata su GeoNames (CC BY 4.0).", "Pesquisa de locais: Open-Meteo Geocoding API, com base no GeoNames (CC BY 4.0).", "Plaatsen zoeken: Open-Meteo Geocoding API, gebaseerd op GeoNames (CC BY 4.0).", "Wyszukiwanie miejsc: Open-Meteo Geocoding API na podstawie GeoNames (CC BY 4.0).", "Пошук місць: Open-Meteo Geocoding API на основі GeoNames (CC BY 4.0)."],
 imsName:["Service météorologique d'Israël", "Israelischer Wetterdienst", "Servicio Meteorológico de Israel", "Servizio meteorologico israeliano", "Serviço Meteorológico de Israel", "Israëlische weerdienst", "Izraelska Służba Meteorologiczna", "Метеорологічна служба Ізраїлю"],
 srcLine:["Source : {s}", "Quelle: {s}", "Fuente: {s}", "Fonte: {s}", "Fonte: {s}", "Bron: {s}", "Źródło: {s}", "Джерело: {s}"],
 imsDisc:["Les observations en Israël proviennent du Service météorologique d'Israël. Celui-ci n'est pas responsable des données ni de leur utilisation, et n'est pas partie à leur publication dans cette application.", "Die Messdaten in Israel stammen vom Israelischen Wetterdienst. Dieser ist nicht für die Daten oder ihre Nutzung verantwortlich und nicht an ihrer Veröffentlichung in dieser App beteiligt.", "Los datos de observación en Israel proceden del Servicio Meteorológico de Israel, que no es responsable de los datos ni de su uso, ni es parte de su publicación en esta aplicación.", "I dati di osservazione in Israele provengono dal Servizio meteorologico israeliano, che non è responsabile dei dati né del loro utilizzo e non è parte della loro pubblicazione in questa app.", "Os dados de observação em Israel provêm do Serviço Meteorológico de Israel, que não é responsável pelos dados nem pela sua utilização, nem é parte da sua publicação nesta aplicação.", "Waarnemingen in Israël komen van de Israëlische weerdienst. Die is niet verantwoordelijk voor de gegevens of het gebruik ervan en is geen partij bij de publicatie in deze app.", "Dane pomiarowe w Izraelu pochodzą z Izraelskiej Służby Meteorologicznej, która nie odpowiada za dane ani ich wykorzystanie i nie jest stroną ich publikacji w tej aplikacji.", "Дані спостережень в Ізраїлі надає Метеорологічна служба Ізраїлю. Служба не несе відповідальності за дані та їх використання і не є стороною їх публікації в цьому застосунку."],
 appName:["MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","MultiModel","МультіМодель"],
-tagline:["Les principaux modèles de prévision du monde, au même endroit","Die führenden Wettermodelle der Welt an einem Ort","Los principales modelos de previsión del mundo, en un solo lugar","I principali modelli di previsione del mondo, in un unico posto","Os principais modelos de previsão do mundo, num só lugar","De belangrijkste weermodellen ter wereld op één plek","Najważniejsze modele prognoz świata w jednym miejscu","Провідні моделі прогнозу погоди в одному місці"],
+tagline:["Cinq modèles de prévision météo, côte à côte","Fünf Wettermodelle im direkten Vergleich","Cinco modelos de previsión, lado a lado","Cinque modelli di previsione a confronto","Cinco modelos de previsão, lado a lado","Vijf weermodellen naast elkaar","Pięć modeli prognozy pogody obok siebie","П’ять моделей прогнозу погоди поруч"],
 locating:["Localisation en cours...","Standort wird ermittelt...","Detectando tu ubicación...","Rilevamento della posizione...","A detetar a sua localização...","Locatie wordt bepaald...","Ustalanie lokalizacji...","Визначаємо ваше місцезнаходження..."],
 autoTag:["Détecté automatiquement","Automatisch erkannt","Detectado automáticamente","Rilevato automaticamente","Detetado automaticamente","Automatisch bepaald","Wykryto automatycznie","Визначено автоматично"],
 change:["Modifier","Ändern","Cambiar","Cambia","Alterar","Wijzigen","Zmień","Змінити"],
@@ -543,7 +543,7 @@ spreadNow:["Écart entre modèles : {v}","Abweichung der Modelle jetzt: {v}","Di
 spreadEx:["(sans la valeur aberrante : {v})","(ohne Ausreißer: {v})","(sin el atípico: {v})","(senza il valore anomalo: {v})","(sem o atípico: {v})","(zonder uitschieter: {v})","(bez wartości odstającej: {v})","(без викиду: {v})"],
 nightNote:["🌙 Nuit claire et calme : les modèles ont tendance à surestimer la température à ces heures. La mesure réelle peut être inférieure de {v}.","🌙 Klare, windstille Nacht: Modelle überschätzen zu diesen Zeiten oft die Temperatur. Der Messwert kann {v} niedriger sein.","🌙 Noche despejada y en calma: los modelos tienden a sobrestimar la temperatura a estas horas. La medición real puede ser {v} más baja.","🌙 Notte serena e calma: i modelli tendono a sovrastimare la temperatura in queste ore. La misura reale può essere più bassa di {v}.","🌙 Noite limpa e calma: os modelos tendem a sobrestimar a temperatura a estas horas. A medição real pode ser {v} mais baixa.","🌙 Heldere, windstille nacht: modellen overschatten op zulke uren vaak de temperatuur. De werkelijke meting kan {v} lager zijn.","🌙 Pogodna, bezwietrzna noc: modele zwykle zawyżają wtedy temperaturę. Rzeczywisty pomiar może być niższy o {v}.","🌙 Ясна тиха ніч: у такі години моделі зазвичай завищують температуру, реальні значення можуть бути нижчими на {v}."],
 range24:["{a} à {b}°","{a} bis {b}°","{a} a {b}°","{a}-{b}°","{a} a {b}°","{a} tot {b}°","{a}-{b}°","{a}-{b}°"],
-conf:["Confiance {n} %","Sicherheit {n} %","Confianza {n} %","Affidabilità {n}%","Confiança {n}%","Zekerheid {n}%","Pewność {n}%","Впевненість {n}%"],
+conf:["Accord {n}/100", "Einigkeit {n}/100", "Acuerdo {n}/100", "Accordo {n}/100", "Acordo {n}/100", "Overeenstemming {n}/100", "Zgodność {n}/100", "Згода {n}/100"],
 measuredNow:["Mesuré maintenant","Jetzt gemessen","Medido ahora","Misurato ora","Medido agora","Nu gemeten","Zmierzono teraz","Виміряно зараз"],
 stationLine:["Station {s} · {d} · il y a {m} min","Station {s} · {d} · vor {m} Min.","Estación {s} · {d} · hace {m} min","Stazione {s} · {d} · {m} min fa","Estação {s} · {d} · há {m} min","Station {s} · {d} · {m} min geleden","Stacja {s} · {d} · {m} min temu","Станція {s} · {d} · {m} хв тому"],
 modelsSay:["Modèles : {v}","Modelle: {v}","Modelos: {v}","Modelli: {v}","Modelos: {v}","Modellen: {v}","Modele: {v}","Моделі: {v}"],
@@ -590,7 +590,7 @@ gardenNo:["Environ {v} de pluie attendus dans les 48 prochaines heures.","In den
 gardenLittle:["Peu de pluie attendue (environ {v} en 48 heures). Un arrosage léger suffit.","Nur wenig Regen erwartet (etwa {v} in 48 Stunden). Leichtes Gießen genügt.","Solo se espera poca lluvia (unos {v} en 48 horas). Basta un riego ligero.","Prevista solo poca pioggia (circa {v} in 48 ore). Basta un'annaffiatura leggera.","Prevê-se pouca chuva (cerca de {v} em 48 horas). Basta uma rega leve.","Weinig regen verwacht (ongeveer {v} in 48 uur). Licht water geven is genoeg.","Spodziewany jest tylko niewielki deszcz (około {v} w 48 godzin). Wystarczy lekkie podlewanie.","Очікується лише невеликий дощ (близько {v} за 48 годин). Достатньо легкого поливу."],
 gardenYes:["Pas de pluie prévue dans les 48 prochaines heures. Tôt le matin ou le soir, c'est idéal.","Kein Regen in den nächsten 48 Stunden. Am besten früh morgens oder abends.","No se espera lluvia en las próximas 48 horas. Mejor temprano o al atardecer.","Nessuna pioggia prevista nelle prossime 48 ore. Meglio al mattino presto o la sera.","Sem chuva prevista nas próximas 48 horas. Melhor de manhã cedo ou ao fim da tarde.","Geen regen verwacht in de komende 48 uur. Het beste vroeg in de ochtend of 's avonds.","W ciągu 48 godzin bez deszczu. Najlepiej wcześnie rano lub wieczorem.","У найближчі 48 годин дощу не очікується. Краще рано-вранці або ввечері."],
 daysTitle:["7 jours selon tous les modèles","7 Tage über alle Modelle","7 días según todos los modelos","7 giorni secondo tutti i modelli","7 dias segundo todos os modelos","7 dagen volgens alle modellen","7 dni według wszystkich modeli","7 днів за всіма моделями"],
-daysSub:["L'indice de confiance est une estimation fondée sur l'écart entre modèles et l'échéance, pas une probabilité statistique. Touchez un jour pour voir chaque modèle.","Die Sicherheit ist eine Schätzung aus Modellabweichung und Vorhersagezeitraum, keine statistische Wahrscheinlichkeit. Tippen Sie auf einen Tag, um jedes Modell zu sehen.","La confianza es una estimación basada en la diferencia entre modelos y la antelación, no una probabilidad estadística. Toca un día para ver cada modelo.","L'affidabilità è una stima basata sulla differenza tra modelli e sull'anticipo, non una probabilità statistica. Tocca un giorno per vedere ogni modello.","A confiança é uma estimativa baseada na diferença entre modelos e na antecedência, não uma probabilidade estatística. Toque num dia para ver cada modelo.","De zekerheid is een schatting op basis van spreiding tussen modellen en de vooruitlooptijd, geen statistische kans. Tik op een dag om elk model te zien.","Pewność to szacunek oparty na rozrzucie modeli i odległości w czasie, a nie prawdopodobieństwo statystyczne. Dotknij dnia, aby zobaczyć każdy model.","Впевненість оцінюється за розкидом моделей і дальністю прогнозу та не є статистичною ймовірністю. Натисніть на день, щоб побачити кожну модель."],
+daysSub:["L'indice d'accord est une estimation fondée sur l'écart entre modèles et l'échéance. C'est un indice d'appoint de l'accord entre les modèles, pas une probabilité. Touchez un jour pour voir chaque modèle.", "Der Einigkeitswert ist eine Schätzung aus Modellabweichung und Vorhersagezeitraum. Er ist ein Hilfswert für die Übereinstimmung der Modelle, keine Wahrscheinlichkeit. Tippen Sie auf einen Tag, um jedes Modell zu sehen.", "El índice de acuerdo es una estimación basada en la diferencia entre modelos y la antelación. Es un índice auxiliar de coincidencia entre los modelos, no una probabilidad. Toca un día para ver cada modelo.", "L'indice di accordo è una stima basata sulla differenza tra modelli e sull'anticipo. È un indice ausiliario dell'accordo tra i modelli, non una probabilità. Tocca un giorno per vedere ogni modello.", "O índice de acordo é uma estimativa baseada na diferença entre modelos e na antecedência. É um índice auxiliar de concordância entre os modelos, não uma probabilidade. Toque num dia para ver cada modelo.", "De overeenstemmingsscore is een schatting op basis van spreiding tussen modellen en de vooruitlooptijd. Het is een hulpindex voor de overeenstemming tussen de modellen, geen kans. Tik op een dag om elk model te zien.", "Wskaźnik zgodności to szacunek oparty na rozrzucie modeli i odległości w czasie. Jest to pomocniczy wskaźnik zgodności modeli, a nie prawdopodobieństwo. Dotknij dnia, aby zobaczyć każdy model.", "Показник згоди оцінюється за розкидом моделей і дальністю прогнозу. Це допоміжний показник згоди моделей, а не ймовірність. Натисніть на день, щоб побачити кожну модель."],
 rainOf:["Pluie : {k}/{n} modèles","Regen: {k}/{n} Modelle","Lluvia: {k}/{n} modelos","Pioggia: {k}/{n} modelli","Chuva: {k}/{n} modelos","Regen: {k}/{n} modellen","Deszcz: {k}/{n} modeli","Дощ: {k}/{n} моделей"],
 upTo:["jusqu'à {v}","bis {v}","hasta {v}","fino a {v}","até {v}","tot {v}","do {v}","до {v}"],
 model:["Modèle","Modell","Modelo","Modello","Modelo","Model","Model","Модель"],
@@ -651,15 +651,15 @@ L.push(...L_EU);
 // Strings added in v2 (Tahazit). Order: he,en,ar,ru,zh,ja,fr,de,es,it,pt,nl,pl,uk
 const S2={
 appName:['תחזית','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit','Tahazit'],
-oneModel:['תחזית {m} לשעה {t}, המודל המדויק ביותר כאן','{m} forecast for {t}, the most accurate model here','توقعات {m} للساعة {t}، النموذج الأدق هنا','Прогноз {m} на {t}, самая точная модель здесь','{m} 在 {t} 的预报，这里最准确的模型','{t} の {m} 予報（ここで最も正確なモデル）','Prévision {m} pour {t}, le modèle le plus précis ici','{m}-Vorhersage für {t}, hier das genaueste Modell','Previsión de {m} para las {t}, el modelo más preciso aquí','Previsione {m} per le {t}, il modello più preciso qui','Previsão {m} para as {t}, o modelo mais preciso aqui','{m}-verwachting voor {t}, hier het nauwkeurigste model','Prognoza {m} na {t}, najdokładniejszy model tutaj','Прогноз {m} на {t}, найточніша модель тут'],
+oneModel:["תחזית {m} לשעה {t}, הכי קרוב לקונצנזוס כאן", "{m} forecast for {t}, closest to the consensus here", "توقعات {m} للساعة {t}، الأقرب إلى الإجماع هنا", "Прогноз {m} на {t}, ближе всего к консенсусу здесь", "{m} 在 {t} 的预报，这里最接近共识的模型", "{t} の {m} 予報（ここでコンセンサスに最も近いモデル）", "Prévision {m} pour {t}, le plus proche du consensus ici", "{m}-Vorhersage für {t}, hier am nächsten am Konsens", "Previsión de {m} para las {t}, la más cercana al consenso aquí", "Previsione {m} per le {t}, la più vicina al consenso qui", "Previsão {m} para as {t}, a mais próxima do consenso aqui", "{m}-verwachting voor {t}, hier het dichtst bij de consensus", "Prognoza {m} na {t}, najbliższa konsensusowi tutaj", "Прогноз {m} на {t}, найближчий до консенсусу тут"],
 oneModelPick:['תחזית {m} לשעה {t}','{m} forecast for {t}','توقعات {m} للساعة {t}','Прогноз {m} на {t}','{m} 在 {t} 的预报','{t} の {m} 予報','Prévision {m} pour {t}','{m}-Vorhersage für {t}','Previsión de {m} para las {t}','Previsione {m} per le {t}','Previsão {m} para as {t}','{m}-verwachting voor {t}','Prognoza {m} na {t}','Прогноз {m} на {t}'],
 addModel:['+ מודלים','+ Models','+ نماذج','+ Модели','+ 模型','+ モデル','+ Modèles','+ Modelle','+ Modelos','+ Modelli','+ Modelos','+ Modellen','+ Modele','+ Моделі'],
 mTitle:['בחירת מודלים','Choose models','اختيار النماذج','Выбор моделей','选择模型','モデルを選ぶ','Choisir les modèles','Modelle wählen','Elegir modelos','Scegli i modelli','Escolher modelos','Modellen kiezen','Wybierz modele','Вибір моделей'],
-mSub:['מסודר לפי הדיוק כאן ב-{d} הימים האחרונים. כדאי להוסיף את המומלצים.','Sorted by accuracy here over the last {d} days. The recommended ones are worth adding.','مرتبة حسب الدقة هنا خلال آخر {d} أيام. يُنصح بإضافة النماذج الموصى بها.','Отсортировано по точности здесь за последние {d} дн. Рекомендуемые стоит добавить.','按过去 {d} 天在此地的准确度排序。建议添加推荐的模型。','過去 {d} 日間のここでの精度順。おすすめのモデルの追加を推奨します。','Classés par précision ici sur les {d} derniers jours. Les modèles recommandés valent la peine d\'être ajoutés.','Nach Genauigkeit hier in den letzten {d} Tagen sortiert. Die empfohlenen lohnen sich.','Ordenados por precisión aquí en los últimos {d} días. Conviene añadir los recomendados.','Ordinati per precisione qui negli ultimi {d} giorni. Conviene aggiungere quelli consigliati.','Ordenados pela precisão aqui nos últimos {d} dias. Vale a pena adicionar os recomendados.','Gesorteerd op nauwkeurigheid hier in de afgelopen {d} dagen. De aanbevolen modellen zijn de moeite waard.','Posortowane według dokładności tutaj z ostatnich {d} dni. Warto dodać polecane.','Відсортовано за точністю тут за останні {d} дн. Варто додати рекомендовані.'],
-mSubNA:['עדיין אין נתוני דיוק למקום הזה.','No accuracy data for this place yet.','لا توجد بيانات دقة لهذا المكان بعد.','Данных о точности для этого места пока нет.','此地暂无准确度数据。','この場所の精度データはまだありません。','Pas encore de données de précision pour ce lieu.','Für diesen Ort gibt es noch keine Genauigkeitsdaten.','Aún no hay datos de precisión para este lugar.','Non ci sono ancora dati di precisione per questo luogo.','Ainda não há dados de precisão para este local.','Nog geen nauwkeurigheidsgegevens voor deze plek.','Brak jeszcze danych o dokładności dla tego miejsca.','Для цього місця ще немає даних про точність.'],
-mBest:['הכי מדויק','Most accurate','الأدق','Самая точная','最准确','最も正確','Le plus précis','Am genauesten','El más preciso','Il più preciso','O mais preciso','Nauwkeurigst','Najdokładniejszy','Найточніша'],
+mSub:["מסודר לפי הקרבה לקונצנזוס כאן ב-{d} הימים האחרונים. כדאי להוסיף את המומלצים.", "Sorted by closeness to the consensus here over the last {d} days. The recommended ones are worth adding.", "مرتبة حسب القرب من الإجماع هنا خلال آخر {d} أيام. يُنصح بإضافة النماذج الموصى بها.", "Отсортировано по близости к консенсусу здесь за последние {d} дн. Рекомендуемые стоит добавить.", "按过去 {d} 天在此地与共识的接近程度排序。建议添加推荐的模型。", "過去 {d} 日間のここでのコンセンサスへの近さ順。おすすめのモデルの追加を推奨します。", "Classés selon la proximité avec le consensus ici sur les {d} derniers jours. Les modèles recommandés valent la peine d'être ajoutés.", "Nach Nähe zum Konsens hier in den letzten {d} Tagen sortiert. Die empfohlenen lohnen sich.", "Ordenados por cercanía al consenso aquí en los últimos {d} días. Conviene añadir los recomendados.", "Ordinati per vicinanza al consenso qui negli ultimi {d} giorni. Conviene aggiungere quelli consigliati.", "Ordenados pela proximidade do consenso aqui nos últimos {d} dias. Vale a pena adicionar os recomendados.", "Gesorteerd op nabijheid bij de consensus hier in de afgelopen {d} dagen. De aanbevolen modellen zijn de moeite waard.", "Posortowane według bliskości do konsensusu tutaj z ostatnich {d} dni. Warto dodać polecane.", "Відсортовано за близькістю до консенсусу тут за останні {d} дн. Варто додати рекомендовані."],
+mSubNA:["עדיין אין נתוני השוואה לקונצנזוס למקום הזה.", "No comparison-to-consensus data for this place yet.", "لا توجد بيانات مقارنة بالإجماع لهذا المكان بعد.", "Данных для сравнения с консенсусом для этого места пока нет.", "此地暂无与共识对比的数据。", "この場所のコンセンサスとの比較データはまだありません。", "Pas encore de données de comparaison au consensus pour ce lieu.", "Für diesen Ort gibt es noch keine Vergleichsdaten zum Konsens.", "Aún no hay datos de comparación con el consenso para este lugar.", "Non ci sono ancora dati di confronto con il consenso per questo luogo.", "Ainda não há dados de comparação com o consenso para este local.", "Nog geen vergelijkingsgegevens met de consensus voor deze plek.", "Brak jeszcze danych porównania z konsensusem dla tego miejsca.", "Для цього місця ще немає даних порівняння з консенсусом."],
+mBest:["הכי קרוב לקונצנזוס", "Closest to consensus", "الأقرب إلى الإجماع", "Ближе к консенсусу", "最接近共识", "コンセンサスに最も近い", "Plus proche du consensus", "Nächster am Konsens", "Más cercano al consenso", "Più vicino al consenso", "Mais próximo do consenso", "Dichtst bij consensus", "Najbliższy konsensusowi", "Найближча до консенсусу"],
 mRec:['מומלץ','Recommended','موصى به','Рекомендуется','推荐','おすすめ','Recommandé','Empfohlen','Recomendado','Consigliato','Recomendado','Aanbevolen','Polecany','Рекомендовано'],
-mReset:['רק המודל המדויק ביותר','Only the most accurate model','النموذج الأدق فقط','Только самая точная модель','仅最准确的模型','最も正確なモデルのみ','Seulement le plus précis','Nur das genaueste Modell','Solo el más preciso','Solo il più preciso','Só o mais preciso','Alleen het nauwkeurigste model','Tylko najdokładniejszy','Лише найточніша модель'],
+mReset:["רק המודל הכי קרוב לקונצנזוס", "Only the model closest to consensus", "النموذج الأقرب إلى الإجماع فقط", "Только модель, ближайшая к консенсусу", "仅最接近共识的模型", "コンセンサスに最も近いモデルのみ", "Seulement le plus proche du consensus", "Nur das Modell am nächsten am Konsens", "Solo el más cercano al consenso", "Solo il più vicino al consenso", "Só o mais próximo do consenso", "Alleen het model dat het dichtst bij de consensus ligt", "Tylko najbliższy konsensusowi", "Лише модель, найближча до консенсусу"],
 mAll:['כל המודלים','All models','كل النماذج','Все модели','所有模型','すべてのモデル','Tous les modèles','Alle Modelle','Todos los modelos','Tutti i modelli','Todos os modelos','Alle modellen','Wszystkie modele','Усі моделі'],
 rainAmt:['גשם: {v}','Rain: {v}','أمطار: {v}','Дождь: {v}','降雨：{v}','雨: {v}','Pluie : {v}','Regen: {v}','Lluvia: {v}','Pioggia: {v}','Chuva: {v}','Regen: {v}','Deszcz: {v}','Дощ: {v}'],
 noRainD:['בלי גשם','No rain','بدون أمطار','Без дождя','无雨','雨なし','Pas de pluie','Kein Regen','Sin lluvia','Niente pioggia','Sem chuva','Geen regen','Bez deszczu','Без дощу'],
@@ -685,6 +685,9 @@ aTooSoon:["אפשר לשלוח התראת בדיקה פעם בדקה. נסה ש�
 aFail:["לא הצלחנו לשלוח התראה לטלפון הזה.", "We could not send a notification to this phone.", "تعذّر إرسال إشعار إلى هذا الهاتف.", "Не удалось отправить уведомление на этот телефон.", "无法向此手机发送通知。", "この端末に通知を送信できませんでした。", "Impossible d'envoyer une notification à ce téléphone.", "Wir konnten keine Benachrichtigung an dieses Telefon senden.", "No pudimos enviar una notificación a este teléfono.", "Non siamo riusciti a inviare una notifica a questo telefono.", "Não foi possível enviar uma notificação para este telefone.", "We konden geen melding naar deze telefoon sturen.", "Nie udało się wysłać powiadomienia na ten telefon.", "Не вдалося надіслати сповіщення на цей телефон."],
 aOff:["ההתראות כבויות.", "Alerts are off.", "التنبيهات متوقفة.", "Предупреждения выключены.", "预警已关闭。", "警報はオフです。", "Les alertes sont désactivées.", "Warnungen sind aus.", "Las alertas están desactivadas.", "Gli avvisi sono disattivati.", "Os alertas estão desativados.", "Waarschuwingen staan uit.", "Ostrzeżenia są wyłączone.", "Попередження вимкнено."],
 sDone:["אישור", "OK", "موافق", "ОК", "确定", "OK", "OK", "OK", "Aceptar", "OK", "OK", "OK", "OK", "OK"],
+aOffPending:["ההתראות כובו במכשיר. מחיקת הנתונים מהשרת תושלם כשיהיה חיבור.", "Alerts are off on this device. Deleting your data from the server will finish when you are back online.", "تم إيقاف التنبيهات على هذا الجهاز. سيكتمل حذف بياناتك من الخادم عند توفر الاتصال.", "Уведомления на этом устройстве отключены. Удаление данных с сервера завершится, когда появится соединение.", "此设备上的预警已关闭。联网后将完成从服务器删除您的数据。", "このデバイスでは警報をオフにしました。オンラインに戻ると、サーバー上のデータ削除が完了します。", "Les alertes sont désactivées sur cet appareil. La suppression de vos données sur le serveur se terminera dès que la connexion sera rétablie.", "Die Warnungen sind auf diesem Gerät aus. Das Löschen Ihrer Daten auf dem Server wird abgeschlossen, sobald wieder eine Verbindung besteht.", "Las alertas están desactivadas en este dispositivo. El borrado de tus datos del servidor se completará cuando haya conexión.", "Gli avvisi sono disattivati su questo dispositivo. L'eliminazione dei tuoi dati dal server verrà completata quando tornerà la connessione.", "Os alertas estão desativados neste dispositivo. A eliminação dos seus dados no servidor será concluída quando houver ligação.", "Waarschuwingen staan uit op dit apparaat. Het verwijderen van je gegevens op de server wordt afgerond zodra je weer verbinding hebt.", "Ostrzeżenia są wyłączone na tym urządzeniu. Usunięcie danych z serwera zakończy się, gdy pojawi się połączenie.", "Попередження на цьому пристрої вимкнено. Видалення даних із сервера завершиться, коли з'явиться з'єднання."],
+highDisagree:["אי־הסכמה גבוהה בין המודלים", "High disagreement between the models", "تباين كبير بين النماذج", "Модели сильно расходятся", "模型之间分歧较大", "モデル間の食い違いが大きい", "Fort désaccord entre les modèles", "Starke Uneinigkeit zwischen den Modellen", "Gran desacuerdo entre los modelos", "Forte disaccordo tra i modelli", "Grande desacordo entre os modelos", "Grote onenigheid tussen de modellen", "Duże rozbieżności między modelami", "Моделі сильно розходяться"],
+confHint:["מדד עזר להסכמה בין המודלים, לא הסתברות.", "A helper index of agreement between the models, not a probability.", "مؤشر مساعد لمدى اتفاق النماذج، وليس احتمالًا.", "Вспомогательный показатель согласия моделей, а не вероятность.", "这是反映模型一致程度的辅助指标，并非概率。", "モデル間の一致度を示す参考指標であり、確率ではありません。", "Indice d'appoint de l'accord entre les modèles, pas une probabilité.", "Ein Hilfswert für die Übereinstimmung der Modelle, keine Wahrscheinlichkeit.", "Índice auxiliar de coincidencia entre los modelos, no una probabilidad.", "Indice ausiliario dell'accordo tra i modelli, non una probabilità.", "Índice auxiliar de concordância entre os modelos, não uma probabilidade.", "Hulpindex voor de overeenstemming tussen de modellen, geen kans.", "Pomocniczy wskaźnik zgodności modeli, a nie prawdopodobieństwo.", "Допоміжний показник згоди моделей, а не ймовірність."],
 };
 {const ALL=L;for(const k in S2){if(S2[k].length!==ALL.length)console.warn('i18n length',k);S[k]=S2[k]}}
 const CITIES=[
@@ -719,10 +722,76 @@ const CITIES=[
 
 // ===== הגדרות בסיס =====
 const $=s=>document.querySelector(s);
+// ===== On-device place naming (no network lookups of the user's position) =====
+// geo/cities15000.json: [[name, lat, lon, countryCode], ...], GeoNames (CC BY 4.0), built by tools/make_geo.js.
+function geoKm(a,b,c,d){const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.min(1,Math.sqrt(h)))}
+function nearestIn(list,lat,lon){
+  let best=null,bd=Infinity;
+  if(!Array.isArray(list))return {c:null,d:bd};
+  for(const c of list){
+    if(Math.abs(c[1]-lat)>1)continue; // cheap prefilter, 1 degree is about 111 km
+    const d=geoKm(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}
+  }
+  return {c:best,d:bd};
+}
+// Returns the place name to show. o: {lang, cities (Hebrew list), geo (list or null), lat, lon, t (translate fn)}
+function resolveName(o){
+  const he=o.lang==='he';
+  const hc=he?nearestIn(o.cities,o.lat,o.lon):{c:null,d:Infinity};
+  if(he&&hc.d<=4)return hc.c[0];
+  if(he&&hc.d<=15)return o.t('near',{p:hc.c[0]});
+  const g=nearestIn(o.geo,o.lat,o.lon);
+  if(g.c&&g.d<=15)return g.c[0];
+  if(g.c&&g.d<=40)return o.t('near',{p:g.c[0]});
+  return o.t('myLoc');
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={geoKm,nearestIn,resolveName};
+// ===== Pure calculation helpers (no DOM, no globals). Tested by tests/calc.test.js =====
+const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
+const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// Strict majority of n models, never fewer than 2 (4 models need 3, 5 need 3, 2 need 2). Same rule in server/alerts_lib.php.
+const needFor=n=>Math.max(2,Math.floor(n/2)+1);
+// s = {n: models that have a value, k: models that cross the threshold}. With a single selected model, that model decides.
+const majority=s=>s.n>0&&s.k>=(s.n===1?1:needFor(s.n));
+
+// Consensus of the models' values for one moment. Outlier: differs from the median of the others by 3 or more (needs 3 others).
+// If fewer than 2 values would be left after filtering, nothing is filtered, the median of all is used and disagree=true.
+// Returns {empty,med,min,max,inMin,inMax,out:[bool per input],disagree}.
+function consensus(vals){
+  const v=vals.map(x=>x==null?NaN:+x),ok=v.filter(Number.isFinite);
+  if(!ok.length)return {empty:true,med:null,min:null,max:null,inMin:null,inMax:null,out:v.map(()=>false),disagree:false};
+  // compare each value with the others (by position, so equal values are handled correctly)
+  const idx=v.map((x,i)=>Number.isFinite(x)?i:-1).filter(i=>i>=0);
+  let out=v.map((x,i)=>{
+    if(!Number.isFinite(x))return false;
+    const others=idx.filter(j=>j!==i).map(j=>v[j]);
+    return others.length>=3&&Math.abs(x-med(others))>=3;
+  });
+  let disagree=false;
+  let inl=idx.filter(i=>!out[i]);
+  if(inl.length<2&&ok.length>=2){out=out.map(()=>false);inl=idx;disagree=true}
+  const iv=inl.map(i=>v[i]);
+  return {empty:false,med:med(iv),min:Math.min(...ok),max:Math.max(...ok),inMin:Math.min(...iv),inMax:Math.max(...iv),out,disagree};
+}
+
+// Per-day counts from the per-model rows [{max,min,rain,gust,code,cape}] (a missing value is null/undefined).
+// A model with no value for a hazard is not counted in that hazard's denominator (n*), it does not count as "0".
+function dayCounts(per){
+  const has=k=>per.filter(x=>x[k]!=null);
+  const rains=has('rain'),gusts=has('gust');
+  const thunderPer=per.filter(x=>x.code!=null||x.cape!=null);
+  return {
+    nRain:rains.length,rainN:rains.filter(x=>x.rain>=1).length,heavyN:rains.filter(x=>x.rain>=20).length,
+    rainAvg:rains.length?avg(rains.map(x=>x.rain)):0,rainMax:rains.length?Math.max(...rains.map(x=>x.rain)):0,
+    nWind:gusts.length,windN:gusts.filter(x=>x.gust>=60).length,gustMax:gusts.length?Math.max(...gusts.map(x=>x.gust)):0,
+    nThunder:thunderPer.length,thunderN:thunderPer.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length
+  };
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts};
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
 const APP_VER='2.0.3';
 
-// --- Which models are shown. Default: only the most accurate one here. ---
+// --- Which models are shown. Default: all of them. The model closest to the consensus is only marked, not preferred. ---
 const MSEL='mm_models';
 function activeIds(){
   const u=load(MSEL);
@@ -785,8 +854,9 @@ function drawStorm(){
       const x=get(d,m),c=stCell(x),sel=stSel&&stSel[0]===m.id&&stSel[1]===di;
       return `<td class="sc ${c[0]}${sel?' sel':''}" data-m="${m.id}" data-d="${di}">${c[1]}</td>`}).join('')}</tr>`;
   });
-  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length,n=d.n;
-    const need=Math.max(2,Math.ceil(n/2));return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
+  h+=`<tr class="cons"><td class="l">${t('stAgree')}</td>${days.map(d=>{const k=ms.filter(m=>stHit(get(d,m))).length;
+    const n=stMode==='rain'?d.nRain:stMode==='wind'?d.nWind:stMode==='thunder'?d.nThunder:d.n; // models that have a value for this hazard
+    const need=needFor(n);return `<td class="${k>=need?'agr-hi':k?'agr-md':''}">${n?k+'/'+n:'·'}</td>`}).join('')}</tr></table></div>`;
   let det='';
   if(stSel){const m=MODELS.find(x=>x.id===stSel[0]),d=days[stSel[1]],x=d&&get(d,m);
     det=x?t('stDet',{m:m.name,d:dayLabel(d.date,stSel[1]),x:fT1(x.max),n:fT1(x.min),r:fR(x.rain??0),g:fW(x.gust??0),c:x.cape!=null?Math.round(x.cape):'·'})+` ${wc(x.code??0).join(' ')}`:t('stNoData')}
@@ -868,9 +938,9 @@ function wireV2(){
   $('#mAll').onclick=()=>{store(MSEL,null);closeModels();if(state.data)render()};
   $('#closeW').onclick=closeStorm;$('#ovW').addEventListener('click',e=>{if(e.target.id==='ovW')closeStorm()});
 }
-const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;
-const med=a=>{const s=[...a].sort((x,y)=>x-y),n=s.length;return n%2?s[(n-1)/2]:(s[n/2-1]+s[n/2])/2};
+// avg, med, majority, consensus and dayCounts live in calc.js (pure functions, tested in tests/calc.test.js)
 const r1=v=>Math.round(v*10)/10;
+const q2=v=>Math.round(+v*100)/100; // coordinates leave the device rounded to 2 decimals (about 1 km)
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 function load(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}}
@@ -945,7 +1015,7 @@ let state={place:null,data:null,tab:'temp',obs:null,cached:false};
 
 async function fetchForecast(p){
   const ids=MODELS.map(m=>m.id).join(',');
-  const u=`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+  const u=`https://api.open-meteo.com/v1/forecast?latitude=${q2(p.lat)}&longitude=${q2(p.lon)}`+
    `&hourly=temperature_2m,precipitation,weather_code,wind_speed_10m,wind_gusts_10m,cape`+
    `&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_gusts_10m_max,weather_code,sunrise,sunset`+
    `&models=${ids}&timezone=auto&forecast_days=7`;
@@ -960,7 +1030,7 @@ async function fetchObs(p){
   if(!/^https?:/.test(location.protocol))return null;
   try{
     const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),7000);
-    const r=await fetch(`${OBS_API}?lat=${p.lat}&lon=${p.lon}`,{signal:ac.signal});clearTimeout(tm);
+    const r=await fetch(`${OBS_API}?lat=${q2(p.lat)}&lon=${q2(p.lon)}`,{signal:ac.signal});clearTimeout(tm);
     if(!r.ok)return null;const j=await r.json();
     if(!j||!j.ok||typeof j.temp_c!=='number')return null;
     const age=Math.round((Date.now()/1000-j.time)/60);
@@ -985,20 +1055,18 @@ function process(d,ids){
     })).filter(x=>x.max!=null);
     const n=per.length;
     const maxs=per.map(x=>x.max),mins=per.map(x=>x.min);
-    const rains=per.map(x=>x.rain??0);
-    const codes=per.map(x=>x.code??0).sort((a,b)=>a-b);
-    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,rainAvg:n?avg(rains):0,rainMax:n?Math.max(...rains):0,
-      rainN:per.filter(x=>(x.rain??0)>=1).length,heavyN:per.filter(x=>(x.rain??0)>=20).length,
-      thunderN:per.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length,
-      windN:per.filter(x=>(x.gust??0)>=60).length,spread:n?Math.max(...maxs)-Math.min(...maxs):0,
-      code:codes[Math.floor(codes.length/2)]||0,gustMax:n?Math.max(...per.map(x=>x.gust??0)):0};
+    const dc=dayCounts(per);
+    const codes=per.map(x=>x.code).filter(c=>c!=null).sort((a,b)=>a-b);
+    return {idx:i,date:tm,per,n,max:n?avg(maxs):null,min:n?avg(mins):null,...dc,
+      spread:n?Math.max(...maxs)-Math.min(...maxs):0,
+      code:codes.length?codes[Math.floor(codes.length/2)]:0};
   });
   return {models,ni,days,H,D};
 }
 
 function conf(d){
   if(!d.n)return 0;
-  const p=d.rainN/d.n;
+  const p=d.nRain?d.rainN/d.nRain:0;
   let c=100-Math.min(40,d.spread*7)-(1-Math.abs(2*p-1))*35-(d.idx||0)*3;
   if(d.n<3)c-=10;
   return Math.max(30,Math.min(97,Math.round(c)));
@@ -1009,7 +1077,6 @@ function hourStats(P,i,key,thr){
   const v=P.models.map(m=>(pick(P.H,key,m.id)||[])[i]).filter(x=>x!=null);
   return {n:v.length,k:v.filter(x=>x>=thr).length,mean:v.length?avg(v):null};
 }
-const majority=s=>s.n>0&&s.k>=Math.max(Math.min(2,s.n),Math.ceil(s.n/2));
 function dph(P,i){return dayRef(P.H.time[i].slice(0,10),Math.floor(i/24))}
 
 function rainLine(P){
@@ -1068,10 +1135,11 @@ function render(){
   sky(P);
   if(!models.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return}
   const nowPer=models.map(m=>({m,t:pick(H,'temperature_2m',m.id)[ni],c:pick(H,'weather_code',m.id)?.[ni],w:pick(H,'wind_speed_10m',m.id)?.[ni]})).filter(x=>x.t!=null);
-  nowPer.forEach(x=>{const o=nowPer.filter(y=>y!==x).map(y=>y.t);x.out=o.length>=3&&Math.abs(x.t-med(o))>=3});
+  if(!nowPer.length){$('#app').innerHTML=`<div class="err">${t('noData')}</div>`;return} // no model has a value for this hour
+  const cs=consensus(nowPer.map(x=>x.t)); // outliers are filtered only while at least 2 models remain; otherwise median of all + a disagreement note
+  nowPer.forEach((x,i)=>x.out=cs.out[i]);
   const nowIn=nowPer.filter(x=>!x.out),outs=nowPer.filter(x=>x.out);
-  const nowT=med(nowIn.map(x=>x.t));
-  const nowMin=Math.min(...nowPer.map(x=>x.t)),nowMax=Math.max(...nowPer.map(x=>x.t));
+  const nowT=cs.med,nowMin=cs.min,nowMax=cs.max;
   const nowCodes=nowPer.map(x=>x.c??0).sort((a,b)=>a-b);
   const nowCode=nowCodes[Math.floor(nowCodes.length/2)]||0;
   const nowC=wc(nowCode);
@@ -1085,13 +1153,12 @@ function render(){
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
     const dr=dayRef(d.date,i);
-    const need=Math.max(2,Math.ceil(d.n/2));
-    if(d.thunderN>=need)al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.n})]);
-    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.n})]);
-    if(d.heavyN>=need)al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
-    if(d.windN>=need)al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
+    if(d.nThunder&&d.thunderN>=needFor(d.nThunder))al.push(['red','⛈️',t('thunder',{d:dr}),t('thunderMeta',{k:d.thunderN,n:d.nThunder})]);
+    else if(d.thunderN>=1)al.push(['orange','⛈️',t('thunderEarly',{d:dr}),t('thunderEarlyMeta',{k:d.thunderN,n:d.nThunder})]);
+    if(d.nRain&&d.heavyN>=needFor(d.nRain))al.push(['red','🌊',t('heavy',{d:dr}),t('heavyMeta',{k:d.heavyN,v:fR(20)})]);
+    if(d.nWind&&d.windN>=needFor(d.nWind))al.push(['orange','💨',t('windA',{d:dr}),t('windMeta',{k:d.windN,v:fW(60),m:fW(d.gustMax)})]);
   });
-  const nextRain=PA.days.findIndex(d=>d.rainN>=Math.max(2,Math.ceil(d.n/2)));
+  const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
   const bigT=obs?obs.temp_c:nowT;
@@ -1106,17 +1173,17 @@ function render(){
           ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
-        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}</div>`}
+        :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
-        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}">${ag[1]}</span>`}</div>
+        <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>
       <div class="bigt">${Math.round(cT(bigT))}<sup>°</sup></div>
     </div>
     <div class="now-models">
-      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'🏆 ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
+      ${nowPer.map(x=>`<div class="nm"${x.out?' style="opacity:.55;border-style:dashed"':''}><span class="dot" style="background:${x.m.color}"></span>${x.m.id===skillTop?'⭐ ':''}${x.m.name} <b dir="ltr">${fT1(x.t)}</b>${x.out?' ⚠️':''}</div>`).join('')}
       <button class="nm addm" id="addModel">${t('addModel')}</button>
     </div>
-    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(Math.max(...nowIn.map(x=>x.t))-Math.min(...nowIn.map(x=>x.t)))}):''}</div>`}
+    ${one?'':`<div class="rangeline">${t('spreadNow',{v:fDiff(nowMax-nowMin)})}${outs.length?' '+t('spreadEx',{v:fDiff(cs.inMax-cs.inMin)}):''}</div>`}
     <div class="rangeline" style="font-size:11.5px"><a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#9cc3ff" dir="ltr">Weather data by Open-Meteo.com</a></div>
     ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
   </section>
@@ -1144,18 +1211,18 @@ function render(){
     <h2>${t('daysTitle')}</h2>
     <p class="sub">${t('daysSub')}</p>
     <div class="days">
-      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=Math.round(d.rainN/d.n*100);return `
+      ${days.map((d,i)=>{const a=agree(d);const c=wc(d.code);const pct=d.nRain?Math.round(d.rainN/d.nRain*100):0;return `
       <div class="day" data-i="${i}">
         <div><div class="dn">${dayLabel(d.date,i)}</div><div class="dd">${dmy(d.date)}</div></div>
         <div class="ico">${c[0]}</div>
-        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px">${a[1]}</span>`}<br>
-          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):t('rainOf',{k:d.rainN,n:d.n})+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
+        <div class="sum">${c[1]}${one?'':` · <span class="pill ${a[0]}" style="padding:1px 7px" title="${esc(t('confHint'))}">${a[1]}</span>`}<br>
+          <span class="m">${one?(d.rainMax>=0.1?t('rainAmt',{v:fR(d.rainMax)}):t('noRainD')):(d.nRain?t('rainOf',{k:d.rainN,n:d.nRain}):'·')+(d.rainN?' · '+t('upTo',{v:fR(d.rainMax)}):'')}</span>
           <div class="bar"><i style="width:${pct}%"></i></div></div>
         <div class="tt" dir="ltr"><b>${fT(d.max)}</b> <span>${fT(d.min)}</span></div>
         <div class="detail"><div class="tbl-wrap"><table>
           <tr><th class="l">${t('model')}</th><th>${t('max')}</th><th>${t('min')}</th><th>${t('rainH')} (${rU()})</th><th>${t('gustH')} (${wU()})</th><th>${t('condH')}</th></tr>
-          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${nR(x.rain??0)}</td><td>${Math.round(cW(x.gust??0))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
-          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${nR(d.rainAvg)}</td><td>${Math.round(cW(avg(d.per.map(x=>x.gust??0))))}</td><td>${c[0]}</td></tr>`}
+          ${d.per.map(x=>`<tr><td class="l"><span class="dot" style="background:${x.m.color}"></span> ${x.m.name}</td><td>${fT1(x.max)}</td><td>${fT1(x.min)}</td><td>${x.rain==null?'·':nR(x.rain)}</td><td>${x.gust==null?'·':Math.round(cW(x.gust))}</td><td>${wc(x.code??0)[0]}</td></tr>`).join('')}
+          ${one?'':`<tr class="cons"><td class="l">${t('mean')}</td><td>${fT1(d.max)}</td><td>${fT1(d.min)}</td><td>${d.nRain?nR(d.rainAvg):'·'}</td><td>${d.nWind?Math.round(cW(avg(d.per.filter(x=>x.gust!=null).map(x=>x.gust)))):'·'}</td><td>${c[0]}</td></tr>`}
         </table></div></div>
       </div>`}).join('')}
     </div>
@@ -1170,7 +1237,7 @@ function render(){
       <button class="tab ${state.tab==='gust'?'on':''}" data-t="gust">${t('tabGust')}</button>
     </div>
     <div id="chart">${chart(P)}</div>
-    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'🏆 ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
+    <div class="legend">${models.map(m=>`<span${m.id===skillTop?' style="color:#fff;font-weight:700"':''}><i class="dot" style="background:${m.color}"></i>${m.id===skillTop?'⭐ ':''}${m.name}</span>`).join('')}${one?'':`<span><i class="dot" style="background:#fff"></i>${t('mean')}</span>`}</div>
   </section>
 
   <section class="card">
@@ -1231,18 +1298,18 @@ function hourly(P){
     const lbl=tm.endsWith('T00:00')?`<b>${esc(dayShort(tm.slice(0,10),Math.floor(i/24)))}</b> ${fmtH(tm)}`:fmtH(tm);
     rows.push(`<tr><td class="l">${lbl}</td>${raw.map(a=>`<td ${hot(a)}>${fmt(a)}</td>`).join('')}${P.models.length>1?`<td class="cons">${fmt(mean)}</td>`:''}</tr>`);
   }
-  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'🏆 ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
+  return `<table${P.models.length<=3?' style="min-width:0"':''}><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th${m.id===bestId()?' style="color:#fff"':''}><span class="dot" style="background:${m.color}"></span> ${m.id===bestId()&&P.models.length>1?'⭐ ':''}${m.name}</th>`).join('')}${P.models.length>1?`<th>${t('mean')}</th>`:''}</tr>${rows.join('')}</table>`;
 }
 
-// ===== מי המודל המדויק ביותר: בדיקה על 7 הימים האחרונים במקום הזה =====
-// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול מה שקרה בפועל.
-// "בפועל" = החציון של כל המודלים לאותה שעה אחרי מעשה (ניתוח עדכני), בשעות שכבר עברו.
+// ===== איזה מודל הכי קרוב לקונצנזוס: בדיקה על 7 הימים האחרונים במקום הזה =====
+// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול החציון של כל המודלים.
+// ההשוואה היא לחציון של כל המודלים לאותה שעה אחרי מעשה, בשעות שכבר עברו. זו לא מדידה בפועל.
 async function fetchSkill(p){
   const key='mm_skill_'+p.lat.toFixed(1)+'_'+p.lon.toFixed(1);
   const c=load(key);
   if(c&&Date.now()-c.at<6*3600e3)return c.r;
   const ids=MODELS.map(m=>m.id).join(',');
-  const u=`https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+  const u=`https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${q2(p.lat)}&longitude=${q2(p.lon)}`+
     `&hourly=temperature_2m,temperature_2m_previous_day1&models=${ids}&past_days=7&forecast_days=1&timezone=auto`;
   try{
     const r=await fetch(u);if(!r.ok)return null;
@@ -1274,7 +1341,7 @@ function skillHTML(s){
   const worst=s.list[s.list.length-1].mae||1;
   return `<h2>${t('skillTitle')}</h2>
     <p class="sub">${t('skillSub',{d:s.days})}</p>
-    <div class="al green"><div style="font-size:22px">🏆</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
+    <div class="al green"><div style="font-size:22px">⭐</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
     ${s.list.map((x,i)=>{const m=MODELS.find(y=>y.id===x.id);const b=Math.abs(x.bias)>=0.5?(x.bias>0?t('skillWarm',{v:fDiff(x.bias)}):t('skillCold',{v:fDiff(-x.bias)})):'';
       return `<div class="qa"><div class="e">${i+1}</div><div><b><span class="dot" style="background:${m.color}"></span> ${m.name} <span dir="ltr">±${fDiff(x.mae)}</span></b>
       <div class="bar"><i style="width:${Math.max(8,Math.round((1-x.mae/(worst*1.15))*100))}%;background:${m.color}"></i></div>
@@ -1291,17 +1358,17 @@ async function loadSkill(p){
 // ===== מיקום =====
 const norm=s=>(s||'').replace(/[֑-ׇ'"׳״\-\s()]/g,'').toLowerCase();
 const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
-function nearestCity(lat,lon){let best=null,bd=1e9;CITIES.forEach(c=>{const d=km(lat,lon,c[1],c[2]);if(d<bd){bd=d;best=c}});return {c:best,d:bd}}
-
+// On-device place naming: no request containing the user's position is sent to any naming service.
+let GEO=null,geoP=null;
+function loadGeo(){
+  if(GEO)return Promise.resolve(GEO);
+  if(!geoP)geoP=fetch('geo/cities15000.json').then(r=>r.ok?r.json():null).then(j=>{GEO=Array.isArray(j)?j:null;if(!GEO)geoP=null;return GEO}).catch(()=>{geoP=null;return null});
+  return geoP;
+}
 async function reverseName(lat,lon){
-  const n=nearestCity(lat,lon);
-  if(LANG==='he'&&n.d<=4)return n.c[0];
-  try{
-    const r=await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=${LANG}`);
-    if(r.ok){const j=await r.json();const nm=j.city||j.locality;if(nm)return nm}
-  }catch(e){}
-  if(LANG==='he'&&n.d<=15)return t('near',{p:n.c[0]});
-  return t('myLoc');
+  const near=LANG==='he'&&nearestIn(CITIES,lat,lon).d<=4;
+  const geo=near?null:await loadGeo(); // offline or missing file: falls back to the Hebrew list or "My location"
+  return resolveName({lang:LANG,cities:CITIES,geo,lat,lon,t});
 }
 function getPos(timeout=12000){
   return new Promise((res,rej)=>{
@@ -1397,9 +1464,11 @@ async function currentSub(){if(!pushOK())return null;const reg=await navigator.s
 async function sendSub(sub){
   const p=state.place;if(!p||!sub)return false;
   let tz='UTC';try{tz=(state.data&&state.data.timezone)||Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC'}catch(e){}
-  const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:p.lat,lon:p.lon,name:p.name,lang:LANG,imperial:U.imp,tz});
-  return !!(j&&j.ok);
+  const j=await postSub({action:'subscribe',subscription:sub.toJSON(),lat:q2(p.lat),lon:q2(p.lon),name:p.name,lang:LANG,imperial:U.imp,tz});
+  if(j&&j.ok){store('mm_alerts_sync',{sig:syncSig(p),at:Date.now()});return true}
+  return false;
 }
+const syncSig=p=>[q2(p.lat),q2(p.lon),p.name,LANG,U.imp?1:0].join('|');
 async function alertsEnable(){
   if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
   const perm=await Notification.requestPermission();
@@ -1409,15 +1478,42 @@ async function alertsEnable(){
     let sub=await reg.pushManager.getSubscription();
     if(!sub){const k=await (await fetch(SUB_API+'?key=1')).json();sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(k.key)})}
     if(!(await sendSub(sub)))throw new Error('server');
+    if(load('mm_unsub_pending')===sub.endpoint)store('mm_unsub_pending',null); // re-enabled on the same subscription: nothing to delete
     store('mm_alerts',true);return true;
   }catch(e){alertsMsg(t('alertsErr'),1);return false}
 }
-async function alertsDisable(){
-  store('mm_alerts',false);
-  try{const sub=await currentSub();if(sub){await postSub({action:'unsubscribe',endpoint:sub.endpoint}).catch(()=>{});await sub.unsubscribe()}}catch(e){}
+// Turning alerts off must really delete the server copy. If the server cannot be reached, the endpoint is kept in
+// mm_unsub_pending and the deletion is retried on every app start. The browser subscription is removed only after the server confirmed.
+async function serverUnsub(endpoint){
+  try{const j=await postSub({action:'unsubscribe',endpoint});return !!(j&&j.ok)}catch(e){return false}
 }
-async function alertsSync(){ // עדכון המיקום, השפה והיחידות בשרת אחרי כל שינוי
+async function alertsDisable(){
+  store('mm_alerts',false);store('mm_alerts_sync',null);
+  let done=true;
+  try{
+    const sub=await currentSub();
+    if(sub){
+      if(await serverUnsub(sub.endpoint)){store('mm_unsub_pending',null);await sub.unsubscribe()}
+      else{store('mm_unsub_pending',sub.endpoint);done=false}
+    }
+  }catch(e){}
+  return done;
+}
+async function alertsPending(){ // on startup: finish a deletion that failed earlier
+  const ep=load('mm_unsub_pending');if(!ep||!pushOK())return;
+  try{
+    const sub=await currentSub();
+    if(load('mm_alerts')&&sub&&sub.endpoint===ep){store('mm_unsub_pending',null);return}
+    if(!(await serverUnsub(ep)))return;
+    store('mm_unsub_pending',null);
+    if(sub&&sub.endpoint===ep&&!load('mm_alerts'))await sub.unsubscribe();
+  }catch(e){}
+}
+async function alertsSync(force){ // update location, language and units on the server when they changed, and at most once every 7 days otherwise (keeps the subscription from expiring)
   if(!load('mm_alerts'))return;
+  const p=state.place;if(!p)return;
+  const last=load('mm_alerts_sync');
+  if(!force&&last&&last.sig===syncSig(p)&&Date.now()-last.at<7*864e5)return;
   try{const sub=await currentSub();if(sub)await sendSub(sub)}catch(e){}
 }
 async function sendTest(fresh){
@@ -1503,7 +1599,7 @@ function wire(){
     const b=$('#geo');b.disabled=true;b.textContent=t('detecting');
     try{
       const c=await getPos();const name=await reverseName(c.latitude,c.longitude);
-      selected={name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),sub:t('detectedSub')};
+      selected={name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),sub:t('detectedSub')};
       results=[selected];renderList(results,'x');choose(0);
     }catch(e){$('#list').innerHTML=`<div class="hint">${geoErrText(e)}</div>`}
     finally{b.disabled=false;b.textContent=t('detectBtn')}
@@ -1519,7 +1615,7 @@ function wire(){
       alertsMsg(t('aWorking'));
       const ok=await alertsEnable();tg.checked=ok;
       if(ok){$('#alertsTest').hidden=false;await sendTest(true)}
-    }else{await alertsDisable();alertsMsg(t('aOff'))}
+    }else{const ok=await alertsDisable();alertsMsg(t(ok?'aOff':'aOffPending'))}
     tg.disabled=false;
   });
   $('#alertsTest').addEventListener('click',()=>sendTest(false));
@@ -1528,7 +1624,7 @@ function wire(){
 
 // ===== הפעלה =====
 async function init(){
-  applyPrefs();applyStatic();wire();setTimeout(alertsHeal,3000);
+  applyPrefs();applyStatic();wire();setTimeout(()=>alertsPending().then(alertsHeal),3000);
   const saved=load('mm_place');
   if(saved){
     go(saved);
@@ -1539,7 +1635,7 @@ async function init(){
         if(km(c.latitude,c.longitude,saved.lat,saved.lon)>8){
           const name=await reverseName(c.latitude,c.longitude);
           showBanner(`<div class="txt">${t('movedQ',{p:esc(name)})}</div><button class="btn" id="bNo">${t('stay')}</button><button class="btn pri" id="bYes">${t('switchYes')}</button>`);
-          $('#bYes').onclick=()=>{hideBanner();go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true})};
+          $('#bYes').onclick=()=>{hideBanner();go({name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),auto:true})};
           $('#bNo').onclick=hideBanner;
         }
       }
@@ -1551,7 +1647,7 @@ async function init(){
   try{
     const c=await getPos();
     const name=await reverseName(c.latitude,c.longitude);
-    go({name,lat:+c.latitude.toFixed(3),lon:+c.longitude.toFixed(3),auto:true});
+    go({name,lat:+c.latitude.toFixed(2),lon:+c.longitude.toFixed(2),auto:true});
     showBanner(`<div class="txt">${t('detectedQ',{p:esc(name)})}</div><button class="btn" id="bChg">${t('otherPlace')}</button><button class="btn pri" id="bOk">${t('yesBtn')}</button>`);
     $('#bOk').onclick=hideBanner;$('#bChg').onclick=()=>{hideBanner();openPicker()};
   }catch(e){

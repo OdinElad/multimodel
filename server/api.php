@@ -5,7 +5,7 @@
  * Everywhere else (and fallback): NOAA Aviation Weather Center METAR (public, no key).
  * Results are cached for 10 minutes so the source APIs get very few requests.
  *
- * Diagnostics: open api.php?diag=1 in the browser after uploading.
+ * Diagnostics: run `php api.php diag` on the server (command line only; over HTTP ?diag returns 404).
  */
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
@@ -19,10 +19,11 @@ if (in_array($origin, $allowed, true)) { header('Access-Control-Allow-Origin: ' 
 $cfgFile = __DIR__ . '/config.php';
 $cfg = is_file($cfgFile) ? (require $cfgFile) : [];
 $IMS_TOKEN = is_array($cfg) ? trim((string)($cfg['ims_token'] ?? '')) : '';
-// Cache lives outside the public web folder when possible, so it is never reachable from the internet.
+// Cache lives outside the public web folder, so it is never reachable from the internet. No fallback inside public_html.
 $CACHE = dirname(__DIR__, 2) . '/multimodel-cache';
 if (!is_dir($CACHE)) { @mkdir($CACHE, 0700, true); }
-if (!is_dir($CACHE) || !is_writable($CACHE)) { $CACHE = __DIR__ . '/cache'; if (!is_dir($CACHE)) { @mkdir($CACHE, 0700, true); } }
+$CACHE_OK = is_dir($CACHE) && is_writable($CACHE);
+if (!$CACHE_OK) { error_log('multimodel: private cache folder missing or not writable: ' . $CACHE); }
 
 function out(array $a, int $code = 200): void { http_response_code($code); echo json_encode($a, JSON_UNESCAPED_UNICODE); exit; }
 
@@ -115,8 +116,10 @@ function ims_nearest(float $lat, float $lon, string $tok): ?array {
 
 // ---------- METAR (worldwide) ----------
 function metar_nearest(float $lat, float $lon): ?array {
-  $b = 0.7;
-  $bbox = sprintf('%.2f,%.2f,%.2f,%.2f', $lat - $b, $lon - $b, $lat + $b, $lon + $b);
+  // The query area is snapped to a 0.5 degree grid, so NOAA gets an area and never the user's own (rounded) position.
+  // Half-width 1.25 degrees keeps every station within the 50 km limit inside the box (up to about 63 degrees latitude).
+  $g = 0.5; $b = 1.25; $cLat = round($lat / $g) * $g; $cLon = round($lon / $g) * $g;
+  $bbox = sprintf('%.2f,%.2f,%.2f,%.2f', $cLat - $b, $cLon - $b, $cLat + $b, $cLon + $b);
   [$code, $body, $err] = http_get('https://aviationweather.gov/api/data/metar?format=json&bbox=' . $bbox);
   if ($code !== 200 && $code !== 204) { log_issue('METAR', "bbox $bbox failed: HTTP $code $err"); return null; }
   $j = json_decode($body, true);
@@ -137,9 +140,11 @@ function metar_nearest(float $lat, float $lon): ?array {
   return ($best !== null && $best['dist_km'] <= 50) ? $best : null;
 }
 
-// ---------- diagnostics ----------
-if (isset($_GET['diag'])) {
-  $r = ['php' => PHP_VERSION, 'curl' => function_exists('curl_init'), 'cache_writable' => is_writable($CACHE), 'ims_token_set' => $IMS_TOKEN !== ''];
+// ---------- diagnostics (command line only) ----------
+// Run on the server:  php api.php diag     Over HTTP the diagnostics do not exist (404).
+if (PHP_SAPI !== 'cli' && isset($_GET['diag'])) out(['ok' => false, 'error' => 'not_found'], 404);
+if (PHP_SAPI === 'cli' && ($argv[1] ?? '') === 'diag') {
+  $r = ['php' => PHP_VERSION, 'curl' => function_exists('curl_init'), 'cache_writable' => $CACHE_OK, 'ims_token_set' => $IMS_TOKEN !== ''];
   if ($r['curl']) {
     [$c, , $e] = http_get('https://aviationweather.gov/api/data/metar?ids=LLBG&format=json');
     $r['aviationweather_http'] = $c; if ($e) $r['aviationweather_error'] = $e;
@@ -155,6 +160,8 @@ if (isset($_GET['diag'])) {
 }
 
 // ---------- main ----------
+// Without the private cache the 10 minute cache (which protects the IMS and NOAA rate limits) cannot work: refuse.
+if (!$CACHE_OK) out(['ok' => false, 'error' => 'storage'], 503);
 $lat = filter_var($_GET['lat'] ?? null, FILTER_VALIDATE_FLOAT);
 $lon = filter_var($_GET['lon'] ?? null, FILTER_VALIDATE_FLOAT);
 if (!is_float($lat) || !is_float($lon) || abs($lat) > 90 || abs($lon) > 180) out(['ok' => false, 'error' => 'bad_coords'], 400);

@@ -15,65 +15,75 @@ p,li{color:#c9d3ef;font-size:15px}a{color:#9cc3ff}
 </head>
 <body><div class="wrap">
 
-<h1>מדיניות פרטיות: מולטי מודל</h1>
-<p class="muted">עודכן לאחרונה: 23 בנובמבר 2026</p>
-<p>מולטי מודל היא אפליקציית מזג אוויר חינמית, ללא פרסומות וללא מטרת רווח, שפותחה על ידי אלעד אלימלך כפרויקט אישי.</p>
+<h1>מדיניות פרטיות: תחזית</h1>
+<p class="muted">עודכן לאחרונה: 24 בנובמבר 2026</p>
+<p>תחזית (Tahazit) היא אפליקציית מזג אוויר חינמית, ללא פרסומות וללא מטרת רווח, שפותחה על ידי אלעד אלימלך כפרויקט אישי.</p>
 
 <h2>מה נשמר במכשיר שלך</h2>
-<p>המקום שבחרת, מקומות אחרונים, השפה, היחידות והתחזית האחרונה נשמרים רק בדפדפן או באפליקציה במכשיר שלך, ולא נשלחים אלינו.</p>
+<p>המקום שבחרת, מקומות אחרונים, השפה, היחידות והתחזית האחרונה נשמרים בדפדפן או באפליקציה במכשיר שלך (אחסון מקומי).</p>
 
 <h2>מיקום</h2>
-<p>אם אישרת גישה למיקום, הקואורדינטות משמשות רק כדי להביא תחזית למקום שלך. הן נשלחות ישירות מהמכשיר לשירותים שמפורטים בהמשך, ולא נשמרות אצלנו (חוץ ממה שמתואר בסעיף ההתראות).</p>
+<p>אם אישרת גישה למיקום, האפליקציה משתמשת בו כדי להציג תחזית למקום שלך. הקואורדינטות (מעוגלות לכקילומטר) נשלחות ל-Open-Meteo לקבלת תחזית, ולשרת שלנו (Hostinger) לקבלת מדידה מהתחנה הקרובה. השרת שלנו שומר את תוצאת המדידה במטמון כ-10 דקות, לפי מפתח שנגזר מהמיקום המעוגל. לשירות המטאורולוגי ול-NOAA לא נשלח מיקום המשתמש: השרת שולח להם רק מזהה תחנה או אזור. איתור שם היישוב נעשה במכשיר עצמו, בלי שליחה לאף שירות.</p>
+<p>לפי המדיניות של Open-Meteo, יומני ה-API שלהם עשויים לכלול קואורדינטות ונשמרים עד 90 יום. לפרטים: <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">open-meteo.com/en/terms</a>.</p>
 
 <h2>התראות על מזג אוויר חריג (רק אם הפעלת אותן)</h2>
-<p>כדי לשלוח התראות, השרת שלנו שומר: כתובת התראה שהדפדפן או המכשיר יוצרים (Push), מיקום מעוגל לכקילומטר, שם המקום שבחרת, שפה, יחידות ואזור זמן. לא נשמרים שם, מייל, טלפון או מזהה אישי אחר. המידע נמחק כשמכבים את ההתראות, או אוטומטית כששירות ההתראות מודיע שהכתובת כבר לא בתוקף.</p>
+<p>כדי לשלוח התראות, השרת שלנו שומר: כתובת Push (מזהה שנוצר בדפדפן או במכשיר ומאפשר לשלוח אליו התראות), מיקום מעוגל לכקילומטר, שם המקום, שפה, יחידות, אזור זמן ותאריכי בדיקה ושליחה. לא נדרשים שם, מייל, טלפון או חשבון. לצורך בדיקת ההתראות, השרת שולח ל-Open-Meteo את המיקום המעוגל.</p>
+<p>המידע נמחק כשמכבים התראות (ואם המחיקה נכשלה, האפליקציה מנסה שוב), כששירות ה-Push מודיע שהכתובת לא בתוקף, או אוטומטית אחרי 120 יום בלי פתיחת האפליקציה.</p>
+
+<h2>הגנה מפני שימוש לרעה</h2>
+<p>בעת הרשמה להתראות נשמר זמנית ערך מגובב (hash) של כתובת ה-IP, כדי להגביל מספר בקשות. הוא נמחק תוך שעתיים.</p>
 
 <h2>שירותים חיצוניים</h2>
 <ul>
-<li><b>Open-Meteo.com</b>: נתוני תחזית, נתוני אקלים וחיפוש מקומות (מקבל את המיקום המבוקש).</li>
-<li><b>BigDataCloud</b>: המרת מיקום לשם יישוב, רק כשמשתמשים באיתור מיקום.</li>
-<li><b>השירות המטאורולוגי</b> ו-<b>NOAA Aviation Weather Center</b>: מדידות מתחנות, דרך השרת שלנו (מקבל מיקום מעוגל בלבד).</li>
+<li><b>Open-Meteo.com</b>: נתוני תחזית, בדיקת דיוק של מודלים וחיפוש מקומות (מקבל קואורדינטות מעוגלות, ואת טקסט החיפוש כשמחפשים עיר).</li>
+<li><b>השירות המטאורולוגי</b> ו-<b>NOAA Aviation Weather Center</b>: מדידות מתחנות, דרך השרת שלנו (לא מקבלים את מיקום המשתמש).</li>
 <li><b>שירותי ההתראות של Google, Mozilla, Apple או Microsoft</b>: מעבירים את ההתראות למכשיר.</li>
-<li><b>GitHub Pages</b> ו-<b>Hostinger</b>: אחסון האפליקציה והשרת. ספקי אחסון רושמים בדרך כלל כתובות IP ביומני שרת לצורכי אבטחה.</li>
+<li><b>Google Fonts</b>: הדפדפן טוען משם את הגופן של האפליקציה, ולכן כתובת ה-IP שלך נחשפת לגוגל.</li>
+<li><b>GitHub Pages</b> ו-<b>Hostinger</b>: אחסון האפליקציה והשרת. הם רושמים כתובות IP וכתובות בקשה ביומני שרת לפי המדיניות שלהם.</li>
 </ul>
 
 <h2>מה אין באפליקציה</h2>
-<p>אין פרסומות, אין כלי אנליטיקה או מעקב, אין עוגיות, ואין מכירה או שיתוף של מידע.</p>
+<p>אין פרסומות, אין כלי אנליטיקה או מעקב, ואין עוגיות. איננו מוכרים מידע ואיננו מעבירים אותו לצדדים שלישיים לצורכי פרסום או למטרות שלהם. המידע מועבר רק לספקים שמפורטים כאן, לצורך הפעלת השירות.</p>
 
 <h2>ילדים</h2>
-<p>האפליקציה לא מיועדת לילדים מתחת לגיל 13, ולא נאסף ביודעין מידע עליהם.</p>
+<p>האפליקציה לא מיועדת לילדים ולא תוכננה עבורם, ולא נאסף ביודעין מידע על ילדים מתחת לגיל 13.</p>
 
 <h2>יצירת קשר</h2>
 <p>לשאלות או לבקשת מחיקה: <a href="mailto:angel.elaad@gmail.com">angel.elaad@gmail.com</a></p>
 
 <div class="en">
 <h1>Privacy Policy: Tahazit Weather Forecast</h1>
-<p class="muted">Last updated: November 23, 2026</p>
+<p class="muted">Last updated: November 24, 2026</p>
 <p>Tahazit is a free, ad-free, non-commercial weather app built by Elad Elimelech as a personal project.</p>
 
 <h2>Stored on your device</h2>
-<p>Your chosen place, recent places, language, units and the last forecast are stored only in the browser or app on your device and are not sent to us.</p>
+<p>Your chosen place, recent places, language, units and the last forecast are stored in the browser or app on your device (local storage).</p>
 
 <h2>Location</h2>
-<p>If you allow location access, the coordinates are used only to get the forecast for your location. They are sent directly from your device to the services listed below and are not stored by us (except as described under Alerts).</p>
+<p>If you allow location access, the app uses it to show the forecast for your location. The coordinates (rounded to about 1 km) are sent to Open-Meteo to get the forecast, and to our server (Hostinger) to get a measurement from the nearest station. Our server caches the measurement for about 10 minutes, under a key derived from the rounded location. Your location is not sent to the meteorological service or to NOAA: our server sends them only a station ID or an area. The place name is worked out on your device, without sending your position to any service.</p>
+<p>According to Open-Meteo's policy, their API logs may include coordinates and are kept for up to 90 days. Details: <a href="https://open-meteo.com/en/terms" target="_blank" rel="noopener">open-meteo.com/en/terms</a>.</p>
 
 <h2>Unusual weather alerts (only if you turn them on)</h2>
-<p>To send alerts, our server stores: the push address your browser or device creates, your location rounded to about 1 km, the place name you chose, language, units and time zone. No name, email, phone number or other personal identifier is stored. This data is deleted when you turn alerts off, or automatically when the push service reports that the address is no longer valid.</p>
+<p>To send alerts, our server stores: the push address (an identifier created by your browser or device that lets notifications be sent to it), your location rounded to about 1 km, the place name, language, units, time zone, and the dates of the last check and send. No name, email, phone number or account is required. To check for alerts, our server sends the rounded location to Open-Meteo.</p>
+<p>The data is deleted when you turn alerts off (and if deletion fails, the app tries again), when the push service reports that the address is no longer valid, or automatically after 120 days without opening the app.</p>
+
+<h2>Abuse protection</h2>
+<p>When you subscribe to alerts, a hashed value of your IP address is stored temporarily to limit the number of requests. It is deleted within two hours.</p>
 
 <h2>Third-party services</h2>
 <ul>
-<li><b>Open-Meteo.com</b>: forecasts, climate data and place search (receives the requested location).</li>
-<li><b>BigDataCloud</b>: turns a location into a place name, only when you use location detection.</li>
-<li><b>Israel Meteorological Service</b> and <b>NOAA Aviation Weather Center</b>: station observations, through our server (receives a rounded location only).</li>
+<li><b>Open-Meteo.com</b>: forecasts, model accuracy checks and place search (receives rounded coordinates, and the search text when you search for a city).</li>
+<li><b>Israel Meteorological Service</b> and <b>NOAA Aviation Weather Center</b>: station observations, through our server (they do not receive the user's location).</li>
 <li><b>Push services of Google, Mozilla, Apple or Microsoft</b>: deliver notifications to your device.</li>
-<li><b>GitHub Pages</b> and <b>Hostinger</b>: host the app and server. Hosting providers typically log IP addresses in server logs for security.</li>
+<li><b>Google Fonts</b>: your browser loads the app's font from there, so your IP address is visible to Google.</li>
+<li><b>GitHub Pages</b> and <b>Hostinger</b>: host the app and server. They log IP addresses and request addresses in server logs under their own policies.</li>
 </ul>
 
 <h2>What the app does not do</h2>
-<p>No ads, no analytics or tracking, no cookies, and no selling or sharing of data.</p>
+<p>No ads, no analytics or tracking, and no cookies. We do not sell data, and we do not pass it to third parties for advertising or for their own purposes. Data is passed only to the providers listed here, to operate the service.</p>
 
 <h2>Children</h2>
-<p>The app is not directed at children under 13, and we do not knowingly collect data about them.</p>
+<p>The app is not directed at children and was not designed for them, and we do not knowingly collect data about children under 13.</p>
 
 <h2>Contact</h2>
 <p>For questions or deletion requests: <a href="mailto:angel.elaad@gmail.com">angel.elaad@gmail.com</a></p>

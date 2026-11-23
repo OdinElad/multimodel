@@ -15,11 +15,19 @@ function mm_cfg(): array {
   if ($c === null) { $f = __DIR__ . '/config.php'; $c = is_file($f) ? (array)(require $f) : []; }
   return $c;
 }
+/** Numeric limit from config.php, or the default. */
+function mm_limit(string $k, int $def): int { $v = mm_cfg()[$k] ?? null; return is_int($v) && $v > 0 ? $v : $def; }
+/** Private data folder, outside the public web root. No fallback inside public_html: if it is not usable, fail closed. */
 function mm_data_dir(): string {
-  $d = dirname(__DIR__, 2) . '/multimodel-data';
-  if (!is_dir($d)) @mkdir($d, 0700, true);
-  if (!is_dir($d) || !is_writable($d)) { $d = __DIR__ . '/data'; if (!is_dir($d)) @mkdir($d, 0700, true); }
-  return $d;
+  static $d = null;
+  if ($d !== null) return $d;
+  $p = dirname(__DIR__, 2) . '/multimodel-data';
+  if (!is_dir($p)) @mkdir($p, 0700, true);
+  if (!is_dir($p) || !is_writable($p)) {
+    error_log('multimodel: private data folder missing or not writable: ' . $p);
+    throw new RuntimeException('storage');
+  }
+  return $d = $p;
 }
 function mm_db(): PDO {
   static $db = null;
@@ -30,8 +38,29 @@ function mm_db(): PDO {
     endpoint TEXT PRIMARY KEY, p256dh TEXT NOT NULL, auth TEXT NOT NULL,
     lat REAL NOT NULL, lon REAL NOT NULL, name TEXT, lang TEXT, imperial INTEGER DEFAULT 0, tz TEXT,
     created INTEGER, updated INTEGER, last_checked TEXT, last_sent TEXT, last_test INTEGER DEFAULT 0, fails INTEGER DEFAULT 0)');
+  // Rate limiting for subscribe.php: one row per (keyed hash of the client address, hour). Rows are deleted after two hours.
+  $db->exec('CREATE TABLE IF NOT EXISTS rl (k TEXT, win INTEGER, n INTEGER, PRIMARY KEY (k, win))');
   return $db;
 }
+/** Secret for hashing client addresses. Created once, kept in the private data folder (never in the repo). */
+function mm_rl_secret(): string {
+  $f = mm_data_dir() . '/rl_secret';
+  $s = is_file($f) ? trim((string)@file_get_contents($f)) : '';
+  if (strlen($s) >= 32) return $s;
+  $s = bin2hex(random_bytes(32));
+  $h = @fopen($f, 'x'); // exclusive create: if another request won the race, use its value
+  if ($h) { fwrite($h, $s); fclose($h); @chmod($f, 0600); return $s; }
+  $other = trim((string)@file_get_contents($f));
+  return strlen($other) >= 32 ? $other : $s;
+}
+/** Keyed hash of the client address (IPv6 reduced to its /64). The raw address is never stored. */
+function mm_client_key(): string {
+  $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '');
+  $bin = @inet_pton($ip);
+  if ($bin !== false && strlen($bin) === 16) $bin = substr($bin, 0, 8);
+  return hash_hmac('sha256', $bin !== false ? bin2hex($bin) : 'unknown', mm_rl_secret());
+}
+
 function mm_http_json(string $url, int $timeout = 20): ?array {
   $ch = curl_init($url);
   curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => $timeout, CURLOPT_CONNECTTIMEOUT => 6,
@@ -42,7 +71,7 @@ function mm_http_json(string $url, int $timeout = 20): ?array {
   return is_array($j) ? $j : null;
 }
 function mm_log(string $msg): void {
-  $f = mm_data_dir() . '/alerts.log';
+  try { $f = mm_data_dir() . '/alerts.log'; } catch (Throwable $e) { return; }
   $old = is_file($f) ? array_slice((array)@file($f), -499) : [];
   @file_put_contents($f, implode('', $old) . gmdate('Y-m-d H:i:s') . "Z $msg\n", LOCK_EX);
 }
@@ -53,18 +82,21 @@ function mm_percentile(array $v, float $p): float {
 }
 function mm_median(array $v): float { return mm_percentile($v, 0.5); }
 
-/** Climate for a location around a date: samples of daily min/max, 2010-2024, +-7 days. Cached ~1 week. */
+/** Climate for a place around a date: samples of daily min/max, 2010-2024 (ERA5), +-7 days. Cached ~1 week per 0.25 degree cell.
+ *  The request is sent for the centre of the 0.25 degree cell (never for one subscriber's own position). */
 function mm_climate(float $lat, float $lon, string $date): ?array {
-  $key = sprintf('clim_%.2f_%.2f_%s', round($lat * 4) / 4, round($lon * 4) / 4, substr($date, 5, 5));
+  $cLat = round($lat * 4) / 4 + 0.0; $cLon = round($lon * 4) / 4 + 0.0; // cell centre (ERA5 native resolution is 0.25)
+  $key = sprintf('clim2_%.2f_%.2f_%s', $cLat, $cLon, substr($date, 5, 5));
   $f = mm_data_dir() . '/' . sha1($key) . '.json';
   if (is_file($f) && time() - filemtime($f) < 8 * 86400) { $j = json_decode((string)file_get_contents($f), true); if ($j) return $j; }
   $mins = []; $maxs = [];
   [$y0, $m, $d] = array_map('intval', explode('-', $date));
   for ($y = 2010; $y <= 2024; $y++) {
-    $c = mktime(12, 0, 0, $m, $d, $y);
+    $dd = ($m === 2 && $d === 29 && !checkdate(2, 29, $y)) ? 28 : $d; // 29 February in a non-leap year: use 28 February
+    $c = mktime(12, 0, 0, $m, $dd, $y);
     $s = date('Y-m-d', $c - 7 * 86400); $e = date('Y-m-d', $c + 7 * 86400);
-    $j = mm_http_json('https://archive-api.open-meteo.com/v1/archive?latitude=' . $lat . '&longitude=' . $lon .
-      "&start_date=$s&end_date=$e&daily=temperature_2m_max,temperature_2m_min&timezone=auto");
+    $j = mm_http_json('https://archive-api.open-meteo.com/v1/archive?latitude=' . $cLat . '&longitude=' . $cLon .
+      "&start_date=$s&end_date=$e&daily=temperature_2m_max,temperature_2m_min&models=era5&timezone=auto");
     if (!$j) continue;
     foreach ((array)($j['daily']['temperature_2m_min'] ?? []) as $v) if (is_numeric($v)) $mins[] = (float)$v;
     foreach ((array)($j['daily']['temperature_2m_max'] ?? []) as $v) if (is_numeric($v)) $maxs[] = (float)$v;
@@ -91,16 +123,17 @@ function mm_tomorrow(float $lat, float $lon): ?array {
   return ['date' => $j['daily']['time'][1], 'tz' => $j['timezone'] ?? 'UTC', 'mins' => $mins, 'maxs' => $maxs];
 }
 
+function mm_need(int $n): int { return max(2, intdiv($n, 2) + 1); } // strict majority, at least 2 (same rule as src/calc.js)
 /** Decide whether tomorrow is unusual. Returns null or ['type'=>'cold'|'heat', 'value', 'normal', 'k', 'n']. */
 function mm_evaluate(array $fc, array $cl): ?array {
-  $n = count($fc['mins']); $need = (int)ceil($n / 2);
+  $nMin = count($fc['mins']); $nMax = count($fc['maxs']); // cold and heat each use their own number of models
   $minMed = mm_median($fc['mins']); $maxMed = mm_median($fc['maxs']);
   $kCold = count(array_filter($fc['mins'], fn($v) => $v < $cl['min_p02']));
   $kHeat = count(array_filter($fc['maxs'], fn($v) => $v > $cl['max_p98']));
-  if ($minMed < $cl['min_p02'] && $cl['min_mean'] - $minMed >= 5 && $kCold >= $need)
-    return ['type' => 'cold', 'value' => $minMed, 'normal' => $cl['min_mean'], 'k' => $kCold, 'n' => $n];
-  if ($maxMed > $cl['max_p98'] && $maxMed - $cl['max_mean'] >= 5 && $kHeat >= $need)
-    return ['type' => 'heat', 'value' => $maxMed, 'normal' => $cl['max_mean'], 'k' => $kHeat, 'n' => count($fc['maxs'])];
+  if ($minMed < $cl['min_p02'] && $cl['min_mean'] - $minMed >= 5 && $kCold >= mm_need($nMin))
+    return ['type' => 'cold', 'value' => $minMed, 'normal' => $cl['min_mean'], 'k' => $kCold, 'n' => $nMin];
+  if ($maxMed > $cl['max_p98'] && $maxMed - $cl['max_mean'] >= 5 && $kHeat >= mm_need($nMax))
+    return ['type' => 'heat', 'value' => $maxMed, 'normal' => $cl['max_mean'], 'k' => $kHeat, 'n' => $nMax];
   return null;
 }
 
@@ -131,6 +164,13 @@ function mm_app_url(): string { return 'https://odinelad.github.io/multimodel/';
 /** Send to one subscriber; drops subscriptions the push service reports as gone. */
 function mm_push(array $s, string $title, string $body, string $tag): int {
   $payload = json_encode(['title' => $title, 'body' => $body, 'tag' => $tag, 'url' => mm_app_url()], JSON_UNESCAPED_UNICODE);
+  // Web Push allows about 4 KB of encrypted payload: stay well below it. Shorten the body if needed, otherwise do not send.
+  if (strlen($payload) >= 3000) {
+    $over = strlen($payload) - 2900;
+    $body = mb_strcut($body, 0, max(0, strlen($body) - $over - 3), 'UTF-8') . '...';
+    $payload = json_encode(['title' => $title, 'body' => $body, 'tag' => $tag, 'url' => mm_app_url()], JSON_UNESCAPED_UNICODE);
+  }
+  if (!is_string($payload) || strlen($payload) >= 3000) { mm_log('push payload too large, not sent'); return 413; }
   try { $code = webpush_send($s, $payload, mm_vapid()); }
   catch (Throwable $e) { mm_log('push error: ' . $e->getMessage()); $code = 0; }
   $db = mm_db();
