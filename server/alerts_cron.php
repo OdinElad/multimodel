@@ -1,7 +1,7 @@
 <?php
 /**
- * MultiModel: runs every 30 minutes from cron. For every subscriber whose location is now between 20:00 and 20:59
- * local time and who was not checked today, checks tomorrow for unusual cold/heat and sends a notification if needed.
+ * MultiModel: runs every 30 minutes from cron. For every subscriber whose location is now between 20:00 and 21:59
+ * local time (20:xx first try, 21:xx retry) and who was not checked today, checks tomorrow for unusual cold/heat and sends a notification if needed.
  * CLI only. Options: --dry (evaluate and log, send nothing), --force (ignore the 20:00 window, for testing).
  */
 declare(strict_types=1);
@@ -36,6 +36,10 @@ if (($i = array_search('--probe', $argv, true)) !== false) {
     'clim' => $cl ? ['min_p02' => $cl['min_p02'] ?? null, 'max_p98' => $cl['max_p98'] ?? null] : null, 'result' => $res ?: 'normal']), "\n";
   exit;
 }
+// One run at a time: a slow run must not overlap with the next one (cron fires every 30 minutes).
+try { $lockFile = mm_data_dir() . '/cron.lock'; } catch (Throwable $e) { fwrite(STDERR, "storage unavailable\n"); exit(1); }
+$lock = fopen($lockFile, 'c');
+if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) { echo "another run is active, exiting\n"; exit(0); }
 $db = mm_db();
 // Retention: a subscription the app has not refreshed for 120 days is deleted (the app refreshes it at least every 7 days while it is opened).
 if (!$dry) {
@@ -47,21 +51,23 @@ $groups = []; $due = 0;
 foreach ($subs as $s) {
   try { $now = new DateTime('now', new DateTimeZone($s['tz'] ?: 'UTC')); } catch (Throwable $e) { $now = new DateTime('now', new DateTimeZone('UTC')); }
   $today = $now->format('Y-m-d');
-  if (!$force && ((int)$now->format('G') !== 20 || $s['last_checked'] === $today)) continue;
+  if (!$force && (!in_array((int)$now->format('G'), [20, 21], true) || $s['last_checked'] === $today)) continue; // 20:00 window, 21:00 is the retry window
   $due++;
   $groups[sprintf('%.1f,%.1f', $s['lat'], $s['lon'])][] = $s + ['_today' => $today];
 }
-$sent = 0; $checked = 0;
+$sent = 0; $checked = 0; $failed = 0;
 foreach ($groups as $key => $list) {
   $s0 = $list[0];
   $fc = mm_tomorrow((float)$s0['lat'], (float)$s0['lon']);
-  $res = null;
-  if ($fc) {
-    $cl = mm_climate((float)$s0['lat'], (float)$s0['lon'], $fc['date']);
-    if ($cl) $res = mm_evaluate($fc, $cl);
-    mm_log(sprintf('check %s %s: min %s max %s | clim min_p02 %.1f max_p98 %.1f -> %s', $key, $fc['date'],
-      json_encode($fc['mins']), json_encode($fc['maxs']), $cl['min_p02'] ?? NAN, $cl['max_p98'] ?? NAN, $res ? $res['type'] : 'normal'));
+  $cl = $fc ? mm_climate((float)$s0['lat'], (float)$s0['lon'], $fc['date']) : null;
+  if (!$fc || !$cl) { // not marked as checked: the next run this evening (20:xx or 21:xx local) tries again
+    $failed += count($list);
+    mm_log(sprintf('check %s: forecast or climate unavailable (%s), will retry', $key, $fc ? 'climate' : 'forecast'));
+    continue;
   }
+  $res = mm_evaluate($fc, $cl);
+  mm_log(sprintf('check %s %s: min %s max %s | clim min_p02 %.1f max_p98 %.1f -> %s', $key, $fc['date'],
+    json_encode($fc['mins']), json_encode($fc['maxs']), $cl['min_p02'] ?? NAN, $cl['max_p98'] ?? NAN, $res ? $res['type'] : 'normal'));
   foreach ($list as $s) {
     $checked++;
     if (!$dry) $db->prepare('UPDATE subs SET last_checked=? WHERE endpoint=?')->execute([$s['_today'], $s['endpoint']]);
@@ -73,5 +79,5 @@ foreach ($groups as $key => $list) {
     if ($code >= 200 && $code < 300) { $sent++; $db->prepare('UPDATE subs SET last_sent=? WHERE endpoint=?')->execute([$fc['date'], $s['endpoint']]); }
   }
 }
-$msg = sprintf('run: %d subscribers, %d due, %d checked, %d sent%s', count($subs), $due, $checked, $sent, $dry ? ' (dry)' : '');
+$msg = sprintf('run: %d subscribers, %d due, %d checked, %d failed (retry later), %d sent%s', count($subs), $due, $checked, $failed, $sent, $dry ? ' (dry)' : '');
 mm_log($msg); echo $msg, "\n";
