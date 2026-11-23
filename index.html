@@ -217,6 +217,14 @@ const L=['he','en','ar','ru','zh','ja'];
 const LANG_NAMES={he:'עברית',en:'English',ar:'العربية',ru:'Русский',zh:'中文',ja:'日本語'};
 const RTL={he:1,ar:1};
 const S={
+skillTitle:["מי המודל המדויק ביותר כאן", "Which model is most accurate here", "أي نموذج هو الأدق هنا", "Какая модель здесь точнее всего", "哪个模型在这里最准确", "ここで最も正確なモデル"],
+skillSub:["בדיקה של {d} הימים האחרונים במקום הזה: מה כל מודל חזה יום מראש, מול מה שקרה בפועל.", "A check of the last {d} days at this place: what each model forecast a day ahead, against what actually happened.", "فحص آخر {d} أيام في هذا المكان: ما توقعه كل نموذج قبل يوم مقارنة بما حدث فعلًا.", "Проверка за последние {d} дн. в этом месте: прогноз каждой модели за сутки против того, что было на самом деле.", "检查此地过去 {d} 天：每个模型提前一天的预报与实际情况对比。", "この場所の過去{d}日間を検証：各モデルの前日予報と実際の結果を比較。"],
+skillBest:["הכי מדויק כאן לאחרונה: {m}", "Most accurate here lately: {m}", "الأدق هنا مؤخرًا: {m}", "Точнее всего здесь в последнее время: {m}", "近期这里最准确：{m}", "最近ここで最も正確：{m}"],
+skillErr:["טעות ממוצעת בטמפרטורה: {v}", "Average temperature error: {v}", "متوسط خطأ درجة الحرارة: {v}", "Средняя ошибка температуры: {v}", "平均温度误差：{v}", "平均気温誤差：{v}"],
+skillWarm:["נוטה לחזות חם מדי בכ-{v}", "Tends to forecast about {v} too warm", "يميل إلى توقع حرارة أعلى بنحو {v}", "Обычно завышает примерно на {v}", "通常预报偏暖约 {v}", "約{v}高めに予報する傾向"],
+skillCold:["נוטה לחזות קר מדי בכ-{v}", "Tends to forecast about {v} too cold", "يميل إلى توقع حرارة أقل بنحو {v}", "Обычно занижает примерно на {v}", "通常预报偏冷约 {v}", "約{v}低めに予報する傾向"],
+skillNote:["\"מה שקרה בפועל\" הוא החציון של כל המודלים לאותה שעה אחרי מעשה. התוצאה מתעדכנת כל כמה שעות ויכולה להשתנות לפי עונה ומקום.", "\"What actually happened\" is the median of all models for that hour after the fact. Updated every few hours; it can change by season and place.", "\"ما حدث فعلًا\" هو وسيط جميع النماذج لتلك الساعة بعد وقوعها. يُحدَّث كل بضع ساعات وقد يتغير حسب الموسم والمكان.", "«Что было на самом деле» это медиана всех моделей за этот час задним числом. Обновляется каждые несколько часов и может меняться по сезону и месту.", "“实际情况”指事后所有模型在该小时的中位数。每隔数小时更新，可能随季节和地点变化。", "「実際の結果」は、その時刻についての全モデルの事後の中央値です。数時間ごとに更新され、季節や場所によって変わることがあります。"],
+skillNA:["אין כרגע מספיק נתונים לבדיקת דיוק במקום הזה.", "Not enough data yet to check accuracy at this place.", "لا توجد بيانات كافية حاليًا لفحص الدقة في هذا المكان.", "Пока недостаточно данных для проверки точности в этом месте.", "目前此地数据不足，无法检查准确度。", "この場所では精度を検証するデータがまだ不足しています。"],
 alertsOpt:["התראות על מזג אוויר חריג", "Unusual weather alerts", "تنبيهات الطقس غير الاعتيادي", "Уведомления о необычной погоде", "异常天气预警", "異常気象の通知"],
 alertsOptSub:["התראה בערב שלפני, בסביבות 20:00 לפי השעה במקום, כשצפוי קור או חום חריגים יחסית למקום ולעונה.", "A notification the evening before, around 20:00 local time, when unusual cold or heat for the place and season is expected.", "إشعار في المساء السابق قرابة الساعة 20:00 بالتوقيت المحلي، عند توقع برد أو حر غير اعتيادي بالنسبة للمكان والموسم.", "Уведомление накануне вечером, около 20:00 по местному времени, если ожидается необычный для места и сезона холод или жара.", "当预计出现相对于当地和季节的异常寒冷或炎热时，在前一天当地时间20:00左右发送通知。", "その場所と季節にしては異例の寒さや暑さが予想される場合、前日の現地時間20:00頃に通知します。"],
 alertsOn:["ההתראות פעילות עבור {p}", "Alerts are on for {p}", "التنبيهات مفعلة لـ {p}", "Уведомления включены: {p}", "已为{p}开启预警", "{p}の通知はオンです"],
@@ -381,6 +389,14 @@ c_unknown:['לא ידוע','Unknown','غير معروف','Нет данных','
 const L_EU=['fr','de','es','it','pt','nl','pl','uk'];
 Object.assign(LANG_NAMES,{fr:"Français",de:"Deutsch",es:"Español",it:"Italiano",pt:"Português",nl:"Nederlands",pl:"Polski",uk:"Українська"});
 const S_EU={
+skillTitle:["Quel modèle est le plus précis ici", "Welches Modell ist hier am genauesten", "Qué modelo es el más preciso aquí", "Quale modello è il più preciso qui", "Qual modelo é o mais preciso aqui", "Welk model is hier het nauwkeurigst", "Który model jest tu najdokładniejszy", "Яка модель тут найточніша"],
+skillSub:["Vérification des {d} derniers jours ici : la prévision de chaque modèle la veille, comparée à ce qui s'est réellement passé.", "Prüfung der letzten {d} Tage an diesem Ort: Vorhersage jedes Modells vom Vortag gegenüber dem tatsächlichen Wetter.", "Revisión de los últimos {d} días aquí: lo que cada modelo pronosticó un día antes frente a lo que realmente pasó.", "Verifica degli ultimi {d} giorni qui: la previsione di ogni modello del giorno prima, confrontata con ciò che è successo davvero.", "Verificação dos últimos {d} dias aqui: a previsão de cada modelo na véspera, comparada com o que realmente aconteceu.", "Controle van de afgelopen {d} dagen hier: de voorspelling van elk model een dag vooraf, tegenover wat er echt gebeurde.", "Sprawdzenie ostatnich {d} dni w tym miejscu: prognoza każdego modelu z dnia wcześniej w porównaniu z tym, co faktycznie się stało.", "Перевірка за останні {d} дн. тут: прогноз кожної моделі за добу проти того, що було насправді."],
+skillBest:["Le plus précis ici récemment : {m}", "Zuletzt hier am genauesten: {m}", "El más preciso aquí últimamente: {m}", "Il più preciso qui di recente: {m}", "O mais preciso aqui ultimamente: {m}", "Hier recent het nauwkeurigst: {m}", "Ostatnio najdokładniejszy tutaj: {m}", "Останнім часом найточніша тут: {m}"],
+skillErr:["Erreur moyenne de température : {v}", "Mittlerer Temperaturfehler: {v}", "Error medio de temperatura: {v}", "Errore medio di temperatura: {v}", "Erro médio de temperatura: {v}", "Gemiddelde temperatuurfout: {v}", "Średni błąd temperatury: {v}", "Середня похибка температури: {v}"],
+skillWarm:["A tendance à prévoir environ {v} trop chaud", "Sagt meist etwa {v} zu warm voraus", "Suele pronosticar unos {v} de más", "Tende a prevedere circa {v} di troppo", "Tende a prever cerca de {v} acima", "Voorspelt meestal ongeveer {v} te warm", "Zwykle zawyża o około {v}", "Зазвичай завищує приблизно на {v}"],
+skillCold:["A tendance à prévoir environ {v} trop froid", "Sagt meist etwa {v} zu kalt voraus", "Suele pronosticar unos {v} de menos", "Tende a prevedere circa {v} in meno", "Tende a prever cerca de {v} abaixo", "Voorspelt meestal ongeveer {v} te koud", "Zwykle zaniża o około {v}", "Зазвичай занижує приблизно на {v}"],
+skillNote:["« Ce qui s'est passé » est la médiane de tous les modèles pour cette heure, après coup. Mis à jour toutes les quelques heures ; peut varier selon la saison et le lieu.", "„Tatsächliches Wetter“ ist der Median aller Modelle für diese Stunde im Nachhinein. Wird alle paar Stunden aktualisiert und kann je nach Jahreszeit und Ort variieren.", "\"Lo que pasó\" es la mediana de todos los modelos para esa hora, a posteriori. Se actualiza cada pocas horas y puede variar según la estación y el lugar.", "\"Ciò che è successo\" è la mediana di tutti i modelli per quell'ora, a posteriori. Aggiornato ogni poche ore; può variare per stagione e luogo.", "\"O que aconteceu\" é a mediana de todos os modelos para essa hora, a posteriori. Atualizado a cada poucas horas; pode variar com a estação e o local.", "\"Wat er echt gebeurde\" is de mediaan van alle modellen voor dat uur, achteraf. Wordt elke paar uur bijgewerkt en kan per seizoen en plaats verschillen.", "„Co faktycznie się stało” to mediana wszystkich modeli dla tej godziny, po fakcie. Aktualizowane co kilka godzin; może się zmieniać zależnie od pory roku i miejsca.", "«Що було насправді» це медіана всіх моделей за цю годину заднім числом. Оновлюється кожні кілька годин і може змінюватися залежно від сезону та місця."],
+skillNA:["Pas encore assez de données pour vérifier la précision ici.", "Noch nicht genug Daten, um die Genauigkeit hier zu prüfen.", "Aún no hay datos suficientes para comprobar la precisión aquí.", "Non ci sono ancora dati sufficienti per verificare la precisione qui.", "Ainda não há dados suficientes para verificar a precisão aqui.", "Nog niet genoeg gegevens om de nauwkeurigheid hier te controleren.", "Za mało danych, by sprawdzić dokładność w tym miejscu.", "Поки що недостатньо даних, щоб перевірити точність тут."],
 alertsOpt:["Alertes météo inhabituelle", "Warnungen bei ungewöhnlichem Wetter", "Alertas de tiempo inusual", "Allerte meteo insolito", "Alertas de tempo invulgar", "Waarschuwingen voor ongewoon weer", "Ostrzeżenia o nietypowej pogodzie", "Сповіщення про незвичну погоду"],
 alertsOptSub:["Une notification la veille vers 20 h, heure locale, quand un froid ou une chaleur inhabituels pour le lieu et la saison sont prévus.", "Eine Benachrichtigung am Vorabend gegen 20:00 Uhr Ortszeit, wenn für Ort und Jahreszeit ungewöhnliche Kälte oder Hitze erwartet wird.", "Un aviso la noche anterior, hacia las 20:00 hora local, cuando se prevé frío o calor inusual para el lugar y la estación.", "Una notifica la sera prima, verso le 20:00 ora locale, quando è previsto freddo o caldo insolito per il luogo e la stagione.", "Uma notificação na véspera, por volta das 20:00 hora local, quando se prevê frio ou calor invulgar para o local e a estação.", "Een melding de avond ervoor, rond 20:00 lokale tijd, als er ongewone kou of hitte voor de plek en het seizoen wordt verwacht.", "Powiadomienie wieczorem dzień wcześniej, około 20:00 czasu lokalnego, gdy prognozowane jest zimno lub upał nietypowe dla miejsca i pory roku.", "Сповіщення напередодні ввечері, близько 20:00 за місцевим часом, якщо очікується незвичний для місця і сезону холод або спека."],
 alertsOn:["Alertes activées pour {p}", "Warnungen aktiv für {p}", "Alertas activadas para {p}", "Allerte attive per {p}", "Alertas ativos para {p}", "Waarschuwingen staan aan voor {p}", "Ostrzeżenia włączone: {p}", "Сповіщення увімкнено: {p}"],
@@ -822,6 +838,8 @@ function render(){
     ${nightNote?`<div class="rangeline" style="color:#fcd34d">${t('nightNote',{v:U.imp?t('range24',{a:4,b:7}):t('range24',{a:2,b:4})})}</div>`:''}
   </section>
 
+  <section class="card" id="skillCard">${state.skill===undefined?`<h2>${t('skillTitle')}</h2><p class="sub">${t('loading')}</p>`:skillHTML(state.skill)}</section>
+
   <section class="card">
     <div class="rainline"><div class="e">${rl[0]}</div><div><b>${rl[1]}</b><span>${rl[2]}</span></div></div>
   </section>
@@ -927,6 +945,60 @@ function hourly(P){
   return `<table><tr><th class="l">${t('hourH')}</th>${P.models.map(m=>`<th><span class="dot" style="background:${m.color}"></span> ${m.name}</th>`).join('')}<th>${t('mean')}</th></tr>${rows.join('')}</table>`;
 }
 
+// ===== מי המודל המדויק ביותר: בדיקה על 7 הימים האחרונים במקום הזה =====
+// כל מודל נבדק לפי התחזית שנתן יום מראש (previous_day1) מול מה שקרה בפועל.
+// "בפועל" = החציון של כל המודלים לאותה שעה אחרי מעשה (ניתוח עדכני), בשעות שכבר עברו.
+async function fetchSkill(p){
+  const key='mm_skill_'+p.lat.toFixed(1)+'_'+p.lon.toFixed(1);
+  const c=load(key);
+  if(c&&Date.now()-c.at<6*3600e3)return c.r;
+  const ids=MODELS.map(m=>m.id).join(',');
+  const u=`https://previous-runs-api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`+
+    `&hourly=temperature_2m,temperature_2m_previous_day1&models=${ids}&past_days=7&forecast_days=1&timezone=auto`;
+  try{
+    const r=await fetch(u);if(!r.ok)return null;
+    const res=skillCompute(await r.json());
+    if(res)store(key,{at:Date.now(),r:res});
+    return res;
+  }catch(e){return null}
+}
+function skillCompute(d){
+  const H=d&&d.hourly;if(!H||!H.time)return null;
+  const nowLocal=new Date(Date.now()+(d.utc_offset_seconds||0)*1000).toISOString().slice(0,13);
+  const ms=MODELS.map(m=>({m,a:pick(H,'temperature_2m',m.id),f:pick(H,'temperature_2m_previous_day1',m.id),e:[]}))
+    .filter(x=>x.a&&x.f);
+  if(ms.length<3)return null;
+  for(let i=0;i<H.time.length;i++){
+    if(H.time[i].slice(0,13)>=nowLocal)break;
+    const act=ms.map(x=>x.a[i]).filter(v=>v!=null);
+    if(act.length<3)continue;
+    const truth=med(act);
+    ms.forEach(x=>{const f=x.f[i];if(f!=null)x.e.push(f-truth)});
+  }
+  const out=ms.filter(x=>x.e.length>=48).map(x=>({id:x.m.id,mae:avg(x.e.map(Math.abs)),bias:avg(x.e),n:x.e.length}))
+    .sort((a,b)=>a.mae-b.mae);
+  return out.length>=3?{list:out,days:Math.round(Math.max(...out.map(x=>x.n))/24)}:null;
+}
+function skillHTML(s){
+  if(!s)return `<h2>${t('skillTitle')}</h2><p class="sub">${t('skillNA')}</p>`;
+  const top=MODELS.find(m=>m.id===s.list[0].id);
+  const worst=s.list[s.list.length-1].mae||1;
+  return `<h2>${t('skillTitle')}</h2>
+    <p class="sub">${t('skillSub',{d:s.days})}</p>
+    <div class="al green"><div style="font-size:22px">🏆</div><div><b>${t('skillBest',{m:top.name})}</b><span>${t('skillErr',{v:fDiff(s.list[0].mae)})}</span></div></div>
+    ${s.list.map((x,i)=>{const m=MODELS.find(y=>y.id===x.id);const b=Math.abs(x.bias)>=0.5?(x.bias>0?t('skillWarm',{v:fDiff(x.bias)}):t('skillCold',{v:fDiff(-x.bias)})):'';
+      return `<div class="qa"><div class="e">${i+1}</div><div><b><span class="dot" style="background:${m.color}"></span> ${m.name} <span dir="ltr">±${fDiff(x.mae)}</span></b>
+      <div class="bar"><i style="width:${Math.max(8,Math.round((1-x.mae/(worst*1.15))*100))}%;background:${m.color}"></i></div>
+      ${b?`<span class="t">${b}</span>`:''}</div></div>`}).join('')}
+    <p class="sub" style="margin-top:8px;font-size:11.5px">${t('skillNote')}</p>`;
+}
+async function loadSkill(p){
+  const el=$('#skillCard');if(!el)return;
+  const s=await fetchSkill(p);
+  state.skill=s;
+  if(state.place===p&&$('#skillCard'))$('#skillCard').innerHTML=skillHTML(s);
+}
+
 // ===== מיקום =====
 const norm=s=>(s||'').replace(/[֑-ׇ'"׳״\-\s()]/g,'').toLowerCase();
 const km=(a,b,c,d)=>{const R=6371,r=x=>x*Math.PI/180;const h=Math.sin(r(c-a)/2)**2+Math.cos(r(a))*Math.cos(r(c))*Math.sin(r(d-b)/2)**2;return 2*R*Math.asin(Math.sqrt(h))};
@@ -953,7 +1025,7 @@ function showBanner(html){const b=$('#banner');b.innerHTML=html;b.hidden=false}
 function hideBanner(){$('#banner').hidden=true}
 
 async function go(p){
-  state.place=p;state.obs=null;state.cached=false;store('mm_place',p);setLocUI(p);
+  state.place=p;state.obs=null;state.cached=false;state.skill=undefined;store('mm_place',p);setLocUI(p);
   $('#app').innerHTML=`<div class="loading"><div class="spin"></div>${t('loading')}</div>`;
   const obsP=fetchObs(p);
   try{
@@ -966,6 +1038,7 @@ async function go(p){
   }
   render();
   alertsSync();
+  loadSkill(p);
   const o=await obsP;
   if(o&&state.place===p){state.obs=o;render()}
 }
