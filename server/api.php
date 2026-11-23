@@ -5,7 +5,7 @@
  * Everywhere else (and fallback): NOAA Aviation Weather Center METAR (public, no key).
  * Results are cached for 10 minutes so the source APIs get very few requests.
  *
- * Diagnostics: open api.php?diag=1 in the browser after uploading.
+ * Diagnostics: run `php api.php diag` on the server (command line only; over HTTP ?diag returns 404).
  */
 declare(strict_types=1);
 header('Content-Type: application/json; charset=utf-8');
@@ -140,8 +140,10 @@ function metar_nearest(float $lat, float $lon): ?array {
   return ($best !== null && $best['dist_km'] <= 50) ? $best : null;
 }
 
-// ---------- diagnostics ----------
-if (isset($_GET['diag'])) {
+// ---------- diagnostics (command line only) ----------
+// Run on the server:  php api.php diag     Over HTTP the diagnostics do not exist (404).
+if (PHP_SAPI !== 'cli' && isset($_GET['diag'])) out(['ok' => false, 'error' => 'not_found'], 404);
+if (PHP_SAPI === 'cli' && ($argv[1] ?? '') === 'diag') {
   $r = ['php' => PHP_VERSION, 'curl' => function_exists('curl_init'), 'cache_writable' => $CACHE_OK, 'ims_token_set' => $IMS_TOKEN !== ''];
   if ($r['curl']) {
     [$c, , $e] = http_get('https://aviationweather.gov/api/data/metar?ids=LLBG&format=json');
