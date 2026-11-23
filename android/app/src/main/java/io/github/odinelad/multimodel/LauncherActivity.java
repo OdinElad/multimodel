@@ -20,6 +20,13 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.browser.customtabs.CustomTabsClient;
+
+import com.google.androidbrowserhelper.trusted.TwaLauncher;
+
+import java.util.Arrays;
+import java.util.List;
+
 
 
 public class LauncherActivity
@@ -40,6 +47,30 @@ public class LauncherActivity
         } else {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         }
+    }
+
+    /**
+     * Browsers that fully support Trusted Web Activities with notification delegation, so that
+     * notifications are shown as coming from this app (not from the website) and the permission
+     * prompt is the regular Android one. Some default browsers (for example Samsung Internet on
+     * Samsung phones) run TWAs without notification delegation, which shows a website permission
+     * prompt and delivers notifications through the browser instead of the app.
+     */
+    private static final List<String> PREFERRED_BROWSERS = Arrays.asList(
+            "com.android.chrome", "com.chrome.beta", "com.chrome.dev", "com.chrome.canary");
+
+    @Override
+    protected TwaLauncher createTwaLauncher() {
+        // Prefer an installed Chrome channel over the default browser. If none is installed
+        // (or it is disabled), fall back to the library's normal choice (the default browser).
+        String provider = null;
+        try {
+            provider = CustomTabsClient.getPackageName(this, PREFERRED_BROWSERS, true);
+        } catch (RuntimeException e) {
+            provider = null;
+        }
+        if (provider == null) return super.createTwaLauncher();
+        return new TwaLauncher(this, provider, getTaskId());
     }
 
     @Override
