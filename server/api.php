@@ -115,8 +115,10 @@ function ims_nearest(float $lat, float $lon, string $tok): ?array {
 
 // ---------- METAR (worldwide) ----------
 function metar_nearest(float $lat, float $lon): ?array {
-  $b = 0.7;
-  $bbox = sprintf('%.2f,%.2f,%.2f,%.2f', $lat - $b, $lon - $b, $lat + $b, $lon + $b);
+  // The query area is snapped to a 0.5 degree grid, so NOAA gets an area and never the user's own (rounded) position.
+  // Half-width 1.25 degrees keeps every station within the 50 km limit inside the box (up to about 63 degrees latitude).
+  $g = 0.5; $b = 1.25; $cLat = round($lat / $g) * $g; $cLon = round($lon / $g) * $g;
+  $bbox = sprintf('%.2f,%.2f,%.2f,%.2f', $cLat - $b, $cLon - $b, $cLat + $b, $cLon + $b);
   [$code, $body, $err] = http_get('https://aviationweather.gov/api/data/metar?format=json&bbox=' . $bbox);
   if ($code !== 200 && $code !== 204) { log_issue('METAR', "bbox $bbox failed: HTTP $code $err"); return null; }
   $j = json_decode($body, true);
