@@ -26,7 +26,7 @@ if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
 $raw = file_get_contents('php://input', false, null, 0, 8192);
 $in = json_decode((string)$raw, true);
 if (!is_array($in)) reply(['ok' => false, 'error' => 'bad_json'], 400);
-$db = mm_db();
+try { $db = mm_db(); } catch (Throwable $e) { reply(['ok' => false, 'error' => 'storage'], 503); } // reason is already in error_log
 $action = (string)($in['action'] ?? '');
 
 if ($action === 'subscribe') {

@@ -19,10 +19,11 @@ if (in_array($origin, $allowed, true)) { header('Access-Control-Allow-Origin: ' 
 $cfgFile = __DIR__ . '/config.php';
 $cfg = is_file($cfgFile) ? (require $cfgFile) : [];
 $IMS_TOKEN = is_array($cfg) ? trim((string)($cfg['ims_token'] ?? '')) : '';
-// Cache lives outside the public web folder when possible, so it is never reachable from the internet.
+// Cache lives outside the public web folder, so it is never reachable from the internet. No fallback inside public_html.
 $CACHE = dirname(__DIR__, 2) . '/multimodel-cache';
 if (!is_dir($CACHE)) { @mkdir($CACHE, 0700, true); }
-if (!is_dir($CACHE) || !is_writable($CACHE)) { $CACHE = __DIR__ . '/cache'; if (!is_dir($CACHE)) { @mkdir($CACHE, 0700, true); } }
+$CACHE_OK = is_dir($CACHE) && is_writable($CACHE);
+if (!$CACHE_OK) { error_log('multimodel: private cache folder missing or not writable: ' . $CACHE); }
 
 function out(array $a, int $code = 200): void { http_response_code($code); echo json_encode($a, JSON_UNESCAPED_UNICODE); exit; }
 
@@ -141,7 +142,7 @@ function metar_nearest(float $lat, float $lon): ?array {
 
 // ---------- diagnostics ----------
 if (isset($_GET['diag'])) {
-  $r = ['php' => PHP_VERSION, 'curl' => function_exists('curl_init'), 'cache_writable' => is_writable($CACHE), 'ims_token_set' => $IMS_TOKEN !== ''];
+  $r = ['php' => PHP_VERSION, 'curl' => function_exists('curl_init'), 'cache_writable' => $CACHE_OK, 'ims_token_set' => $IMS_TOKEN !== ''];
   if ($r['curl']) {
     [$c, , $e] = http_get('https://aviationweather.gov/api/data/metar?ids=LLBG&format=json');
     $r['aviationweather_http'] = $c; if ($e) $r['aviationweather_error'] = $e;
@@ -157,6 +158,8 @@ if (isset($_GET['diag'])) {
 }
 
 // ---------- main ----------
+// Without the private cache the 10 minute cache (which protects the IMS and NOAA rate limits) cannot work: refuse.
+if (!$CACHE_OK) out(['ok' => false, 'error' => 'storage'], 503);
 $lat = filter_var($_GET['lat'] ?? null, FILTER_VALIDATE_FLOAT);
 $lon = filter_var($_GET['lon'] ?? null, FILTER_VALIDATE_FLOAT);
 if (!is_float($lat) || !is_float($lon) || abs($lat) > 90 || abs($lon) > 180) out(['ok' => false, 'error' => 'bad_coords'], 400);

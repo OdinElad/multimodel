@@ -1,0 +1,31 @@
+# Defence in depth. The data and cache live OUTSIDE public_html (multimodel-data, multimodel-cache), so nothing
+# sensitive should ever be here. If something ever ends up under this folder, it must not be served.
+Options -Indexes
+
+# Data and secrets: database, logs, JSON files (the API answers come from PHP, not from .json files), config.
+<FilesMatch "(?i)(\.(sqlite|sqlite3|db|json|log|tmp|new|bak|pem|key)$|^config(\.example)?\.php$)">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Library and CLI-only scripts must not be called over HTTP. Only api.php and subscribe.php are public endpoints.
+<FilesMatch "(?i)^(alerts_lib|push_lib|alerts_cron|setup_keys)\.php$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# Folders named data or cache, if they exist here.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(data|cache)(/|$) - [F,L]
+</IfModule>

@@ -15,11 +15,17 @@ function mm_cfg(): array {
   if ($c === null) { $f = __DIR__ . '/config.php'; $c = is_file($f) ? (array)(require $f) : []; }
   return $c;
 }
+/** Private data folder, outside the public web root. No fallback inside public_html: if it is not usable, fail closed. */
 function mm_data_dir(): string {
-  $d = dirname(__DIR__, 2) . '/multimodel-data';
-  if (!is_dir($d)) @mkdir($d, 0700, true);
-  if (!is_dir($d) || !is_writable($d)) { $d = __DIR__ . '/data'; if (!is_dir($d)) @mkdir($d, 0700, true); }
-  return $d;
+  static $d = null;
+  if ($d !== null) return $d;
+  $p = dirname(__DIR__, 2) . '/multimodel-data';
+  if (!is_dir($p)) @mkdir($p, 0700, true);
+  if (!is_dir($p) || !is_writable($p)) {
+    error_log('multimodel: private data folder missing or not writable: ' . $p);
+    throw new RuntimeException('storage');
+  }
+  return $d = $p;
 }
 function mm_db(): PDO {
   static $db = null;
@@ -42,7 +48,7 @@ function mm_http_json(string $url, int $timeout = 20): ?array {
   return is_array($j) ? $j : null;
 }
 function mm_log(string $msg): void {
-  $f = mm_data_dir() . '/alerts.log';
+  try { $f = mm_data_dir() . '/alerts.log'; } catch (Throwable $e) { return; }
   $old = is_file($f) ? array_slice((array)@file($f), -499) : [];
   @file_put_contents($f, implode('', $old) . gmdate('Y-m-d H:i:s') . "Z $msg\n", LOCK_EX);
 }
