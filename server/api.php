@@ -184,6 +184,57 @@ function metar_candidates(float $lat, float $lon): array {
   return array_slice($out, 0, 4);
 }
 
+// ---------- model forecast at the station points ----------
+// For every candidate station: the median of the same 5 models the app shows, at the station's own position
+// and at the time of the measurement. The app compares it with the measurement to learn how far off the models
+// are in this area right now, and corrects the forecast for the user's place by that amount.
+// Only station positions are sent to Open-Meteo (never the user's). Cached 30 minutes per station.
+const OM_MODELS = 'ecmwf_ifs025,gfs_seamless,icon_seamless,ukmo_seamless,meteofrance_seamless';
+function add_model_temps(array $cands): array {
+  $need = [];
+  foreach ($cands as $i => $c) {
+    $ck = sprintf('om_%.3f_%.3f', $c['lat'], $c['lon']);
+    $hit = cache_get($ck, 1800);
+    if ($hit !== null) $cands[$i]['_om'] = $hit['v']; else $need[$i] = $ck;
+  }
+  if ($need) {
+    $idx = array_keys($need);
+    $la = implode(',', array_map(fn($i) => sprintf('%.4f', $cands[$i]['lat']), $idx));
+    $lo = implode(',', array_map(fn($i) => sprintf('%.4f', $cands[$i]['lon']), $idx));
+    [$code, $body, $err] = http_get("https://api.open-meteo.com/v1/forecast?latitude=$la&longitude=$lo&hourly=temperature_2m&models=" . OM_MODELS .
+      '&timezone=GMT&timeformat=unixtime&past_days=1&forecast_days=1', [], 15);
+    $j = $code === 200 ? json_decode($body, true) : null;
+    if (!is_array($j)) { log_issue('OM', "station model temps failed: HTTP $code $err"); }
+    else {
+      if (isset($j['hourly'])) $j = [$j]; // a single location comes back as an object, several as a list
+      foreach ($idx as $k => $i) {
+        $h = $j[$k]['hourly'] ?? null;
+        if (!is_array($h) || !isset($h['time'])) continue;
+        cache_put($need[$i], $h); $cands[$i]['_om'] = $h;
+      }
+    }
+  }
+  foreach ($cands as $i => $c) {
+    $h = $c['_om'] ?? null; unset($cands[$i]['_om']);
+    $cands[$i]['model_c'] = null;
+    if (!is_array($h)) continue;
+    $T = $h['time']; $n = count($T); $t = (int)$c['time']; $k = null;
+    for ($x = 0; $x < $n - 1; $x++) if ($T[$x] <= $t && $t <= $T[$x + 1]) { $k = $x; break; }
+    if ($k === null) continue;
+    $f = ($t - $T[$k]) / max(1, $T[$k + 1] - $T[$k]);
+    $vals = [];
+    foreach (explode(',', OM_MODELS) as $m) {
+      $a = $h['temperature_2m_' . $m] ?? null;
+      if (!is_array($a) || !is_numeric($a[$k] ?? null) || !is_numeric($a[$k + 1] ?? null)) continue;
+      $vals[] = $a[$k] + ($a[$k + 1] - $a[$k]) * $f;
+    }
+    if (count($vals) < 2) continue;
+    sort($vals); $m = count($vals);
+    $cands[$i]['model_c'] = round($m % 2 ? $vals[intdiv($m, 2)] : ($vals[$m / 2 - 1] + $vals[$m / 2]) / 2, 1);
+  }
+  return $cands;
+}
+
 // ---------- diagnostics (command line only) ----------
 // Run on the server:  php api.php diag     Over HTTP the diagnostics do not exist (404).
 if (PHP_SAPI !== 'cli' && isset($_GET['diag'])) out(['ok' => false, 'error' => 'not_found'], 404);
@@ -196,7 +247,7 @@ if (PHP_SAPI === 'cli' && ($argv[1] ?? '') === 'diag') {
     if ($IMS_TOKEN !== '') {
       [$c2, , $e2] = http_get('https://api.ims.gov.il/v1/envista/stations/178/data/latest', ['Authorization: ApiToken ' . $IMS_TOKEN]);
       $r['ims_http'] = $c2; if ($e2) $r['ims_error'] = $e2;
-      $r['ims_test_pardes_hanna'] = ims_candidates(32.47, 34.97, $IMS_TOKEN);
+      $r['ims_test_pardes_hanna'] = add_model_temps(ims_candidates(32.47, 34.97, $IMS_TOKEN));
       $r['user_coast_km_pardes_hanna'] = coast_km(32.47, 34.97);
     }
   }
@@ -211,7 +262,7 @@ $lat = filter_var($_GET['lat'] ?? null, FILTER_VALIDATE_FLOAT);
 $lon = filter_var($_GET['lon'] ?? null, FILTER_VALIDATE_FLOAT);
 if (!is_float($lat) || !is_float($lon) || abs($lat) > 90 || abs($lon) > 180) out(['ok' => false, 'error' => 'bad_coords'], 400);
 $lat = round($lat, 2); $lon = round($lon, 2);
-$key = 'obs2_' . str_replace(['.', '-'], ['p', 'm'], $lat . '_' . $lon);
+$key = 'obs3_' . str_replace(['.', '-'], ['p', 'm'], $lat . '_' . $lon);
 $hit = cache_get($key, 600);
 if ($hit !== null) out((array)$hit['v']);
 
@@ -219,6 +270,7 @@ $cands = [];
 $inIsrael = $lat >= 29.4 && $lat <= 33.4 && $lon >= 34.2 && $lon <= 35.95;
 if ($inIsrael && $IMS_TOKEN !== '') $cands = ims_candidates($lat, $lon, $IMS_TOKEN);
 if (!$cands) $cands = metar_candidates($lat, $lon);
+if ($cands) $cands = add_model_temps($cands);
 // The app chooses among the candidates (it knows the elevation of the user's place from the forecast).
 // The nearest candidate is also returned at the top level for older app versions.
 $v = $cands ? ['ok' => true] + $cands[0] + ['user_coast_km' => coast_km($lat, $lon), 'cands' => $cands] : ['ok' => false, 'error' => 'no_station'];

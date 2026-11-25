@@ -1,5 +1,5 @@
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.4';
+const APP_VER='2.0.5';
 const APP_BUILD='__BUILD__'; // replaced by build.py with the build date (UTC)
 // Android app version, passed by the launcher as ?apk=... (kept for this session, then removed from the address bar).
 const APK_VER=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('apk');

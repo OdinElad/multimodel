@@ -47,7 +47,6 @@ const rU=()=>U.imp?'in':t('mm');
 const cR=m=>U.imp?m/25.4:m;
 const nR=m=>U.imp?Math.round(m/25.4*100)/100:r1(m);
 const fR=m=>nR(m)+' '+rU();
-const fH=m=>U.imp?Math.round(m*3.28084)+' ft':Math.round(m)+' '+t('mUnit');
 const fDist=k=>U.imp?r1(k*0.621371)+' mi':r1(k)+' '+t('km');
 const tUnit=()=>U.imp?'°F':'°C';
 function fmtH(iso){const h=+iso.slice(11,13),m=iso.slice(14,16);if(!U.imp)return iso.slice(11,16);return (h%12||12)+(m!=='00'?':'+m:'')+(h<12?' AM':' PM')}
@@ -212,10 +211,10 @@ function render(){
   const ag=agree(today);
   const rl=rainLine(P),qa=practical(P);
   const hrNow=+H.time[ni].slice(11,13);
-  // A station is used as the main temperature only if it represents this place (distance, sea, elevation). See pickStation in calc.js.
-  const ps=obs?pickStation(obs.cands,obs.user_coast_km,typeof data.elevation==='number'?data.elevation:null):{best:null,near:null};
-  const st=ps.best,stNear=!st?ps.near:null;
-  const nightNote=!st&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
+  // Estimate for this place: the models' median corrected by how far off the models are at nearby stations right now (calc.js obsEstimate).
+  const est=obs?obsEstimate(nowT,obs.cands,obs.user_coast_km,typeof data.elevation==='number'?data.elevation:null):null;
+  const estSrc=est?[...new Set(obs.cands.filter(c=>Number.isFinite(c.model_c)).map(c=>c.source))]:[];
+  const nightNote=!est&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
 
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
@@ -228,25 +227,20 @@ function render(){
   const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
-  const bigT=st?st.temp_c:nowT;
-  const srcName=o=>o.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)';
-  const whyTxt=w=>w==='coastSt'?t('whyCoastSt'):w==='coastIn'?t('whyCoastIn'):w==='elev'?t('whyElev',{h:fH(Math.abs(ps.de||0))}):t('whyFar');
-  const nearLine=stNear?`<div class="updated" style="color:#fcd34d">ℹ️ ${esc(t('stNotRep',{s:stNear.name,d:fDist(stNear.dist_km),v:fT1(stNear.temp_c),why:whyTxt(ps.why)}))}</div>
-          <div class="updated">${t('srcLine',{s:srcName(stNear)})}</div>
-          ${stNear.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}`:'';
+  const bigT=est?est.value:nowT;
+  const srcName=x=>x==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)';
   const html=`
   ${state.cached?`<div class="err" style="margin-bottom:14px">${t('cached')}</div>`:''}
   <section class="card">
     <div class="hero">
       <div>
         <div class="place">📍 ${esc(place.name)}</div>
-        ${st?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:st.name,d:fDist(st.dist_km),m:st.age}))}</div>
-          <div class="updated">${t('srcLine',{s:srcName(st)})}</div>
-          ${st.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
+        ${est?`<div class="updated" style="color:#6ee7a0">✅ ${t('estLine')}</div>
+          <div class="updated">${t('srcLine',{s:estSrc.map(srcName).join(', ')})}</div>
+          ${estSrc.includes('IMS')?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
         :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
-        ${nearLine}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
         <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>

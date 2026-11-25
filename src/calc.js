@@ -40,30 +40,30 @@ function dayCounts(per){
   };
 }
 
-// Which observation station (if any) represents the user's place. Distance alone is not enough: a coastal station
-// a few km away can be several degrees warmer at night than a town inland. A station counts only if it is
-// within 15 km, at a similar distance from the sea (when known) and at a similar elevation (when known).
-// cands: [{dist_km, coast_km, elev, ...}], userCoast: km from the sea or null, userElev: metres or null.
-// Returns {best: representative candidate or null, near: nearest candidate, why: why `near` was rejected}.
-const REP={maxKm:15,maxCoastDiff:3,maxElevDiff:100};
-function stationFit(c,userCoast,userElev){
-  if(!(c.dist_km<=REP.maxKm))return {ok:false,why:'far'};
-  if(c.coast_km!=null&&userCoast!=null){
-    const dc=c.coast_km-userCoast;
-    // both well inland (over 25 km from the sea): the sea no longer makes the difference
-    if(!(c.coast_km>25&&userCoast>25)&&Math.abs(dc)>REP.maxCoastDiff)return {ok:false,why:dc<0?'coastSt':'coastIn',dc};
+// Current temperature estimate for the user's place, corrected by nearby measurements.
+// For each nearby station the server gives the measurement (temp_c) and the models' median at the station
+// at the same time (model_c). Their difference is how far off the models are in this area right now
+// (for example a clear night that cools faster than the models think). The differences are averaged with weights
+// that favour stations that are close and in a similar setting (distance from the sea, elevation), and the
+// average is added to the models' median for the user's place. The result is an estimate, not a measurement.
+// Returns {value, corr, n} or null when no station is similar enough to learn from.
+const EST={maxKm:25,minSim:0.25,maxCorr:8};
+function similarity(c,userCoast,userElev){
+  let s=1;
+  if(c.coast_km!=null&&userCoast!=null&&!(c.coast_km>25&&userCoast>25))s*=Math.exp(-Math.abs(c.coast_km-userCoast)/3);
+  if(c.elev!=null&&userElev!=null)s*=Math.exp(-Math.abs(c.elev-userElev)/100);
+  return s;
+}
+function obsEstimate(modelNow,cands,userCoast,userElev){
+  if(typeof modelNow!=='number'||!Number.isFinite(modelNow))return null;
+  const list=(cands||[]).filter(c=>c&&Number.isFinite(c.temp_c)&&Number.isFinite(c.model_c)&&Number.isFinite(c.dist_km)&&c.dist_km<=EST.maxKm);
+  let ws=0,sum=0,best=0,n=0;
+  for(const c of list){
+    const sim=similarity(c,userCoast,userElev);best=Math.max(best,sim);
+    const w=sim/(c.dist_km*c.dist_km+4);ws+=w;sum+=w*(c.temp_c-c.model_c);n++;
   }
-  if(c.elev!=null&&userElev!=null&&Math.abs(c.elev-userElev)>REP.maxElevDiff)return {ok:false,why:'elev',de:c.elev-userElev};
-  const score=c.dist_km+2*(c.coast_km!=null&&userCoast!=null?Math.abs(c.coast_km-userCoast):0)+(c.elev!=null&&userElev!=null?Math.abs(c.elev-userElev)/25:0);
-  return {ok:true,score};
+  if(!n||best<EST.minSim||!(ws>0))return null;
+  const corr=Math.max(-EST.maxCorr,Math.min(EST.maxCorr,sum/ws));
+  return {value:modelNow+corr,corr,n};
 }
-function pickStation(cands,userCoast,userElev){
-  const list=(cands||[]).filter(c=>c&&typeof c.temp_c==='number'&&Number.isFinite(c.dist_km));
-  if(!list.length)return {best:null,near:null,why:null};
-  const near=list.reduce((a,b)=>b.dist_km<a.dist_km?b:a);
-  let best=null,bs=Infinity;
-  for(const c of list){const f=stationFit(c,userCoast,userElev);if(f.ok&&f.score<bs){bs=f.score;best=c}}
-  const nf=stationFit(near,userCoast,userElev);
-  return {best,near,why:nf.ok?null:nf.why,de:nf.de};
-}
-if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts,pickStation,REP};
+if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts,obsEstimate,EST};

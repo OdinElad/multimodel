@@ -1,6 +1,6 @@
 // Run: node tests/calc.test.js   (no dependencies)
 const assert = require('assert');
-const { avg, med, needFor, majority, consensus, dayCounts, pickStation } = require('../src/calc.js');
+const { avg, med, needFor, majority, consensus, dayCounts, obsEstimate } = require('../src/calc.js');
 let failed = 0;
 function test(name, fn) { try { fn(); console.log('ok   ' + name); } catch (e) { failed++; console.log('FAIL ' + name + '\n     ' + e.message); } }
 
@@ -63,28 +63,32 @@ test('consensus ignores missing values in the middle', () => {
   const c = consensus([10, null, 10, 10, 10, 30]); assert.deepStrictEqual(c.out, [false, false, false, false, false, true]); assert.strictEqual(c.med, 10);
 });
 
-// Pardes Hanna (about 8 km from the sea, about 40 m) with Hadera Port (on the coast) as the nearest station.
-const hadera = { name: 'Hadera Port', dist_km: 6.4, coast_km: 0.3, elev: 5, temp_c: 20 };
-test('coastal station does not represent an inland town', () => {
-  const r = pickStation([hadera], 8.2, 40); assert.strictEqual(r.best, null); assert.strictEqual(r.near, hadera); assert.strictEqual(r.why, 'coastSt');
+// Pardes Hanna (8.2 km from the sea, about 40 m), real readings from 25.11.2026 20:50. model_c values are examples.
+const ph = [
+  { name: 'Hadera Port', dist_km: 8.3, coast_km: 0.3, elev: 0, temp_c: 20.3, model_c: 19.5 },
+  { name: 'En Hahoresh', dist_km: 9.6, coast_km: 7.1, elev: 12, temp_c: 12.2, model_c: 17.2 },
+  { name: 'Zikhron Yaaqov', dist_km: 11.5, coast_km: 4.4, elev: 174, temp_c: 17.1, model_c: 16.8 },
+  { name: 'Galed', dist_km: 13.6, coast_km: 15.6, elev: 181, temp_c: 16.1, model_c: 15.9 },
+];
+test('clear night: inland stations colder than the models pull the estimate down', () => {
+  const r = obsEstimate(18, ph, 8.2, 40); assert.ok(r); assert.ok(r.value < 16 && r.value > 12, 'value ' + r.value); assert.strictEqual(r.n, 4);
 });
-test('a farther station in a similar setting is preferred', () => {
-  const inland = { name: 'Inland', dist_km: 9, coast_km: 7, elev: 60, temp_c: 16 };
-  const r = pickStation([hadera, inland], 8.2, 40); assert.strictEqual(r.best, inland); assert.strictEqual(r.why, 'coastSt');
+test('coastal station alone is not similar enough', () => {
+  assert.strictEqual(obsEstimate(18, [ph[0]], 8.2, 40), null);
 });
-test('nearby station in the same setting is used', () => {
-  const r = pickStation([{ dist_km: 3, coast_km: 1, elev: 10, temp_c: 18 }], 1.3, 20); assert.ok(r.best); assert.strictEqual(r.why, null);
+test('no model value at the station: ignored', () => {
+  assert.strictEqual(obsEstimate(18, [{ dist_km: 3, coast_km: 8, elev: 40, temp_c: 10, model_c: null }], 8.2, 40), null);
 });
-test('large elevation difference is rejected', () => {
-  const r = pickStation([{ dist_km: 8, coast_km: 50, elev: 780, temp_c: 9 }], 45, 300); assert.strictEqual(r.best, null); assert.strictEqual(r.why, 'elev');
+test('station at the place itself dominates', () => {
+  const r = obsEstimate(18, [{ dist_km: 0.5, coast_km: 8, elev: 40, temp_c: 15, model_c: 18 }, ph[2]], 8.2, 40);
+  assert.ok(Math.abs(r.value - 15) < 0.3, 'value ' + r.value);
 });
-test('both far inland: sea distance is ignored', () => {
-  const r = pickStation([{ dist_km: 8, coast_km: 40, elev: 290, temp_c: 9 }], 45, 300); assert.ok(r.best);
+test('correction is capped', () => {
+  assert.strictEqual(obsEstimate(18, [{ dist_km: 2, coast_km: 8, elev: 40, temp_c: 0, model_c: 20 }], 8.2, 40).corr, -8);
 });
-test('unknown coast and elevation (METAR abroad): distance decides', () => {
-  assert.ok(pickStation([{ dist_km: 12, coast_km: null, elev: null, temp_c: 5 }], null, null).best);
-  assert.strictEqual(pickStation([{ dist_km: 20, coast_km: null, elev: null, temp_c: 5 }], null, null).why, 'far');
+test('unknown coast and elevation abroad: distance only', () => {
+  const r = obsEstimate(5, [{ dist_km: 12, coast_km: null, elev: null, temp_c: 3, model_c: 4 }], null, null); assert.strictEqual(r.value, 4);
 });
-test('no candidates', () => { const r = pickStation([], 1, 1); assert.strictEqual(r.best, null); assert.strictEqual(r.near, null); });
+test('missing model median', () => { assert.strictEqual(obsEstimate(null, ph, 8.2, 40), null); });
 
 if (failed) { console.log(failed + ' test(s) failed'); process.exit(1); } else console.log('all calc tests passed');
