@@ -47,6 +47,7 @@ const rU=()=>U.imp?'in':t('mm');
 const cR=m=>U.imp?m/25.4:m;
 const nR=m=>U.imp?Math.round(m/25.4*100)/100:r1(m);
 const fR=m=>nR(m)+' '+rU();
+const fH=m=>U.imp?Math.round(m*3.28084)+' ft':Math.round(m)+' '+t('mUnit');
 const fDist=k=>U.imp?r1(k*0.621371)+' mi':r1(k)+' '+t('km');
 const tUnit=()=>U.imp?'°F':'°C';
 function fmtH(iso){const h=+iso.slice(11,13),m=iso.slice(14,16);if(!U.imp)return iso.slice(11,16);return (h%12||12)+(m!=='00'?':'+m:'')+(h<12?' AM':' PM')}
@@ -92,10 +93,13 @@ async function fetchObs(p){
     const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),7000);
     const r=await fetch(`${OBS_API}?lat=${q2(p.lat)}&lon=${q2(p.lon)}`,{signal:ac.signal});clearTimeout(tm);
     if(!r.ok)return null;const j=await r.json();
-    if(!j||!j.ok||typeof j.temp_c!=='number')return null;
-    const age=Math.round((Date.now()/1000-j.time)/60);
-    if(j.dist_km>25||age>120||age<-10)return null;
-    j.age=Math.max(0,age);return j;
+    if(!j||!j.ok)return null;
+    // Candidates (new server) or the single nearest station (older server). Each one gets its age in minutes.
+    const now=Date.now()/1000;
+    const cands=(Array.isArray(j.cands)?j.cands:[j]).filter(c=>c&&typeof c.temp_c==='number').map(c=>({...c,age:Math.max(0,Math.round((now-c.time)/60)),_age:Math.round((now-c.time)/60)}))
+      .filter(c=>c.dist_km<=25&&c._age<=120&&c._age>=-10);
+    if(!cands.length)return null;
+    return {cands,user_coast_km:typeof j.user_coast_km==='number'?j.user_coast_km:null};
   }catch(e){return null}
 }
 
@@ -208,7 +212,10 @@ function render(){
   const ag=agree(today);
   const rl=rainLine(P),qa=practical(P);
   const hrNow=+H.time[ni].slice(11,13);
-  const nightNote=!obs&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
+  // A station is used as the main temperature only if it represents this place (distance, sea, elevation). See pickStation in calc.js.
+  const ps=obs?pickStation(obs.cands,obs.user_coast_km,typeof data.elevation==='number'?data.elevation:null):{best:null,near:null};
+  const st=ps.best,stNear=!st?ps.near:null;
+  const nightNote=!st&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
 
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
@@ -221,19 +228,25 @@ function render(){
   const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
-  const bigT=obs?obs.temp_c:nowT;
+  const bigT=st?st.temp_c:nowT;
+  const srcName=o=>o.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)';
+  const whyTxt=w=>w==='coastSt'?t('whyCoastSt'):w==='coastIn'?t('whyCoastIn'):w==='elev'?t('whyElev',{h:fH(Math.abs(ps.de||0))}):t('whyFar');
+  const nearLine=stNear?`<div class="updated" style="color:#fcd34d">ℹ️ ${esc(t('stNotRep',{s:stNear.name,d:fDist(stNear.dist_km),v:fT1(stNear.temp_c),why:whyTxt(ps.why)}))}</div>
+          <div class="updated">${t('srcLine',{s:srcName(stNear)})}</div>
+          ${stNear.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}`:'';
   const html=`
   ${state.cached?`<div class="err" style="margin-bottom:14px">${t('cached')}</div>`:''}
   <section class="card">
     <div class="hero">
       <div>
         <div class="place">📍 ${esc(place.name)}</div>
-        ${obs?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:obs.name,d:fDist(obs.dist_km),m:obs.age}))}</div>
-          <div class="updated">${t('srcLine',{s:obs.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)'})}</div>
-          ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
+        ${st?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:st.name,d:fDist(st.dist_km),m:st.age}))}</div>
+          <div class="updated">${t('srcLine',{s:srcName(st)})}</div>
+          ${st.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
         :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
+        ${nearLine}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
         <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>
@@ -612,6 +625,7 @@ function openSettings(){
   $('#selLang').innerHTML=`<option value="auto">${t('langAuto')}</option>`+L.map(l=>`<option value="${l}">${LANG_NAMES[l]}</option>`).join('');
   $('#selUnits').innerHTML=`<option value="auto">${t('unitsAuto')}</option><option value="metric">${t('metric')}</option><option value="imperial">${t('imperial')}</option>`;
   $('#selLang').value=pl;$('#selUnits').value=pu;
+  $('#aboutBox').innerHTML=aboutHTML();
   $('#ovS').classList.add('show');alertsUI();
 }
 function closeSettings(){$('#ovS').classList.remove('show')}

@@ -16,6 +16,8 @@
 package io.github.odinelad.multimodel;
 
 import android.content.pm.ActivityInfo;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -77,9 +79,14 @@ public class LauncherActivity
     protected Uri getLaunchingUrl() {
         // Get the original launch Url.
         Uri uri = super.getLaunchingUrl();
-
-        
-
+        // Tell the web app which Android app version opened it, so Settings > About can show it.
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            long code = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P ? pi.getLongVersionCode() : pi.versionCode;
+            uri = uri.buildUpon().appendQueryParameter("apk", pi.versionName + " (" + code + ")").build();
+        } catch (PackageManager.NameNotFoundException | RuntimeException e) {
+            // Without the version the app still opens normally.
+        }
         return uri;
     }
 }

@@ -1,6 +1,6 @@
 // Run: node tests/calc.test.js   (no dependencies)
 const assert = require('assert');
-const { avg, med, needFor, majority, consensus, dayCounts } = require('../src/calc.js');
+const { avg, med, needFor, majority, consensus, dayCounts, pickStation } = require('../src/calc.js');
 let failed = 0;
 function test(name, fn) { try { fn(); console.log('ok   ' + name); } catch (e) { failed++; console.log('FAIL ' + name + '\n     ' + e.message); } }
 
@@ -62,5 +62,29 @@ test('consensus with one or two models never filters', () => {
 test('consensus ignores missing values in the middle', () => {
   const c = consensus([10, null, 10, 10, 10, 30]); assert.deepStrictEqual(c.out, [false, false, false, false, false, true]); assert.strictEqual(c.med, 10);
 });
+
+// Pardes Hanna (about 8 km from the sea, about 40 m) with Hadera Port (on the coast) as the nearest station.
+const hadera = { name: 'Hadera Port', dist_km: 6.4, coast_km: 0.3, elev: 5, temp_c: 20 };
+test('coastal station does not represent an inland town', () => {
+  const r = pickStation([hadera], 8.2, 40); assert.strictEqual(r.best, null); assert.strictEqual(r.near, hadera); assert.strictEqual(r.why, 'coastSt');
+});
+test('a farther station in a similar setting is preferred', () => {
+  const inland = { name: 'Inland', dist_km: 9, coast_km: 7, elev: 60, temp_c: 16 };
+  const r = pickStation([hadera, inland], 8.2, 40); assert.strictEqual(r.best, inland); assert.strictEqual(r.why, 'coastSt');
+});
+test('nearby station in the same setting is used', () => {
+  const r = pickStation([{ dist_km: 3, coast_km: 1, elev: 10, temp_c: 18 }], 1.3, 20); assert.ok(r.best); assert.strictEqual(r.why, null);
+});
+test('large elevation difference is rejected', () => {
+  const r = pickStation([{ dist_km: 8, coast_km: 50, elev: 780, temp_c: 9 }], 45, 300); assert.strictEqual(r.best, null); assert.strictEqual(r.why, 'elev');
+});
+test('both far inland: sea distance is ignored', () => {
+  const r = pickStation([{ dist_km: 8, coast_km: 40, elev: 290, temp_c: 9 }], 45, 300); assert.ok(r.best);
+});
+test('unknown coast and elevation (METAR abroad): distance decides', () => {
+  assert.ok(pickStation([{ dist_km: 12, coast_km: null, elev: null, temp_c: 5 }], null, null).best);
+  assert.strictEqual(pickStation([{ dist_km: 20, coast_km: null, elev: null, temp_c: 5 }], null, null).why, 'far');
+});
+test('no candidates', () => { const r = pickStation([], 1, 1); assert.strictEqual(r.best, null); assert.strictEqual(r.near, null); });
 
 if (failed) { console.log(failed + ' test(s) failed'); process.exit(1); } else console.log('all calc tests passed');

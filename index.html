@@ -225,6 +225,7 @@ table.stg th small{color:var(--mut);font-weight:400}
 
 /* ===== v2: update banner ===== */
 .upd{position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:60;display:flex;gap:12px;align-items:center;background:#111a30f2;border:1px solid var(--acc);border-radius:14px;padding:10px 14px;box-shadow:0 10px 30px #0008;font-size:14px;max-width:92vw}
+.aboutBox{border-top:1px solid var(--line);padding-top:12px;margin-top:4px;font-size:12.5px;line-height:1.6}.aboutBox b{color:var(--txt);font-size:14px}
 </style>
 </head>
 <body>
@@ -275,6 +276,7 @@ table.stg th small{color:var(--mut);font-weight:400}
         <div id="alertsMsg" class="amsg"></div>
         <button class="btn" id="alertsTest" data-i18n="testBtn" hidden></button>
       </div>
+      <div class="fld aboutBox" id="aboutBox"></div>
       <button class="btn pri" id="doneS" data-i18n="sDone" style="width:100%;margin-top:6px"></button>
     </div>
   </div>
@@ -688,6 +690,17 @@ sDone:["אישור", "OK", "موافق", "ОК", "确定", "OK", "OK", "OK", "Ac
 aOffPending:["ההתראות כובו במכשיר. מחיקת הנתונים מהשרת תושלם כשיהיה חיבור.", "Alerts are off on this device. Deleting your data from the server will finish when you are back online.", "تم إيقاف التنبيهات على هذا الجهاز. سيكتمل حذف بياناتك من الخادم عند توفر الاتصال.", "Уведомления на этом устройстве отключены. Удаление данных с сервера завершится, когда появится соединение.", "此设备上的预警已关闭。联网后将完成从服务器删除您的数据。", "このデバイスでは警報をオフにしました。オンラインに戻ると、サーバー上のデータ削除が完了します。", "Les alertes sont désactivées sur cet appareil. La suppression de vos données sur le serveur se terminera dès que la connexion sera rétablie.", "Die Warnungen sind auf diesem Gerät aus. Das Löschen Ihrer Daten auf dem Server wird abgeschlossen, sobald wieder eine Verbindung besteht.", "Las alertas están desactivadas en este dispositivo. El borrado de tus datos del servidor se completará cuando haya conexión.", "Gli avvisi sono disattivati su questo dispositivo. L'eliminazione dei tuoi dati dal server verrà completata quando tornerà la connessione.", "Os alertas estão desativados neste dispositivo. A eliminação dos seus dados no servidor será concluída quando houver ligação.", "Waarschuwingen staan uit op dit apparaat. Het verwijderen van je gegevens op de server wordt afgerond zodra je weer verbinding hebt.", "Ostrzeżenia są wyłączone na tym urządzeniu. Usunięcie danych z serwera zakończy się, gdy pojawi się połączenie.", "Попередження на цьому пристрої вимкнено. Видалення даних із сервера завершиться, коли з'явиться з'єднання."],
 highDisagree:["אי־הסכמה גבוהה בין המודלים", "High disagreement between the models", "تباين كبير بين النماذج", "Модели сильно расходятся", "模型之间分歧较大", "モデル間の食い違いが大きい", "Fort désaccord entre les modèles", "Starke Uneinigkeit zwischen den Modellen", "Gran desacuerdo entre los modelos", "Forte disaccordo tra i modelli", "Grande desacordo entre os modelos", "Grote onenigheid tussen de modellen", "Duże rozbieżności między modelami", "Моделі сильно розходяться"],
 confHint:["מדד עזר להסכמה בין המודלים, לא הסתברות.", "A helper index of agreement between the models, not a probability.", "مؤشر مساعد لمدى اتفاق النماذج، وليس احتمالًا.", "Вспомогательный показатель согласия моделей, а не вероятность.", "这是反映模型一致程度的辅助指标，并非概率。", "モデル間の一致度を示す参考指標であり、確率ではありません。", "Indice d'appoint de l'accord entre les modèles, pas une probabilité.", "Ein Hilfswert für die Übereinstimmung der Modelle, keine Wahrscheinlichkeit.", "Índice auxiliar de coincidencia entre los modelos, no una probabilidad.", "Indice ausiliario dell'accordo tra i modelli, non una probabilità.", "Índice auxiliar de concordância entre os modelos, não uma probabilidade.", "Hulpindex voor de overeenstemming tussen de modellen, geen kans.", "Pomocniczy wskaźnik zgodności modeli, a nie prawdopodobieństwo.", "Допоміжний показник згоди моделей, а не ймовірність."],
+stNotRep:["תחנת {s} ({d}) מדדה {v}, אבל היא לא מייצגת את המקום הזה ({why}). לכן המספר הראשי הוא חציון המודלים.", "{s} station ({d}) measured {v}, but it does not represent this place ({why}). So the main number is the median of the models.", "محطة {s} ({d}) سجّلت {v}، لكنها لا تمثل هذا المكان ({why}). لذلك الرقم الرئيسي هو وسيط النماذج.", "Станция {s} ({d}) показала {v}, но она не отражает это место ({why}). Поэтому главное число это медиана моделей.", "{s}站（{d}）测得 {v}，但它不能代表此地（{why}）。因此主要数字为各模型的中位数。", "{s}観測所（{d}）の実測は {v} ですが、この場所を代表していません（{why}）。そのため大きな数字はモデルの中央値です。", "La station {s} ({d}) a mesuré {v}, mais elle ne représente pas ce lieu ({why}). Le chiffre principal est donc la médiane des modèles.", "Die Station {s} ({d}) hat {v} gemessen, ist aber für diesen Ort nicht repräsentativ ({why}). Die Hauptzahl ist daher der Median der Modelle.", "La estación {s} ({d}) midió {v}, pero no representa este lugar ({why}). Por eso el número principal es la mediana de los modelos.", "La stazione {s} ({d}) ha misurato {v}, ma non rappresenta questo luogo ({why}). Il numero principale è quindi la mediana dei modelli.", "A estação {s} ({d}) mediu {v}, mas não representa este local ({why}). Por isso o número principal é a mediana dos modelos.", "Station {s} ({d}) mat {v}, maar is niet representatief voor deze plek ({why}). Het hoofdgetal is daarom de mediaan van de modellen.", "Stacja {s} ({d}) zmierzyła {v}, ale nie odzwierciedla tego miejsca ({why}). Dlatego główna liczba to mediana modeli.", "Станція {s} ({d}) виміряла {v}, але вона не відображає це місце ({why}). Тому головне число це медіана моделей."],
+whyCoastSt:["התחנה קרובה לים הרבה יותר מהמקום", "the station is much closer to the sea than this place", "المحطة أقرب بكثير إلى البحر من هذا المكان", "станция намного ближе к морю, чем это место", "该站比此地离海近得多", "観測所はこの場所よりずっと海に近い", "la station est bien plus proche de la mer que ce lieu", "die Station liegt viel näher am Meer als dieser Ort", "la estación está mucho más cerca del mar que este lugar", "la stazione è molto più vicina al mare di questo luogo", "a estação fica muito mais perto do mar do que este local", "het station ligt veel dichter bij zee dan deze plek", "stacja jest znacznie bliżej morza niż to miejsce", "станція значно ближче до моря, ніж це місце"],
+whyCoastIn:["התחנה רחוקה מהים הרבה יותר מהמקום", "the station is much farther from the sea than this place", "المحطة أبعد بكثير عن البحر من هذا المكان", "станция намного дальше от моря, чем это место", "该站比此地离海远得多", "観測所はこの場所よりずっと海から遠い", "la station est bien plus loin de la mer que ce lieu", "die Station liegt viel weiter vom Meer entfernt als dieser Ort", "la estación está mucho más lejos del mar que este lugar", "la stazione è molto più lontana dal mare di questo luogo", "a estação fica muito mais longe do mar do que este local", "het station ligt veel verder van zee dan deze plek", "stacja jest znacznie dalej od morza niż to miejsce", "станція значно далі від моря, ніж це місце"],
+whyElev:["הפרש גובה של {h}", "an elevation difference of {h}", "فرق ارتفاع قدره {h}", "разница высот {h}", "海拔相差 {h}", "標高差 {h}", "une différence d'altitude de {h}", "ein Höhenunterschied von {h}", "una diferencia de altitud de {h}", "una differenza di quota di {h}", "uma diferença de altitude de {h}", "een hoogteverschil van {h}", "różnica wysokości {h}", "різниця висот {h}"],
+whyFar:["היא רחוקה מדי", "it is too far away", "إنها بعيدة جدًا", "она слишком далеко", "距离太远", "遠すぎる", "elle est trop éloignée", "sie ist zu weit entfernt", "está demasiado lejos", "è troppo lontana", "está longe demais", "het ligt te ver weg", "jest za daleko", "вона надто далеко"],
+mUnit:["מ'", "m", "م", "м", "米", "m", "m", "m", "m", "m", "m", "m", "m", "м"],
+about:["אודות", "About", "حول التطبيق", "О приложении", "关于", "このアプリについて", "À propos", "Über", "Acerca de", "Informazioni", "Sobre", "Over", "O aplikacji", "Про застосунок"],
+verWeb:["גרסה", "version", "الإصدار", "версия", "版本", "バージョン", "version", "Version", "versión", "versione", "versão", "versie", "wersja", "версія"],
+buildDate:["נבנתה", "built", "تاريخ البناء", "сборка", "构建于", "ビルド", "compilée le", "erstellt", "compilada", "compilata il", "compilada em", "gebouwd", "zbudowano", "збірка"],
+verApk:["אפליקציית אנדרואיד:", "Android app:", "تطبيق أندرويد:", "Приложение Android:", "Android 应用：", "Androidアプリ:", "Application Android :", "Android-App:", "App de Android:", "App Android:", "App Android:", "Android-app:", "Aplikacja Android:", "Застосунок Android:"],
+srcCode:["קוד מקור (פתוח)", "Source code (open source)", "الشيفرة المصدرية (مفتوحة)", "Исходный код (открытый)", "源代码（开源）", "ソースコード（オープンソース）", "Code source (libre)", "Quellcode (Open Source)", "Código fuente (abierto)", "Codice sorgente (aperto)", "Código-fonte (aberto)", "Broncode (open source)", "Kod źródłowy (otwarty)", "Вихідний код (відкритий)"],
 };
 {const ALL=L;for(const k in S2){if(S2[k].length!==ALL.length)console.warn('i18n length',k);S[k]=S2[k]}}
 const CITIES=[
@@ -787,9 +800,49 @@ function dayCounts(per){
     nThunder:thunderPer.length,thunderN:thunderPer.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length
   };
 }
-if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts};
+
+// Which observation station (if any) represents the user's place. Distance alone is not enough: a coastal station
+// a few km away can be several degrees warmer at night than a town inland. A station counts only if it is
+// within 15 km, at a similar distance from the sea (when known) and at a similar elevation (when known).
+// cands: [{dist_km, coast_km, elev, ...}], userCoast: km from the sea or null, userElev: metres or null.
+// Returns {best: representative candidate or null, near: nearest candidate, why: why `near` was rejected}.
+const REP={maxKm:15,maxCoastDiff:3,maxElevDiff:100};
+function stationFit(c,userCoast,userElev){
+  if(!(c.dist_km<=REP.maxKm))return {ok:false,why:'far'};
+  if(c.coast_km!=null&&userCoast!=null){
+    const dc=c.coast_km-userCoast;
+    // both well inland (over 25 km from the sea): the sea no longer makes the difference
+    if(!(c.coast_km>25&&userCoast>25)&&Math.abs(dc)>REP.maxCoastDiff)return {ok:false,why:dc<0?'coastSt':'coastIn',dc};
+  }
+  if(c.elev!=null&&userElev!=null&&Math.abs(c.elev-userElev)>REP.maxElevDiff)return {ok:false,why:'elev',de:c.elev-userElev};
+  const score=c.dist_km+2*(c.coast_km!=null&&userCoast!=null?Math.abs(c.coast_km-userCoast):0)+(c.elev!=null&&userElev!=null?Math.abs(c.elev-userElev)/25:0);
+  return {ok:true,score};
+}
+function pickStation(cands,userCoast,userElev){
+  const list=(cands||[]).filter(c=>c&&typeof c.temp_c==='number'&&Number.isFinite(c.dist_km));
+  if(!list.length)return {best:null,near:null,why:null};
+  const near=list.reduce((a,b)=>b.dist_km<a.dist_km?b:a);
+  let best=null,bs=Infinity;
+  for(const c of list){const f=stationFit(c,userCoast,userElev);if(f.ok&&f.score<bs){bs=f.score;best=c}}
+  const nf=stationFit(near,userCoast,userElev);
+  return {best,near,why:nf.ok?null:nf.why,de:nf.de};
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts,pickStation,REP};
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.3';
+const APP_VER='2.0.4';
+const APP_BUILD='2026-11-25'; // replaced by build.py with the build date (UTC)
+// Android app version, passed by the launcher as ?apk=... (kept for this session, then removed from the address bar).
+const APK_VER=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('apk');
+  if(v&&/^[\w.\- ()]{1,40}$/.test(v)){sessionStorage.setItem('mm_apk',v);q.delete('apk');
+    history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);return v}
+  return sessionStorage.getItem('mm_apk')}catch(e){return null}})();
+function aboutHTML(){
+  return `<b>${t('about')}</b>
+    <div>${t('appName')} · ${t('verWeb')} <span dir="ltr">${APP_VER}</span> · ${t('buildDate')} <span dir="ltr">${APP_BUILD}</span></div>
+    ${APK_VER?`<div>${t('verApk')} <span dir="ltr">${esc(APK_VER)}</span></div>`:''}
+    <div>${t('builtBy')}</div>
+    <div><a class="pp" href="https://github.com/OdinElad/multimodel" target="_blank" rel="noopener">${t('srcCode')}</a> · <a class="pp" href="privacy.html">${t('privacy')}</a></div>`;
+}
 
 // --- Which models are shown. Default: all of them. The model closest to the consensus is only marked, not preferred. ---
 const MSEL='mm_models';
@@ -987,6 +1040,7 @@ const rU=()=>U.imp?'in':t('mm');
 const cR=m=>U.imp?m/25.4:m;
 const nR=m=>U.imp?Math.round(m/25.4*100)/100:r1(m);
 const fR=m=>nR(m)+' '+rU();
+const fH=m=>U.imp?Math.round(m*3.28084)+' ft':Math.round(m)+' '+t('mUnit');
 const fDist=k=>U.imp?r1(k*0.621371)+' mi':r1(k)+' '+t('km');
 const tUnit=()=>U.imp?'°F':'°C';
 function fmtH(iso){const h=+iso.slice(11,13),m=iso.slice(14,16);if(!U.imp)return iso.slice(11,16);return (h%12||12)+(m!=='00'?':'+m:'')+(h<12?' AM':' PM')}
@@ -1032,10 +1086,13 @@ async function fetchObs(p){
     const ac=new AbortController();const tm=setTimeout(()=>ac.abort(),7000);
     const r=await fetch(`${OBS_API}?lat=${q2(p.lat)}&lon=${q2(p.lon)}`,{signal:ac.signal});clearTimeout(tm);
     if(!r.ok)return null;const j=await r.json();
-    if(!j||!j.ok||typeof j.temp_c!=='number')return null;
-    const age=Math.round((Date.now()/1000-j.time)/60);
-    if(j.dist_km>25||age>120||age<-10)return null;
-    j.age=Math.max(0,age);return j;
+    if(!j||!j.ok)return null;
+    // Candidates (new server) or the single nearest station (older server). Each one gets its age in minutes.
+    const now=Date.now()/1000;
+    const cands=(Array.isArray(j.cands)?j.cands:[j]).filter(c=>c&&typeof c.temp_c==='number').map(c=>({...c,age:Math.max(0,Math.round((now-c.time)/60)),_age:Math.round((now-c.time)/60)}))
+      .filter(c=>c.dist_km<=25&&c._age<=120&&c._age>=-10);
+    if(!cands.length)return null;
+    return {cands,user_coast_km:typeof j.user_coast_km==='number'?j.user_coast_km:null};
   }catch(e){return null}
 }
 
@@ -1148,7 +1205,10 @@ function render(){
   const ag=agree(today);
   const rl=rainLine(P),qa=practical(P);
   const hrNow=+H.time[ni].slice(11,13);
-  const nightNote=!obs&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
+  // A station is used as the main temperature only if it represents this place (distance, sea, elevation). See pickStation in calc.js.
+  const ps=obs?pickStation(obs.cands,obs.user_coast_km,typeof data.elevation==='number'?data.elevation:null):{best:null,near:null};
+  const st=ps.best,stNear=!st?ps.near:null;
+  const nightNote=!st&&(hrNow<=8||hrNow>=19)&&nowW<12&&nowCode<=2;
 
   const al=[];
   PA.days.slice(0,4).forEach((d,i)=>{
@@ -1161,19 +1221,25 @@ function render(){
   const nextRain=PA.days.findIndex(d=>d.nRain&&d.rainN>=needFor(d.nRain));
   if(!al.length)al.push(['green','✅',t('calm'),nextRain<0?t('calmNone'):t('calmRain',{d:dayRef(PA.days[nextRain].date,nextRain)})]);
 
-  const bigT=obs?obs.temp_c:nowT;
+  const bigT=st?st.temp_c:nowT;
+  const srcName=o=>o.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)';
+  const whyTxt=w=>w==='coastSt'?t('whyCoastSt'):w==='coastIn'?t('whyCoastIn'):w==='elev'?t('whyElev',{h:fH(Math.abs(ps.de||0))}):t('whyFar');
+  const nearLine=stNear?`<div class="updated" style="color:#fcd34d">ℹ️ ${esc(t('stNotRep',{s:stNear.name,d:fDist(stNear.dist_km),v:fT1(stNear.temp_c),why:whyTxt(ps.why)}))}</div>
+          <div class="updated">${t('srcLine',{s:srcName(stNear)})}</div>
+          ${stNear.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}`:'';
   const html=`
   ${state.cached?`<div class="err" style="margin-bottom:14px">${t('cached')}</div>`:''}
   <section class="card">
     <div class="hero">
       <div>
         <div class="place">📍 ${esc(place.name)}</div>
-        ${obs?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:obs.name,d:fDist(obs.dist_km),m:obs.age}))}</div>
-          <div class="updated">${t('srcLine',{s:obs.source==='IMS'?t('imsName'):'NOAA Aviation Weather Center (METAR)'})}</div>
-          ${obs.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
+        ${st?`<div class="updated" style="color:#6ee7a0">✅ ${t('measuredNow')} · ${esc(t('stationLine',{s:st.name,d:fDist(st.dist_km),m:st.age}))}</div>
+          <div class="updated">${t('srcLine',{s:srcName(st)})}</div>
+          ${st.source==='IMS'?`<div class="updated" style="font-size:11px">${t('imsDisc')}</div>`:''}
           <div class="updated">${t('modelsSay',{v:fT(nowT)})}</div>`
         :one?`<div class="updated">${t(models[0].id===skillTop?'oneModel':'oneModelPick',{m:models[0].name,t:fmtH(H.time[ni])})}</div>`
         :`<div class="updated">${t('medianOf',{n:nowIn.length,t:fmtH(H.time[ni])})}${outs.length?' · '+t('excluded',{m:outs.map(x=>x.m.name).join(', ')}):''}${cs.disagree?' · '+t('highDisagree'):''}</div>`}
+        ${nearLine}
         <div class="cond">${nowC[0]} ${nowC[1]} · ${t('wind')} ${fW(nowW)}</div>
         <div class="rangeline">${t('todayRange',{a:fT(today.min),b:fT(today.max)})}${one?'':` · <span class="pill ${ag[0]}" title="${esc(t('confHint'))}">${ag[1]}</span>`}</div>
       </div>
@@ -1552,6 +1618,7 @@ function openSettings(){
   $('#selLang').innerHTML=`<option value="auto">${t('langAuto')}</option>`+L.map(l=>`<option value="${l}">${LANG_NAMES[l]}</option>`).join('');
   $('#selUnits').innerHTML=`<option value="auto">${t('unitsAuto')}</option><option value="metric">${t('metric')}</option><option value="imperial">${t('imperial')}</option>`;
   $('#selLang').value=pl;$('#selUnits').value=pu;
+  $('#aboutBox').innerHTML=aboutHTML();
   $('#ovS').classList.add('show');alertsUI();
 }
 function closeSettings(){$('#ovS').classList.remove('show')}

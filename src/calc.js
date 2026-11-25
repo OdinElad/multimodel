@@ -39,4 +39,31 @@ function dayCounts(per){
     nThunder:thunderPer.length,thunderN:thunderPer.filter(x=>(x.code>=95)||(x.cape!=null&&x.cape>=1000&&(x.rain??0)>=1)).length
   };
 }
-if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts};
+
+// Which observation station (if any) represents the user's place. Distance alone is not enough: a coastal station
+// a few km away can be several degrees warmer at night than a town inland. A station counts only if it is
+// within 15 km, at a similar distance from the sea (when known) and at a similar elevation (when known).
+// cands: [{dist_km, coast_km, elev, ...}], userCoast: km from the sea or null, userElev: metres or null.
+// Returns {best: representative candidate or null, near: nearest candidate, why: why `near` was rejected}.
+const REP={maxKm:15,maxCoastDiff:3,maxElevDiff:100};
+function stationFit(c,userCoast,userElev){
+  if(!(c.dist_km<=REP.maxKm))return {ok:false,why:'far'};
+  if(c.coast_km!=null&&userCoast!=null){
+    const dc=c.coast_km-userCoast;
+    // both well inland (over 25 km from the sea): the sea no longer makes the difference
+    if(!(c.coast_km>25&&userCoast>25)&&Math.abs(dc)>REP.maxCoastDiff)return {ok:false,why:dc<0?'coastSt':'coastIn',dc};
+  }
+  if(c.elev!=null&&userElev!=null&&Math.abs(c.elev-userElev)>REP.maxElevDiff)return {ok:false,why:'elev',de:c.elev-userElev};
+  const score=c.dist_km+2*(c.coast_km!=null&&userCoast!=null?Math.abs(c.coast_km-userCoast):0)+(c.elev!=null&&userElev!=null?Math.abs(c.elev-userElev)/25:0);
+  return {ok:true,score};
+}
+function pickStation(cands,userCoast,userElev){
+  const list=(cands||[]).filter(c=>c&&typeof c.temp_c==='number'&&Number.isFinite(c.dist_km));
+  if(!list.length)return {best:null,near:null,why:null};
+  const near=list.reduce((a,b)=>b.dist_km<a.dist_km?b:a);
+  let best=null,bs=Infinity;
+  for(const c of list){const f=stationFit(c,userCoast,userElev);if(f.ok&&f.score<bs){bs=f.score;best=c}}
+  const nf=stationFit(near,userCoast,userElev);
+  return {best,near,why:nf.ok?null:nf.why,de:nf.de};
+}
+if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts,pickStation,REP};

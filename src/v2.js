@@ -1,5 +1,18 @@
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.3';
+const APP_VER='2.0.4';
+const APP_BUILD='__BUILD__'; // replaced by build.py with the build date (UTC)
+// Android app version, passed by the launcher as ?apk=... (kept for this session, then removed from the address bar).
+const APK_VER=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('apk');
+  if(v&&/^[\w.\- ()]{1,40}$/.test(v)){sessionStorage.setItem('mm_apk',v);q.delete('apk');
+    history.replaceState(null,'',location.pathname+(q.toString()?'?'+q:'')+location.hash);return v}
+  return sessionStorage.getItem('mm_apk')}catch(e){return null}})();
+function aboutHTML(){
+  return `<b>${t('about')}</b>
+    <div>${t('appName')} · ${t('verWeb')} <span dir="ltr">${APP_VER}</span> · ${t('buildDate')} <span dir="ltr">${APP_BUILD}</span></div>
+    ${APK_VER?`<div>${t('verApk')} <span dir="ltr">${esc(APK_VER)}</span></div>`:''}
+    <div>${t('builtBy')}</div>
+    <div><a class="pp" href="https://github.com/OdinElad/multimodel" target="_blank" rel="noopener">${t('srcCode')}</a> · <a class="pp" href="privacy.html">${t('privacy')}</a></div>`;
+}
 
 // --- Which models are shown. Default: all of them. The model closest to the consensus is only marked, not preferred. ---
 const MSEL='mm_models';
