@@ -824,8 +824,8 @@ function obsEstimate(modelNow,cands,userCoast,userElev){
 }
 if(typeof module!=='undefined'&&module.exports)module.exports={avg,med,needFor,majority,consensus,dayCounts,obsEstimate,EST};
 // ===== v2 (Tahazit): model choice, weekly storm outlook, dynamic sky, update banner =====
-const APP_VER='2.0.5';
-const APP_BUILD='2026-11-25'; // replaced by build.py with the build date (UTC)
+const APP_VER='2.0.6';
+const APP_BUILD='2026-11-26'; // replaced by build.py with the build date (UTC)
 // Android app version, passed by the launcher as ?apk=... (kept for this session, then removed from the address bar).
 const APK_VER=(()=>{try{const q=new URLSearchParams(location.search),v=q.get('apk');
   if(v&&/^[\w.\- ()]{1,40}$/.test(v)){sessionStorage.setItem('mm_apk',v);q.delete('apk');
@@ -1526,7 +1526,10 @@ async function sendSub(sub){
 const syncSig=p=>[q2(p.lat),q2(p.lon),p.name,LANG,U.imp?1:0].join('|');
 async function alertsEnable(){
   if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
-  const perm=await Notification.requestPermission();
+  let perm=await Notification.requestPermission();
+  // In the Android app the answer comes from the system dialog, and on the first request the browser can report it
+  // a moment late. Re-read the permission briefly before treating it as refused.
+  for(let i=0;perm!=='granted'&&i<6;i++){await new Promise(r=>setTimeout(r,500));perm=Notification.permission}
   if(perm!=='granted'){alertsMsg(t('alertsDenied'),1);return false}
   try{
     const reg=await navigator.serviceWorker.ready;

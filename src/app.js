@@ -538,7 +538,10 @@ async function sendSub(sub){
 const syncSig=p=>[q2(p.lat),q2(p.lon),p.name,LANG,U.imp?1:0].join('|');
 async function alertsEnable(){
   if(!pushOK()){alertsMsg(t('alertsUnsupported'),1);return false}
-  const perm=await Notification.requestPermission();
+  let perm=await Notification.requestPermission();
+  // In the Android app the answer comes from the system dialog, and on the first request the browser can report it
+  // a moment late. Re-read the permission briefly before treating it as refused.
+  for(let i=0;perm!=='granted'&&i<6;i++){await new Promise(r=>setTimeout(r,500));perm=Notification.permission}
   if(perm!=='granted'){alertsMsg(t('alertsDenied'),1);return false}
   try{
     const reg=await navigator.serviceWorker.ready;

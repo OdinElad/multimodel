@@ -20,13 +20,17 @@
     "path": "./upload.jks",
     "alias": "upload"
   },
-  "appVersionName": "2.0.4",
-  "appVersionCode": 4,
+  "appVersionName": "2.0.6",
+  "appVersionCode": 5,
   "shortcuts": [],
   "generatorApp": "unknown",
   "webManifestUrl": "https://odinelad.github.io/multimodel/manifest.json",
   "fallbackType": "customtabs",
-  "features": {},
+  "features": {
+    "locationDelegation": {
+      "enabled": true
+    }
+  },
   "alphaDependencies": {
     "enabled": false
   },
